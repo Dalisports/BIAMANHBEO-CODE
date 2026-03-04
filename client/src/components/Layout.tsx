@@ -3,9 +3,9 @@ import { MessageSquare, Package, Receipt, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "AI Assistant", icon: MessageSquare },
-  { href: "/orders", label: "Orders", icon: Receipt },
-  { href: "/products", label: "Products", icon: Package },
+  { href: "/", label: "Trợ Lý AI", icon: MessageSquare },
+  { href: "/orders", label: "Đơn hàng", icon: Receipt },
+  { href: "/products", label: "Mặt hàng", icon: Package },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-xl leading-none">VoxFlow</h1>
+            <h1 className="font-display font-bold text-xl leading-none">Thanh Sói VoxFlow</h1>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Voice OS</p>
           </div>
         </div>
@@ -54,7 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h1 className="font-display font-bold text-lg">VoxFlow</h1>
+          <h1 className="font-display font-bold text-lg">Thanh Sói VoxFlow</h1>
         </header>
 
         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">

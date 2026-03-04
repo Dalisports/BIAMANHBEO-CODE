@@ -17,7 +17,7 @@ export default function Home() {
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là trợ lý ảo VoxFlow. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
+      content: "Xin chào! Tôi là Trợ lý ảo Thanh Sói VoxFlow. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
       timestamp: new Date()
     }
   ]);
@@ -73,7 +73,7 @@ export default function Home() {
       {/* Header Area */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Assistant</h2>
+          <h2 className="text-3xl font-display font-bold text-foreground">Trợ Lý AI</h2>
           <p className="text-muted-foreground mt-1 text-sm">Giao tiếp quản lý cửa hàng của bạn</p>
         </div>
         <button

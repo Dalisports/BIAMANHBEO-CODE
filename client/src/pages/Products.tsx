@@ -31,7 +31,7 @@ export default function Products() {
     <div className="h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Sản phẩm</h2>
+          <h2 className="text-3xl font-display font-bold text-foreground">Mặt hàng</h2>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý danh sách mặt hàng của bạn</p>
         </div>
         <button

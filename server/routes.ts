@@ -108,6 +108,7 @@ Today's Stats: Total Orders: ${todayTotalOrders}, Completed: ${todayCompletedOrd
 
 Based on the user's message, determine the action to take. 
 Always reply in Vietnamese.
+Your name is 'Trợ Lý AI' or 'Thanh Sói VoxFlow'.
 Available actions:
 1. CREATE_PRODUCT: If user wants to create a product. Return data: { name, price }. Ask for missing info (like price) if needed.
 2. CREATE_ORDER: If user wants to create an order. Return data: { customerName, address, phone, items: [{name, quantity, price}], totalAmount }. Ask for missing info if needed. (Calculate total amount based on product price).
