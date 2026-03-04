@@ -90,6 +90,21 @@ export default function Home() {
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto pr-2 pb-4 space-y-6">
+        <div className="bg-muted/50 rounded-2xl p-4 mb-4 border border-border/50">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Mẫu câu lệnh hướng dẫn</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold text-primary">Nhập liệu:</span>
+              <span className="text-muted-foreground italic">"Tạo mặt hàng Khoai tây lắc giá 45k"</span>
+              <span className="text-muted-foreground italic">"Lên đơn chị Thanh - 2 phần khoai tây lắc - địa chỉ 582 trần lãm"</span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold text-primary">Truy vấn & Chốt đơn:</span>
+              <span className="text-muted-foreground italic">"Hôm nay có bao nhiêu đơn hàng?"</span>
+              <span className="text-muted-foreground italic">"Chốt đơn chị Thanh trần lãm"</span>
+            </div>
+          </div>
+        </div>
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div

@@ -45,6 +45,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Desktop Instruction Card */}
+        <div className="mt-auto pt-6 border-t border-border/50">
+          <div className="bg-muted/30 rounded-2xl p-4 border border-border/30">
+            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Mẫu câu lệnh</h4>
+            <div className="space-y-3 text-xs">
+              <div className="flex flex-col gap-1">
+                <span className="font-bold text-primary/80">Nhập liệu:</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Tạo mặt hàng Khoai tây lắc giá 45k"</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Lên đơn chị Thanh - 2 khoai tây lắc - 582 trần lãm"</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold text-primary/80">Chốt đơn:</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Chốt đơn chị Thanh trần lãm"</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}
