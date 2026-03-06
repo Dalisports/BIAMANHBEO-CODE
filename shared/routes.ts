@@ -32,6 +32,22 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/products/:id' as const,
+      input: insertProductSchema.partial(),
+      responses: {
+        200: z.custom<typeof products.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/products/:id' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+      },
+    },
   },
   orders: {
     list: {
@@ -76,7 +92,14 @@ export const api = {
         200: z.object({ success: z.boolean() }),
         400: errorSchemas.validation,
       },
-    }
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/orders/:id' as const,
+      responses: {
+        200: z.object({ success: z.boolean() }),
+      },
+    },
   },
   chat: {
     process: {

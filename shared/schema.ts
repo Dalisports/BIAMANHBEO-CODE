@@ -8,6 +8,8 @@ export const products = pgTable("products", {
   price: integer("price").notNull(),
 });
 
+export const insertProductSchema = createInsertSchema(products).omit({ id: true });
+
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   customerName: text("customer_name").notNull(),
@@ -17,10 +19,10 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("Pending"), // Pending, Complete, Updated-Pending
   items: jsonb("items").notNull(), // Array of { name: string, quantity: number, price: number }
   createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
-export const insertProductSchema = createInsertSchema(products).omit({ id: true });
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true });
 
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;

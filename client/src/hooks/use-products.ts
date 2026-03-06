@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@shared/routes";
-import { type InsertProduct } from "@shared/schema";
+import { api, buildUrl } from "@shared/routes";
+import { type InsertProduct, type Product } from "@shared/schema";
 
 export function useProducts() {
   return useQuery({
@@ -33,6 +33,48 @@ export function useCreateProduct() {
       }
       
       return api.products.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, name, price }: { id: number; name?: string; price?: number }) => {
+      const url = buildUrl(api.products.update.path, { id });
+      const res = await fetch(url, {
+        method: api.products.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, price }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to update product");
+      return api.products.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.products.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.products.delete.method,
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to delete product");
+      return api.products.delete.responses[200].parse(await res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.products.list.path] });

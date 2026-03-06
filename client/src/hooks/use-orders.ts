@@ -100,3 +100,45 @@ export function useCompleteOrders() {
     },
   });
 }
+
+export function useDeleteOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.orders.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.orders.delete.method,
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to delete order");
+      return api.orders.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}
+
+export function useUncompleteOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.orders.update.path, { id });
+      const res = await fetch(url, {
+        method: api.orders.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Pending" }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to uncomplete order");
+      return api.orders.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+    },
+  });
+}

@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, Bot, User, Volume2, VolumeX } from "lucide-react";
+import { Mic, Send, Bot, User, Volume2, VolumeX, Package, Receipt, CheckCircle2, Clock } from "lucide-react";
 import { useProcessChat } from "@/hooks/use-chat";
 import { useSpeech } from "@/hooks/use-speech";
-import { cn } from "@/lib/utils";
+import { useOrders } from "@/hooks/use-orders";
+import { useProducts } from "@/hooks/use-products";
+import { formatCurrency, cn } from "@/lib/utils";
 
 type Message = {
   id: string;
@@ -13,11 +15,13 @@ type Message = {
 };
 
 export default function Home() {
+  const { data: orders } = useOrders();
+  const { data: products } = useProducts();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là Trợ lý ảo Thanh Sói VoxFlow. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
+      content: "Xin chào! Tôi là Trợ lý ảo SÓI int. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
       timestamp: new Date()
     }
   ]);
@@ -33,6 +37,24 @@ export default function Home() {
   };
 
   const { isListening, listen, stop, speak, supported } = useSpeech(handleSpeechResult);
+  const [isPressing, setIsPressing] = useState(false);
+
+  const handleMouseDown = () => {
+    setIsPressing(true);
+    listen();
+  };
+
+  const handleMouseUp = () => {
+    setIsPressing(false);
+    stop();
+  };
+
+  const handleMouseLeave = () => {
+    if (isPressing) {
+      setIsPressing(false);
+      stop();
+    }
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,7 +93,7 @@ export default function Home() {
   return (
     <div className="h-full flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
       {/* Header Area */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Trợ Lý AI</h2>
           <p className="text-muted-foreground mt-1 text-sm">Giao tiếp quản lý cửa hàng của bạn</p>
@@ -88,23 +110,32 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto pr-2 pb-4 space-y-6">
-        <div className="bg-muted/50 rounded-2xl p-4 mb-4 border border-border/50">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Mẫu câu lệnh hướng dẫn</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-primary">Nhập liệu:</span>
-              <span className="text-muted-foreground italic">"Tạo mặt hàng Khoai tây lắc giá 45k"</span>
-              <span className="text-muted-foreground italic">"Lên đơn chị Thanh - 2 phần khoai tây lắc - địa chỉ 582 trần lãm"</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-primary">Truy vấn & Chốt đơn:</span>
-              <span className="text-muted-foreground italic">"Hôm nay có bao nhiêu đơn hàng?"</span>
-              <span className="text-muted-foreground italic">"Chốt đơn chị Thanh trần lãm"</span>
-            </div>
-          </div>
+      {/* Dashboard Stats */}
+      <div className="grid grid-cols-4 gap-2 mb-2">
+        <div className="bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
+          <Receipt className="w-3 h-3 text-orange-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-orange-600">{orders?.filter(o => o.status === "Pending").length || 0}</span>
+          <p className="text-[10px] text-orange-600">Chưa giao</p>
         </div>
+        <div className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
+          <CheckCircle2 className="w-3 h-3 text-green-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-green-600">{orders?.filter(o => o.status === "Complete").length || 0}</span>
+          <p className="text-[10px] text-green-600">Hoàn thành</p>
+        </div>
+        <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-center">
+          <Package className="w-3 h-3 text-blue-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-blue-600">{products?.length || 0}</span>
+          <p className="text-[10px] text-blue-600">Mặt hàng</p>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-2 border border-purple-200 text-center">
+          <Clock className="w-3 h-3 text-purple-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-purple-600">{formatCurrency(orders?.filter(o => o.status === "Complete").reduce((sum, o) => sum + o.totalAmount, 0) || 0)}</span>
+          <p className="text-[10px] text-purple-600">Doanh thu</p>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-2 min-h-0">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div
@@ -160,7 +191,7 @@ export default function Home() {
       </div>
 
       {/* Input Area */}
-      <div className="mt-4 flex items-end gap-3 relative">
+      <div className="flex items-end gap-2 relative shrink-0">
         <div className="flex-1 bg-card border border-border rounded-3xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-300 flex items-end gap-2">
           <textarea
             value={input}
@@ -171,7 +202,7 @@ export default function Home() {
                 handleSend();
               }
             }}
-            placeholder="Nhập hoặc nói yêu cầu của bạn..."
+            placeholder="Hãy ra lệnh"
             className="w-full max-h-32 min-h-[48px] bg-transparent resize-none outline-none py-3 px-4 text-foreground placeholder:text-muted-foreground"
             rows={1}
           />
@@ -185,18 +216,50 @@ export default function Home() {
         </div>
 
         {supported && (
-          <button
-            onClick={isListening ? stop : listen}
-            className={cn(
-              "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 text-white shadow-lg",
-              isListening 
-                ? "bg-accent animate-pulse-ring" 
-                : "bg-primary hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 active:translate-y-0"
-            )}
-          >
-            <Mic className={cn("w-6 h-6", isListening && "scale-110")} />
-          </button>
+          <div className="flex flex-col-reverse items-center gap-2">
+            <button
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onTouchStart={handleMouseDown}
+              onTouchEnd={handleMouseUp}
+              className={cn(
+                "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 text-white shadow-lg",
+                isListening 
+                  ? "bg-accent animate-pulse-ring" 
+                  : "bg-primary hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 active:translate-y-0"
+              )}
+            >
+              <Mic className={cn("w-6 h-6", isListening && "scale-110")} />
+            </button>
+            <span className="text-xs text-muted-foreground whitespace-nowrap italic">
+              {isListening ? "Đang nghe..." : "Bấm giữ để nói"}
+            </span>
+          </div>
         )}
+      </div>
+
+      {/* Quick Commands */}
+      <div className="bg-orange-50 rounded-t-2xl p-2 border-t-2 border-orange-200 shrink-0">
+        <div className="grid grid-cols-3 gap-1">
+          {[
+            { label: "Tạo mặt hàng", cmd: "tạo mặt hàng" },
+            { label: "Lên đơn mới", cmd: "lên đơn" },
+            { label: "Chốt đơn", cmd: "chốt đơn" },
+            { label: "Xem đơn hàng", cmd: "hiển thị đơn hàng" },
+            { label: "Xem mặt hàng", cmd: "hiển thị mặt hàng" },
+            { label: "Báo cáo hôm nay", cmd: "báo cáo hôm nay" },
+          ].map((item) => (
+            <button
+              key={item.cmd}
+              onClick={() => handleSend(item.cmd)}
+              disabled={chatMutation.isPending}
+              className="px-2 py-1.5 rounded-lg bg-white hover:bg-orange-100 text-xs font-semibold text-orange-700 hover:text-orange-800 border border-orange-200 transition-colors disabled:opacity-50"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -16,12 +16,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-72 flex-col border-r border-border bg-card/50 backdrop-blur-xl sticky top-0 h-screen p-6">
         <div className="flex items-center gap-3 px-2 mb-12">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-            <Sparkles className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
-          <div>
-            <h1 className="font-display font-bold text-xl leading-none">Thanh Sói VoxFlow</h1>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Voice OS</p>
+          <div className="flex items-baseline gap-1">
+            <h1 className="font-display text-3xl leading-none text-sky-500">SÓI</h1>
+            <h1 className="font-display text-3xl leading-none text-foreground">Agent</h1>
           </div>
         </div>
 
@@ -69,10 +69,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0 relative">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center gap-3 p-4 bg-background/80 backdrop-blur-md sticky top-0 z-40 border-b border-border/50">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
-            <Sparkles className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-md">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <h1 className="font-display font-bold text-lg">Thanh Sói VoxFlow</h1>
+          <div className="flex items-baseline gap-1">
+            <h1 className="font-display text-xl leading-none text-sky-500">SÓI</h1>
+            <h1 className="font-display text-xl leading-none text-foreground">Agent</h1>
+          </div>
         </header>
 
         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">

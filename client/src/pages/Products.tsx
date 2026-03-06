@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useProducts, useCreateProduct } from "@/hooks/use-products";
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/use-products";
 import { formatCurrency } from "@/lib/utils";
-import { Plus, Package, Loader2 } from "lucide-react";
+import { Plus, Package, Loader2, Pencil, Trash2, Check, X } from "lucide-react";
 
 export default function Products() {
   const { data: products, isLoading } = useProducts();
   const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const deleteProduct = useDeleteProduct();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
 
@@ -27,9 +34,35 @@ export default function Products() {
     );
   };
 
+  const handleEdit = (product: { id: number; name: string; price: number }) => {
+    setEditingId(product.id);
+    setEditName(product.name);
+    setEditPrice(product.price.toString());
+  };
+
+  const handleSaveEdit = (id: number) => {
+    if (!editName || !editPrice) return;
+    updateProduct.mutate(
+      { id, name: editName, price: parseInt(editPrice, 10) },
+      { onSuccess: () => setEditingId(null) }
+    );
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditPrice("");
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Bạn có chắc chắn muốn xóa mặt hàng này?")) {
+      deleteProduct.mutate(id);
+    }
+  };
+
   return (
     <div className="h-full">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Mặt hàng</h2>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý danh sách mặt hàng của bạn</p>
@@ -56,26 +89,98 @@ export default function Products() {
           <p className="text-muted-foreground max-w-sm">Hãy sử dụng trợ lý giọng nói để thêm sản phẩm mới một cách nhanh chóng hoặc bấm nút Thêm bên trên.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product, i) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              key={product.id}
-              className="bg-card rounded-2xl p-6 border border-border hover:shadow-xl hover:border-primary/20 transition-all duration-300 group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform duration-300">
-                <Package className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-1">{product.name}</h3>
-              <p className="text-accent font-semibold text-lg">{formatCurrency(product.price)}</p>
-            </motion.div>
-          ))}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">STT</th>
+                <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Tên mặt hàng</th>
+                <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Giá bán</th>
+                <th className="text-right px-4 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product, i) => (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  key={product.id}
+                  className="border-t border-border hover:bg-muted/30 transition-colors group"
+                >
+                  <td className="px-4 py-3 text-sm font-medium text-muted-foreground">{i + 1}</td>
+                  <td className="px-4 py-3">
+                    {editingId === product.id ? (
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary"
+                        placeholder="Tên mặt hàng"
+                      />
+                    ) : (
+                      <span className="font-medium">{product.name}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {editingId === product.id ? (
+                      <input
+                        type="number"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="w-32 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary text-right"
+                        placeholder="Giá bán"
+                      />
+                    ) : (
+                      <span className="text-accent font-semibold">{formatCurrency(product.price)}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {editingId === product.id ? (
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-2 rounded-lg bg-secondary text-muted-foreground hover:bg-secondary/80 transition-colors"
+                          title="Hủy"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleSaveEdit(product.id)}
+                          disabled={updateProduct.isPending}
+                          className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          title="Xác nhận"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                          title="Sửa"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
-      {/* Manual Create Modal (Fallback for non-voice usage) */}
+      {/* Manual Create Modal */}
       {isDialogOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
           <motion.div 
