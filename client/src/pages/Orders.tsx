@@ -119,7 +119,7 @@ export default function Orders() {
     <div className="h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Đơn hàng</h2>
+          <h2 className="text-3xl font-sans font-bold text-foreground">Đơn hàng</h2>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý và theo dõi trạng thái giao hàng</p>
         </div>
       </div>
@@ -138,7 +138,7 @@ export default function Orders() {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
             >
-              {f === "All" ? "Tất cả" : f === "Pending" ? "Chưa giao" : "Hoàn thành"}
+              {f === "All" ? "Tất cả" : f === "Pending" ? "CHỜ GIAO" : "HOÀN THÀNH"}
             </button>
           ))}
         </div>
@@ -257,16 +257,16 @@ export default function Orders() {
                           ) : (
                           <>
                             <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                              <h3 className="text-lg font-sans font-bold text-foreground flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" />
-                                {order.customerName}
+                                <span className="font-sans">Tên Khách Hàng:</span> {order.customerName}
                               </h3>
                               <span className={cn(
                                 "px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1",
                                 isComplete ? "bg-accent/20 text-accent" : isPending ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary"
                               )}>
                                 {isComplete ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                {order.status}
+                                {isComplete ? "HOÀN THÀNH" : "CHỜ GIAO"}
                               </span>
                             </div>
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -451,7 +451,7 @@ export default function Orders() {
                     <li key={order.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
                       <div className="flex justify-between items-start mb-1">
                         <div>
-                          <span className="font-medium">{order.customerName}</span>
+                          <span className="font-sans font-medium">Tên Khách Hàng: {order.customerName}</span>
                           <span className="text-xs text-muted-foreground block">{order.phone} • {order.address}</span>
                         </div>
                         <span className="font-bold text-accent">{formatCurrency(order.totalAmount)}</span>

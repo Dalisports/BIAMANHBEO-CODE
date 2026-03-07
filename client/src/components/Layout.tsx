@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110")} />
-                <span className="font-semibold">{item.label}</span>
+                <span className="font-sans font-semibold">{item.label}</span>
               </Link>
             );
           })}
@@ -97,7 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
             >
               <item.icon className={cn("w-6 h-6", isActive && "fill-primary/20")} />
-              <span className="text-[10px] font-semibold">{item.label}</span>
+              <span className="font-sans text-[10px] font-semibold">{item.label}</span>
             </Link>
           );
         })}

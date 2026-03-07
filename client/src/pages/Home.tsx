@@ -21,7 +21,7 @@ export default function Home() {
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là Trợ lý ảo SÓI int. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
+      content: "Xin chào! Tôi là SÓI Agent. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
       timestamp: new Date()
     }
   ]);
@@ -95,7 +95,7 @@ export default function Home() {
       {/* Header Area */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Trợ Lý AI</h2>
+          <h2 className="text-3xl font-sans font-bold text-foreground">Trợ Lý AI</h2>
           <p className="text-muted-foreground mt-1 text-sm">Giao tiếp quản lý cửa hàng của bạn</p>
         </div>
         <button

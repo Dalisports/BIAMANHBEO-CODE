@@ -64,7 +64,7 @@ export default function Products() {
     <div className="h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Mặt hàng</h2>
+          <h2 className="text-3xl font-sans font-bold text-foreground">Mặt hàng</h2>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý danh sách mặt hàng của bạn</p>
         </div>
         <button
@@ -155,7 +155,7 @@ export default function Products() {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleEdit(product)}
                           className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
@@ -188,7 +188,7 @@ export default function Products() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-border"
           >
-            <h3 className="text-2xl font-display font-bold mb-6">Thêm Mặt Hàng Mới</h3>
+            <h3 className="text-2xl font-sans font-bold mb-6">Thêm Mặt Hàng Mới</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2 text-foreground">Tên mặt hàng</label>
