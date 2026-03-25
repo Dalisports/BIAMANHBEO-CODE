@@ -7,16 +7,20 @@ import NotFound from "@/pages/not-found";
 
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
-import Products from "@/pages/Products";
+import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
+import Kitchen from "@/pages/Kitchen";
+import Reports from "@/pages/Reports";
 
 function Router() {
   return (
     <Layout>
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/products" component={Products} />
         <Route path="/orders" component={Orders} />
+        <Route path="/kitchen" component={Kitchen} />
+        <Route path="/menu" component={Menu} />
+        <Route path="/reports" component={Reports} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

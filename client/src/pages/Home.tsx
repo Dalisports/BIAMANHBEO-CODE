@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, Bot, User, Volume2, VolumeX, Package, Receipt, CheckCircle2, Clock } from "lucide-react";
+import { Mic, Send, Bot, User, Volume2, VolumeX, UtensilsCrossed, ChefHat, DollarSign, Clock } from "lucide-react";
 import { useProcessChat } from "@/hooks/use-chat";
 import { useSpeech } from "@/hooks/use-speech";
-import { useOrders } from "@/hooks/use-orders";
-import { useProducts } from "@/hooks/use-products";
+import { useOrders, useKitchenOrders } from "@/hooks/use-orders";
+import { useMenuItems } from "@/hooks/use-menu";
 import { formatCurrency, cn } from "@/lib/utils";
 
 type Message = {
@@ -16,12 +16,13 @@ type Message = {
 
 export default function Home() {
   const { data: orders } = useOrders();
-  const { data: products } = useProducts();
+  const { data: kitchenOrders } = useKitchenOrders();
+  const { data: menuItems } = useMenuItems();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là SÓI Agent. Bạn có thể ra lệnh bằng giọng nói hoặc gõ phím để tạo mặt hàng, lên đơn, chốt đơn hoặc xem báo cáo.",
+      content: "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
       timestamp: new Date()
     }
   ]);
@@ -90,13 +91,17 @@ export default function Home() {
     });
   };
 
+  const activeOrders = orders?.filter(o => o.status !== "Complete").length || 0;
+  const kitchenActive = kitchenOrders?.filter(o => o.status !== "Done").length || 0;
+  const todayRevenue = orders?.filter(o => o.paymentStatus === "Paid")
+    .reduce((acc, o) => acc + o.totalAmount, 0) || 0;
+
   return (
     <div className="h-full flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
-      {/* Header Area */}
       <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="text-3xl font-sans font-bold text-foreground">Trợ Lý AI</h2>
-          <p className="text-muted-foreground mt-1 text-sm">Giao tiếp quản lý cửa hàng của bạn</p>
+          <p className="text-muted-foreground mt-1 text-sm">Quản lý nhà hàng F&B của bạn</p>
         </div>
         <button
           onClick={() => setAutoSpeak(!autoSpeak)}
@@ -110,31 +115,29 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Dashboard Stats */}
       <div className="grid grid-cols-4 gap-2 mb-2">
         <div className="bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
-          <Receipt className="w-3 h-3 text-orange-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-orange-600">{orders?.filter(o => o.status === "Pending").length || 0}</span>
-          <p className="text-[10px] text-orange-600">Chưa giao</p>
+          <UtensilsCrossed className="w-3 h-3 text-orange-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-orange-600">{activeOrders}</span>
+          <p className="text-[10px] text-orange-600">Đơn đang xử lý</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
-          <CheckCircle2 className="w-3 h-3 text-green-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-green-600">{orders?.filter(o => o.status === "Complete").length || 0}</span>
-          <p className="text-[10px] text-green-600">Hoàn thành</p>
+        <div className="bg-red-50 rounded-lg p-2 border border-red-200 text-center">
+          <ChefHat className="w-3 h-3 text-red-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-red-600">{kitchenActive}</span>
+          <p className="text-[10px] text-red-600">Đang nấu</p>
         </div>
         <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-center">
-          <Package className="w-3 h-3 text-blue-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-blue-600">{products?.length || 0}</span>
-          <p className="text-[10px] text-blue-600">Mặt hàng</p>
+          <UtensilsCrossed className="w-3 h-3 text-blue-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-blue-600">{menuItems?.length || 0}</span>
+          <p className="text-[10px] text-blue-600">Món trong menu</p>
         </div>
-        <div className="bg-purple-50 rounded-lg p-2 border border-purple-200 text-center">
-          <Clock className="w-3 h-3 text-purple-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-purple-600">{formatCurrency(orders?.filter(o => o.status === "Complete").reduce((sum, o) => sum + o.totalAmount, 0) || 0)}</span>
-          <p className="text-[10px] text-purple-600">Doanh thu</p>
+        <div className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
+          <DollarSign className="w-3 h-3 text-green-500 mx-auto mb-1" />
+          <span className="text-lg font-bold text-green-600">{formatCurrency(todayRevenue)}</span>
+          <p className="text-[10px] text-green-600">Doanh thu</p>
         </div>
       </div>
 
-      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-2 min-h-0">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
@@ -190,7 +193,6 @@ export default function Home() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input Area */}
       <div className="flex items-end gap-2 relative shrink-0">
         <div className="flex-1 bg-card border border-border rounded-3xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-300 flex items-end gap-2">
           <textarea
@@ -202,7 +204,7 @@ export default function Home() {
                 handleSend();
               }
             }}
-            placeholder="Hãy ra lệnh"
+            placeholder="Hãy ra lệnh cho nhà hàng..."
             className="w-full max-h-32 min-h-[48px] bg-transparent resize-none outline-none py-3 px-4 text-foreground placeholder:text-muted-foreground"
             rows={1}
           />
@@ -239,16 +241,15 @@ export default function Home() {
         )}
       </div>
 
-      {/* Quick Commands */}
       <div className="bg-orange-50 rounded-t-2xl p-2 border-t-2 border-orange-200 shrink-0">
         <div className="grid grid-cols-3 gap-1">
           {[
-            { label: "Tạo mặt hàng", cmd: "tạo mặt hàng" },
-            { label: "Lên đơn mới", cmd: "lên đơn" },
-            { label: "Chốt đơn", cmd: "chốt đơn" },
-            { label: "Xem đơn hàng", cmd: "hiển thị đơn hàng" },
-            { label: "Xem mặt hàng", cmd: "hiển thị mặt hàng" },
-            { label: "Báo cáo hôm nay", cmd: "báo cáo hôm nay" },
+            { label: "Order bàn", cmd: "order bàn 5" },
+            { label: "Gửi bếp", cmd: "gửi bếp bàn" },
+            { label: "Thanh toán", cmd: "thanh toán bàn" },
+            { label: "Xem đơn", cmd: "hiển thị đơn hàng" },
+            { label: "Thêm món", cmd: "thêm món vào menu" },
+            { label: "Báo cáo", cmd: "báo cáo hôm nay" },
           ].map((item) => (
             <button
               key={item.cmd}

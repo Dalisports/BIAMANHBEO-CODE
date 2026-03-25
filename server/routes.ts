@@ -15,16 +15,15 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  // Products
   app.get(api.products.list.path, async (req, res) => {
-    const prods = await storage.getProducts();
+    const prods = await storage.getMenuItems();
     res.json(prods);
   });
 
   app.post(api.products.create.path, async (req, res) => {
     try {
       const input = api.products.create.input.parse(req.body);
-      const prod = await storage.createProduct(input);
+      const prod = await storage.createMenuItem(input);
       res.status(201).json(prod);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -40,8 +39,8 @@ export async function registerRoutes(
   app.patch("/api/products/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { name, price } = req.body;
-      const updated = await storage.updateProduct(id, { name, price });
+      const { name, price, categoryId, description, isAvailable } = req.body;
+      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, isAvailable });
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Failed to update product" });
@@ -51,14 +50,13 @@ export async function registerRoutes(
   app.delete("/api/products/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      await storage.deleteProduct(id);
+      await storage.deleteMenuItem(id);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete product" });
     }
   });
 
-  // Orders
   app.get(api.orders.list.path, async (req, res) => {
     const ords = await storage.getOrders();
     res.json(ords);
@@ -126,50 +124,147 @@ export async function registerRoutes(
     }
   });
 
-  // Chat processing
+  app.post("/api/orders/:id/pay", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { method } = req.body;
+      await storage.payOrder(id, method);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error paying" });
+    }
+  });
+
+  app.post("/api/orders/:id/send-to-kitchen", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const kitchenOrder = await storage.sendToKitchen(id);
+      res.status(201).json(kitchenOrder);
+    } catch (err) {
+      res.status(400).json({ message: "Error sending to kitchen" });
+    }
+  });
+
+  app.get("/api/kitchen", async (req, res) => {
+    const kitchenOrders = await storage.getKitchenOrders();
+    res.json(kitchenOrders);
+  });
+
+  app.post("/api/kitchen/:id/start", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.startKitchenOrder(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error starting" });
+    }
+  });
+
+  app.post("/api/kitchen/:id/complete", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.completeKitchenOrder(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error completing" });
+    }
+  });
+
+  app.get("/api/categories", async (req, res) => {
+    const cats = await storage.getCategories();
+    res.json(cats);
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const { name, displayOrder } = req.body;
+      const cat = await storage.createCategory({ name, displayOrder: displayOrder || 0 });
+      res.status(201).json(cat);
+    } catch (err) {
+      res.status(400).json({ message: "Error creating category" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.deleteCategory(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete category" });
+    }
+  });
+
+  app.get("/api/reports/daily", async (req, res) => {
+    try {
+      const report = await storage.getDailyReport();
+      res.json(report);
+    } catch (err) {
+      res.status(500).json({ message: "Error generating report" });
+    }
+  });
+
+  app.get("/api/reports/best-sellers", async (req, res) => {
+    try {
+      const report = await storage.getBestSellers();
+      res.json(report);
+    } catch (err) {
+      res.status(500).json({ message: "Error generating report" });
+    }
+  });
+
   app.post(api.chat.process.path, async (req, res) => {
     try {
       const { message } = api.chat.process.input.parse(req.body);
       
-      const products = await storage.getProducts();
+      const menuItems = await storage.getMenuItems();
+      const categories = await storage.getCategories();
       const pendingOrders = await storage.getPendingOrders();
+      const activeKitchenOrders = await storage.getActiveKitchenOrders();
       const allOrders = await storage.getOrders();
+      const dailyReport = await storage.getDailyReport();
       
-      // Calculate today's stats simply by all orders for now
-      const todayTotalOrders = allOrders.length;
-      const todayCompletedOrders = allOrders.filter(o => o.status === 'Complete');
-      const todayRevenue = todayCompletedOrders.reduce((acc, o) => acc + o.totalAmount, 0);
+      const systemPrompt = `Bạn là AI assistant quản lý NHÀ HÀNG F&B. 
+Bạn trò chuyện với nhân viên để:
+1. Tạo order cho khách (cần số bàn)
+2. Gửi món vào bếp
+3. Quản lý menu (món ăn, đồ uống)
+4. Thanh toán
+5. Xem báo cáo
 
-      const systemPrompt = `You are an AI assistant managing an order system via voice/text. 
-You extract user intentions and format them as JSON.
-Current Context:
-Products in DB: ${JSON.stringify(products)}
-Pending Orders: ${JSON.stringify(pendingOrders)}
-Today's Stats: Total Orders: ${todayTotalOrders}, Completed: ${todayCompletedOrders.length}, Revenue: ${todayRevenue}k
+Ngữ cảnh hiện tại:
+Menu: ${JSON.stringify(menuItems)}
+Danh mục: ${JSON.stringify(categories)}
+Order đang chờ: ${JSON.stringify(pendingOrders)}
+Order đang nấu ở bếp: ${JSON.stringify(activeKitchenOrders)}
+Báo cáo hôm nay: Doanh thu ${dailyReport.todayRevenue}đ, ${dailyReport.completedOrders} đơn đã thanh toán
 
-Based on the user's message, determine the action to take. 
-Always reply in Vietnamese.
-Your name is 'Trợ Lý AI' or 'SÓI int'.
-Available actions:
-1. CREATE_PRODUCT: If user wants to create a product. Return data: { name, price }. Ask for missing info (like price) if needed.
-2. CREATE_ORDER: If user wants to create an order. Return data: { customerName, address, phone, items: [{name, quantity, price}], totalAmount }. Ask for missing info if needed. (Calculate total amount based on product price).
-3. QUERY_ORDERS: If user asks about orders (e.g. how many pending). Return action QUERY_ORDERS, no data needed.
-4. COMPLETE_ORDER: If user wants to complete/chốt an order. Try to match the customer name or address. Return data: { ids: [order_id1, order_id2] }.
-5. UPDATE_ORDER: If user wants to update an order. Try to match the customer name or address. Return data: { id, updates: { items, totalAmount, address... } }. Ask for confirmation before updating if needed.
-6. REPORT: If user asks for a sales report.
-7. NONE: If no specific action, just converse naturally.
+Luôn trả lời bằng tiếng Việt.
+Tên của bạn: 'SÓI int' - Trợ lý Nhà hàng.
 
-Return a JSON object with this structure:
+Các hành động có thể thực hiện:
+1. CREATE_ORDER: Tạo order mới. Data: { tableNumber, items: [{menuItemId, name, quantity, price}], totalAmount, customerName?, phone?, notes? }
+2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId, tableNumber, items: [{name, quantity, notes?}] }
+3. PAY_ORDER: Thanh toán order. Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
+4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, categoryId, description? }
+5. QUERY: Hỏi thông tin. Không cần data.
+6. NONE: Chỉ trò chuyện, không hành động.
+
+Trả về JSON:
 {
-  "reply": "The response to speak/show to the user",
-  "action": "One of the action strings above or NONE",
-  "data": { ... } // Optional data payload for the action
+  "reply": "Tin nhắn trả lời cho nhân viên",
+  "action": "Hành động hoặc NONE",
+  "data": { ... }
 }
 
-Ensure the 'reply' perfectly matches the user's scenarios. For example, if they say 'chốt đơn chị thanh', reply 'đã chốt đơn hàng chị Thanh...' and return action COMPLETE_ORDER with the matched order id.
-If they say 'Lên Đơn', ask for information: 'mời bạn nhập thông tin đơn hàng'.
-If they say 'Tạo mặt hàng', ask for product info.
-All prices are typically referred to as 'k' (e.g., 45k = 45000). Convert internally to numbers if necessary.`;
+Ví dụ:
+- "Order bàn 5: 2 phần gà rán, 1 cocacola" -> CREATE_ORDER với tableNumber="5"
+- "Gửi bếp bàn 5" -> SEND_TO_KITCHEN
+- "Thanh toán bàn 3" -> PAY_ORDER
+- "Xem doanh thu hôm nay" -> QUERY với reply chứa thông tin dailyReport
+- "Thêm món trà sữa trân châu giá 35k" -> CREATE_MENU_ITEM
+
+Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-5.2",
@@ -187,27 +282,29 @@ All prices are typically referred to as 'k' (e.g., 45k = 45000). Convert interna
 
       const parsedResponse = JSON.parse(content);
       
-      // Auto-execute server-side actions if appropriate, or let frontend handle it
-      if (parsedResponse.action === 'CREATE_PRODUCT' && parsedResponse.data?.name && parsedResponse.data?.price) {
-        await storage.createProduct({
-          name: parsedResponse.data.name,
-          price: Number(parsedResponse.data.price)
-        });
-      } else if (parsedResponse.action === 'CREATE_ORDER' && parsedResponse.data?.customerName) {
+      if (parsedResponse.action === 'CREATE_ORDER' && parsedResponse.data?.tableNumber && parsedResponse.data?.items?.length > 0) {
         await storage.createOrder({
-          customerName: parsedResponse.data.customerName,
-          address: parsedResponse.data.address || "Unknown",
-          phone: parsedResponse.data.phone || "Unknown",
+          tableNumber: parsedResponse.data.tableNumber,
+          customerName: parsedResponse.data.customerName || null,
+          phone: parsedResponse.data.phone || null,
           totalAmount: parsedResponse.data.totalAmount || 0,
-          items: parsedResponse.data.items || [],
-          status: "Pending"
+          items: parsedResponse.data.items,
+          status: "Pending",
+          paymentStatus: "Unpaid",
+          notes: parsedResponse.data.notes || null,
         });
-      } else if (parsedResponse.action === 'COMPLETE_ORDER' && parsedResponse.data?.ids?.length > 0) {
-        await storage.completeOrders(parsedResponse.data.ids);
-      } else if (parsedResponse.action === 'UPDATE_ORDER' && parsedResponse.data?.id && parsedResponse.data?.updates) {
-        await storage.updateOrder(parsedResponse.data.id, {
-          ...parsedResponse.data.updates,
-          status: "Updated - Pending"
+      } else if (parsedResponse.action === 'SEND_TO_KITCHEN' && parsedResponse.data?.orderId) {
+        await storage.sendToKitchen(parsedResponse.data.orderId);
+      } else if (parsedResponse.action === 'PAY_ORDER' && parsedResponse.data?.orderId) {
+        await storage.payOrder(parsedResponse.data.orderId, parsedResponse.data.paymentMethod || "cash");
+      } else if (parsedResponse.action === 'CREATE_MENU_ITEM' && parsedResponse.data?.name && parsedResponse.data?.price) {
+        await storage.createMenuItem({
+          name: parsedResponse.data.name,
+          price: Number(parsedResponse.data.price),
+          categoryId: parsedResponse.data.categoryId || null,
+          description: parsedResponse.data.description || null,
+          isAvailable: true,
+          isActive: true,
         });
       }
 

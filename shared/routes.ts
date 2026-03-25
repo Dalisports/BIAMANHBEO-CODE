@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertProductSchema, insertOrderSchema, products, orders } from "./schema";
+import { insertMenuItemSchema, insertOrderSchema, menuItems, orders } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -20,24 +20,24 @@ export const api = {
       method: 'GET' as const,
       path: '/api/products' as const,
       responses: {
-        200: z.array(z.custom<typeof products.$inferSelect>()),
+        200: z.array(z.custom<typeof menuItems.$inferSelect>()),
       },
     },
     create: {
       method: 'POST' as const,
       path: '/api/products' as const,
-      input: insertProductSchema,
+      input: insertMenuItemSchema,
       responses: {
-        201: z.custom<typeof products.$inferSelect>(),
+        201: z.custom<typeof menuItems.$inferSelect>(),
         400: errorSchemas.validation,
       },
     },
     update: {
       method: 'PATCH' as const,
       path: '/api/products/:id' as const,
-      input: insertProductSchema.partial(),
+      input: insertMenuItemSchema.partial(),
       responses: {
-        200: z.custom<typeof products.$inferSelect>(),
+        200: z.custom<typeof menuItems.$inferSelect>(),
         400: errorSchemas.validation,
       },
     },
@@ -131,7 +131,7 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   return url;
 }
 
-export type ProductInput = z.infer<typeof api.products.create.input>;
+export type MenuItemInput = z.infer<typeof api.products.create.input>;
 export type OrderInput = z.infer<typeof api.orders.create.input>;
 export type OrderUpdateInput = z.infer<typeof api.orders.update.input>;
 export type ChatInput = z.infer<typeof api.chat.process.input>;

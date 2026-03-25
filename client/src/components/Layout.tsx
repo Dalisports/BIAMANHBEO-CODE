@@ -1,11 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, Package, Receipt, Sparkles } from "lucide-react";
+import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Trợ Lý AI", icon: MessageSquare },
-  { href: "/orders", label: "Đơn hàng", icon: Receipt },
-  { href: "/products", label: "Mặt hàng", icon: Package },
+  { href: "/orders", label: "Đơn Hàng", icon: Receipt },
+  { href: "/kitchen", label: "Bếp", icon: ChefHat },
+  { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
+  { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -13,15 +15,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-72 flex-col border-r border-border bg-card/50 backdrop-blur-xl sticky top-0 h-screen p-6">
         <div className="flex items-center gap-3 px-2 mb-12">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/30">
-            <Sparkles className="w-7 h-7 text-white" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+            <UtensilsCrossed className="w-7 h-7 text-white" />
           </div>
           <div className="flex items-baseline gap-1">
-            <h1 className="font-display text-3xl leading-none text-sky-500">SÓI</h1>
-            <h1 className="font-display text-3xl leading-none text-foreground">Agent</h1>
+            <h1 className="font-display text-3xl leading-none text-orange-500">SÓI</h1>
+            <h1 className="font-display text-3xl leading-none text-foreground">F&B</h1>
           </div>
         </div>
 
@@ -46,35 +47,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Desktop Instruction Card */}
         <div className="mt-auto pt-6 border-t border-border/50">
           <div className="bg-muted/30 rounded-2xl p-4 border border-border/30">
             <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Mẫu câu lệnh</h4>
             <div className="space-y-3 text-xs">
               <div className="flex flex-col gap-1">
-                <span className="font-bold text-primary/80">Nhập liệu:</span>
-                <span className="text-muted-foreground italic leading-relaxed">"Tạo mặt hàng Khoai tây lắc giá 45k"</span>
-                <span className="text-muted-foreground italic leading-relaxed">"Lên đơn chị Thanh - 2 khoai tây lắc - 582 trần lãm"</span>
+                <span className="font-bold text-primary/80">Order:</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Order bàn 5: 2 gà rán, 1 cocacola"</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-bold text-primary/80">Chốt đơn:</span>
-                <span className="text-muted-foreground italic leading-relaxed">"Chốt đơn chị Thanh trần lãm"</span>
+                <span className="font-bold text-primary/80">Gửi bếp:</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Gửi bếp bàn 5"</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-bold text-primary/80">Thanh toán:</span>
+                <span className="text-muted-foreground italic leading-relaxed">"Thanh toán bàn 3"</span>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0 relative">
-        {/* Mobile Header */}
         <header className="md:hidden flex items-center gap-3 p-4 bg-background/80 backdrop-blur-md sticky top-0 z-40 border-b border-border/50">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-md">
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+            <UtensilsCrossed className="w-5 h-5 text-white" />
           </div>
           <div className="flex items-baseline gap-1">
-            <h1 className="font-display text-xl leading-none text-sky-500">SÓI</h1>
-            <h1 className="font-display text-xl leading-none text-foreground">Agent</h1>
+            <h1 className="font-display text-xl leading-none text-orange-500">SÓI</h1>
+            <h1 className="font-display text-xl leading-none text-foreground">F&B</h1>
           </div>
         </header>
 
@@ -83,7 +84,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Bottom Nav - Mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-6 flex items-center justify-between z-50 pb-safe">
         {NAV_ITEMS.map((item) => {
           const isActive = location === item.href;
