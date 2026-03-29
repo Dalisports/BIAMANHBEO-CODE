@@ -1,17 +1,56 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMenuItems, useCategories, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem, useCreateCategory, useDeleteCategory } from "@/hooks/use-menu";
+import { useMenuItems, useCategories, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/use-menu";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Plus, Package, Loader2, Pencil, Trash2, Check, X, UtensilsCrossed, Wine, Coffee, IceCream, Salad } from "lucide-react";
+import { 
+  Plus, Minus, ShoppingCart, ChefHat, Beer, X, Check, Loader2, 
+  Flame, GlassWater, Pizza, IceCream, Salad, Coffee, Search
+} from "lucide-react";
 
 const CATEGORY_ICONS: Record<string, any> = {
-  default: UtensilsCrossed,
-  "Món ăn": UtensilsCrossed,
-  "Đồ uống": Wine,
+  default: Pizza,
+  "Món ăn": ChefHat,
+  "Đồ uống": Beer,
   "Cà phê": Coffee,
   "Tráng miệng": IceCream,
   "Khai vị": Salad,
+  "Bia": Beer,
+  "Nước": GlassWater,
+  "Đồ ăn": Pizza,
 };
+
+const CATEGORY_COLORS: Record<string, string> = {
+  default: "bg-amber-100 text-amber-800",
+  "Món ăn": "bg-orange-100 text-orange-800",
+  "Đồ uống": "bg-blue-100 text-blue-800",
+  "Cà phê": "bg-amber-100 text-amber-800",
+  "Tráng miệng": "bg-pink-100 text-pink-800",
+  "Khai vị": "bg-green-100 text-green-800",
+  "Bia": "bg-yellow-100 text-yellow-800",
+  "Nước": "bg-cyan-100 text-cyan-800",
+  "Đồ ăn": "bg-red-100 text-red-800",
+};
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+const PLACEHOLDER_IMAGES = [
+  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1559314809-0d155014e29e?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&h=300&fit=crop",
+];
 
 export default function Menu() {
   const { data: menuItems, isLoading } = useMenuItems();
@@ -19,311 +58,467 @@ export default function Menu() {
   const createMenuItem = useCreateMenuItem();
   const updateMenuItem = useUpdateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
-  const createCategory = useCreateCategory();
-  const deleteCategory = useDeleteCategory();
   
-  const [showDialog, setShowDialog] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editPrice, setEditPrice] = useState("");
-  const [editCategoryId, setEditCategoryId] = useState<number | undefined>();
-  const [editDescription, setEditDescription] = useState("");
   const [filterCategory, setFilterCategory] = useState<number | null>(null);
-  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [showCart, setShowCart] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [newItem, setNewItem] = useState({
+    name: "",
+    price: "",
+    categoryId: undefined as number | undefined,
+    description: "",
+  });
 
-  const filteredItems = filterCategory 
-    ? menuItems?.filter(item => item.categoryId === filterCategory)
-    : menuItems;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editName || !editPrice) return;
-    
-    createMenuItem.mutate(
-      { name: editName, price: parseInt(editPrice, 10), categoryId: editCategoryId, description: editDescription },
-      { onSuccess: () => {
-        setShowDialog(false);
-        resetForm();
-      }}
-    );
-  };
-
-  const handleEdit = (item: any) => {
-    setEditingId(item.id);
-    setEditName(item.name);
-    setEditPrice(item.price.toString());
-    setEditCategoryId(item.categoryId || undefined);
-    setEditDescription(item.description || "");
-  };
-
-  const handleSaveEdit = () => {
-    if (!editingId || !editName || !editPrice) return;
-    updateMenuItem.mutate(
-      { id: editingId, name: editName, price: parseInt(editPrice, 10), categoryId: editCategoryId, description: editDescription },
-      { onSuccess: () => resetForm() }
-    );
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Bạn có chắc muốn xóa món này?")) {
-      deleteMenuItem.mutate(id);
-    }
-  };
-
-  const handleToggleAvailability = (item: any) => {
-    updateMenuItem.mutate({ id: item.id, isAvailable: !item.isAvailable });
-  };
-
-  const handleCreateCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName.trim()) return;
-    createCategory.mutate(
-      { name: newCategoryName, displayOrder: (categories?.length || 0) + 1 },
-      { onSuccess: () => {
-        setShowCategoryDialog(false);
-        setNewCategoryName("");
-      }}
-    );
-  };
-
-  const handleDeleteCategory = (id: number) => {
-    if (confirm("Xóa danh mục này?")) {
-      deleteCategory.mutate(id);
-    }
-  };
-
-  const resetForm = () => {
-    setEditingId(null);
-    setEditName("");
-    setEditPrice("");
-    setEditCategoryId(undefined);
-    setEditDescription("");
-    setShowDialog(false);
-  };
+  const filteredItems = menuItems?.filter(item => {
+    const matchesCategory = filterCategory === null || item.categoryId === filterCategory;
+    const matchesSearch = searchQuery === "" || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch && item.isActive;
+  });
 
   const getCategoryName = (categoryId: number | null) => {
     if (!categoryId) return "Không phân loại";
     return categories?.find(c => c.id === categoryId)?.name || "Không phân loại";
   };
 
+  const getCategoryColor = (name: string) => {
+    return CATEGORY_COLORS[name] || CATEGORY_COLORS.default;
+  };
+
+  const addToCart = (item: any) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        return prev.map(i => 
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prev, {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1,
+        image: item.image,
+      }];
+    });
+  };
+
+  const updateQuantity = (id: number, delta: number) => {
+    setCart(prev => {
+      return prev.map(item => {
+        if (item.id === id) {
+          const newQty = item.quantity + delta;
+          if (newQty <= 0) return null;
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      }).filter(Boolean) as CartItem[];
+    });
+  };
+
+  const removeFromCart = (id: number) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleAddItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItem.name || !newItem.price) return;
+    
+    createMenuItem.mutate(
+      { 
+        name: newItem.name, 
+        price: parseInt(newItem.price, 10), 
+        categoryId: newItem.categoryId, 
+        description: newItem.description,
+      },
+      { onSuccess: () => {
+        setShowAddDialog(false);
+        setNewItem({ name: "", price: "", categoryId: undefined, description: "" });
+      }}
+    );
+  };
+
+  const getPlaceholderImage = (index: number) => {
+    return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+  };
+
   return (
-    <div className="h-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-3xl font-sans font-bold text-foreground">Thực Đơn</h2>
-          <p className="text-muted-foreground mt-1 text-sm">Quản lý món ăn và đồ uống</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowCategoryDialog(true)}
-            className="px-4 py-2 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            + Danh mục
-          </button>
-          <button
-            onClick={() => setShowDialog(true)}
-            className="flex items-center gap-2 px-6 py-2 rounded-xl font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
-          >
-            <Plus className="w-5 h-5" />
-            Thêm Món
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => setFilterCategory(null)}
-          className={cn(
-            "px-4 py-2 rounded-xl text-sm font-semibold transition-all",
-            filterCategory === null 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-secondary text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Tất cả ({menuItems?.length || 0})
-        </button>
-        {categories?.map((cat) => {
-          const count = menuItems?.filter(m => m.categoryId === cat.id).length || 0;
-          return (
+    <div className="min-h-screen bg-gradient-to-b from-amber-50/50 to-background">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <Beer className="w-8 h-8 text-black" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+                  <span className="text-amber-500">BIA MẠNH BÉO</span>
+                </h1>
+                <p className="text-xs text-muted-foreground font-medium">Thực Đơn Nhà Hàng</p>
+              </div>
+            </div>
+            
             <button
-              key={cat.id}
-              onClick={() => setFilterCategory(cat.id)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2",
-                filterCategory === cat.id 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              )}
+              onClick={() => setShowCart(true)}
+              className="relative p-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
             >
-              {cat.name}
-              <span className="text-xs opacity-70">({count})</span>
+              <ShoppingCart className="w-6 h-6" />
+              {cartCount > 0 && (
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-black text-amber-500 text-xs font-bold flex items-center justify-center"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
             </button>
-          );
-        })}
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm món..."
+              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-secondary/50 border-2 border-transparent focus:border-amber-400 transition-all outline-none"
+            />
+          </div>
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-        </div>
-      ) : !filteredItems?.length ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center px-4 bg-card rounded-3xl border border-border border-dashed">
-          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground mb-4">
-            <Package className="w-8 h-8" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">Chưa có món nào</h3>
-          <p className="text-muted-foreground max-w-sm">Hãy thêm món mới vào thực đơn</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
+      {/* Categories */}
+      <div className="sticky top-[140px] z-30 bg-background/95 backdrop-blur-md border-b border-border/50 py-3">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setFilterCategory(null)}
               className={cn(
-                "bg-card rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg",
-                item.isAvailable ? "border-border" : "border-red-200 opacity-60"
+                "flex-shrink-0 px-5 py-2.5 rounded-full font-bold text-sm transition-all",
+                filterCategory === null 
+                  ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20" 
+                  : "bg-secondary text-muted-foreground hover:bg-secondary/80"
               )}
             >
-              {editingId === item.id ? (
-                <div className="p-4 space-y-3">
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background"
-                    placeholder="Tên món"
-                  />
-                  <input
-                    type="number"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background"
-                    placeholder="Giá (VNĐ)"
-                  />
-                  <select
-                    value={editCategoryId || ""}
-                    onChange={(e) => setEditCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background"
-                  >
-                    <option value="">Chọn danh mục</option>
-                    {categories?.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={resetForm}
-                      className="flex-1 px-3 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      onClick={handleSaveEdit}
-                      disabled={updateMenuItem.isPending}
-                      className="flex-1 px-3 py-2 rounded-lg bg-primary text-primary-foreground"
-                    >
-                      Lưu
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-bold text-lg">{item.name}</h3>
-                        <p className="text-xs text-muted-foreground">{getCategoryName(item.categoryId)}</p>
-                      </div>
-                      <span className="text-lg font-bold text-accent">{formatCurrency(item.price)}</span>
-                    </div>
-                    {item.description && (
-                      <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleToggleAvailability(item)}
-                        className={cn(
-                          "px-2 py-1 rounded text-xs font-semibold",
-                          item.isAvailable 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-red-100 text-red-700"
-                        )}
-                      >
-                        {item.isAvailable ? "Còn món" : "Hết món"}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex border-t border-border">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="flex-1 py-2 text-sm text-muted-foreground hover:bg-secondary transition-colors flex items-center justify-center gap-1"
-                    >
-                      <Pencil className="w-4 h-4" /> Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="flex-1 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-1"
-                    >
-                      <Trash2 className="w-4 h-4" /> Xóa
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          ))}
+              Tất cả
+            </button>
+            {categories?.map((cat) => {
+              const count = menuItems?.filter(m => m.categoryId === cat.id && m.isActive).length || 0;
+              const IconComponent = CATEGORY_ICONS[cat.name] || CATEGORY_ICONS.default;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilterCategory(cat.id)}
+                  className={cn(
+                    "flex-shrink-0 px-5 py-2.5 rounded-full font-bold text-sm transition-all flex items-center gap-2",
+                    filterCategory === cat.id 
+                      ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20" 
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  )}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {cat.name}
+                  <span className="text-xs opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
+      </div>
 
+      {/* Menu Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+          </div>
+        ) : !filteredItems?.length ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center mb-6">
+              <Beer className="w-12 h-12 text-amber-500" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Chưa có món nào</h3>
+            <p className="text-muted-foreground mb-6">Hãy thêm món mới vào thực đơn</p>
+            <button
+              onClick={() => setShowAddDialog(true)}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold shadow-lg shadow-amber-500/30"
+            >
+              + Thêm Món Mới
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {filteredItems.map((item, index) => {
+              const cartItem = cart.find(c => c.id === item.id);
+              const quantity = cartItem?.quantity || 0;
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="group bg-card rounded-3xl overflow-hidden border-2 border-border shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-amber-100 to-yellow-100">
+                    {item.image ? (
+                      <img 
+                        src={item.image} 
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <img 
+                        src={getPlaceholderImage(index)}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    )}
+                    
+                    {/* Category badge */}
+                    <div className={cn(
+                      "absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg",
+                      getCategoryColor(getCategoryName(item.categoryId))
+                    )}>
+                      {getCategoryName(item.categoryId)}
+                    </div>
+
+                    {/* Unavailable overlay */}
+                    {!item.isAvailable && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">Hết món</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg mb-1 line-clamp-1">{item.name}</h3>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl font-black text-amber-600">
+                        {formatCurrency(item.price)}
+                      </span>
+
+                      {/* Quantity controls */}
+                      {item.isAvailable ? (
+                        <div className="flex items-center gap-2">
+                          {quantity > 0 ? (
+                            <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full p-1">
+                              <button
+                                onClick={() => updateQuantity(item.id, -1)}
+                                className="w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center transition-colors"
+                              >
+                                <Minus className="w-4 h-4 text-black" />
+                              </button>
+                              <span className="w-8 text-center font-bold text-black">{quantity}</span>
+                              <button
+                                onClick={() => addToCart(item)}
+                                className="w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center transition-colors"
+                              >
+                                <Plus className="w-4 h-4 text-black" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => addToCart(item)}
+                              className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black flex items-center justify-center shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* Add new item card */}
+            <button
+              onClick={() => setShowAddDialog(true)}
+              className="aspect-[4/3] rounded-3xl border-2 border-dashed border-border hover:border-amber-400 bg-secondary/30 flex flex-col items-center justify-center gap-3 transition-all hover:bg-amber-50/50"
+            >
+              <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-amber-600" />
+              </div>
+              <span className="font-bold text-muted-foreground">Thêm món mới</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Cart Sidebar */}
       <AnimatePresence>
-        {showDialog && (
+        {showCart && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
-            onClick={() => setShowDialog(false)}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowCart(false)}
+          >
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-background shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="p-6 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black">
+                      <span className="text-amber-500">GIỎ HÀNG</span>
+                    </h2>
+                    <button
+                      onClick={() => setShowCart(false)}
+                      className="p-2 rounded-full hover:bg-secondary transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Items */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {cart.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <ShoppingCart className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                      <p className="text-muted-foreground">Giỏ hàng trống</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {cart.map((item) => (
+                        <div key={item.id} className="flex items-center gap-4 p-4 bg-card rounded-2xl border-2 border-border">
+                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100 overflow-hidden flex-shrink-0">
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Beer className="w-8 h-8 text-amber-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold truncate">{item.name}</h4>
+                            <p className="text-amber-600 font-bold">{formatCurrency(item.price)}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-colors"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                            <span className="w-8 text-center font-bold">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, 1)}
+                              className="w-8 h-8 rounded-full bg-amber-400 hover:bg-amber-500 text-black flex items-center justify-center transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                {cart.length > 0 && (
+                  <div className="p-6 border-t border-border bg-gradient-to-r from-amber-50 to-yellow-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-lg font-bold text-muted-foreground">Tổng cộng:</span>
+                      <span className="text-3xl font-black text-amber-600">{formatCurrency(cartTotal)}</span>
+                    </div>
+                    <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all">
+                      ĐẶT HÀNG NGAY
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Item Dialog */}
+      <AnimatePresence>
+        {showAddDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAddDialog(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-border"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-md rounded-3xl p-6 shadow-2xl border-2 border-amber-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-2xl font-bold mb-6">Thêm Món Mới</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-black text-amber-500">THÊM MÓN MỚI</h3>
+                <button
+                  onClick={() => setShowAddDialog(false)}
+                  className="p-2 rounded-full hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddItem} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Tên món</label>
+                  <label className="block text-sm font-bold mb-2">Tên món</label>
                   <input
                     autoFocus
                     type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-                    placeholder="Ví dụ: Gà rán giòn"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                    placeholder="VD: Gà rán giòn"
                     required
                   />
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Giá (VNĐ)</label>
+                  <label className="block text-sm font-bold mb-2">Giá (VNĐ)</label>
                   <input
                     type="number"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-                    placeholder="Ví dụ: 89000"
+                    value={newItem.price}
+                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                    placeholder="VD: 89000"
                     required
                   />
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Danh mục</label>
+                  <label className="block text-sm font-bold mb-2">Danh mục</label>
                   <select
-                    value={editCategoryId || ""}
-                    onChange={(e) => setEditCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-primary transition-all"
+                    value={newItem.categoryId || ""}
+                    onChange={(e) => setNewItem({ ...newItem, categoryId: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
                   >
                     <option value="">Chọn danh mục</option>
                     {categories?.map((cat) => (
@@ -331,103 +526,35 @@ export default function Menu() {
                     ))}
                   </select>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Mô tả (tùy chọn)</label>
+                  <label className="block text-sm font-bold mb-2">Mô tả</label>
                   <textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-primary transition-all resize-none"
+                    value={newItem.description}
+                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none resize-none"
                     rows={2}
                     placeholder="Mô tả món ăn..."
                   />
                 </div>
-                <div className="flex gap-3 mt-6">
+
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowDialog(false)}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80"
+                    onClick={() => setShowAddDialog(false)}
+                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
                     disabled={createMenuItem.isPending}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold bg-primary text-primary-foreground disabled:opacity-50"
+                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-black disabled:opacity-50 transition-all"
                   >
                     {createMenuItem.isPending ? "Đang thêm..." : "Thêm món"}
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showCategoryDialog && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
-            onClick={() => setShowCategoryDialog(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-card w-full max-w-md rounded-3xl p-6 shadow-2xl border border-border"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-2xl font-bold mb-6">Thêm Danh Mục Mới</h3>
-              <form onSubmit={handleCreateCategory} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Tên danh mục</label>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-                    placeholder="Ví dụ: Món ăn, Đồ uống..."
-                    required
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowCategoryDialog(false)}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={createCategory.isPending}
-                    className="flex-1 px-4 py-3 rounded-xl font-semibold bg-primary text-primary-foreground disabled:opacity-50"
-                  >
-                    {createCategory.isPending ? "Đang thêm..." : "Thêm"}
-                  </button>
-                </div>
-              </form>
-              
-              {categories && categories.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h4 className="text-sm font-semibold mb-3">Danh mục hiện có</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <div key={cat.id} className="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary text-sm">
-                        {cat.name}
-                        <button
-                          onClick={() => handleDeleteCategory(cat.id)}
-                          className="ml-1 text-muted-foreground hover:text-red-500"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </motion.div>
           </motion.div>
         )}

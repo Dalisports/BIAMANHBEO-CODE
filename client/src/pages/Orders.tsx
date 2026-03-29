@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useOrders, useSendToKitchen, usePayOrder, useDeleteOrder } from "@/hooks/use-orders";
+import { useOrders, useSendToKitchen, usePayOrder, useDeleteOrder, usePaymentSettings, useUpdatePaymentSetting } from "@/hooks/use-orders";
 import { formatCurrency, cn } from "@/lib/utils";
 import { 
   CheckCircle2, Clock, Loader2, Receipt, Trash2, ChevronDown, 
-  Send, CreditCard, Users, Phone, StickyNote, AlertCircle
+  Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy
 } from "lucide-react";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -23,13 +23,72 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function Orders() {
   const { data: orders, isLoading } = useOrders();
+  const { data: paymentSettings } = usePaymentSettings();
   const sendToKitchen = useSendToKitchen();
   const payOrder = usePayOrder();
   const deleteOrder = useDeleteOrder();
+  const updatePaymentSetting = useUpdatePaymentSetting();
   const [filter, setFilter] = useState<string>("All");
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [editingSetting, setEditingSetting] = useState<string | null>(null);
+  const [settingForm, setSettingForm] = useState({
+    label: "",
+    icon: "",
+    qrImageUrl: "",
+    accountName: "",
+    accountNumber: "",
+    bankName: "",
+    additionalInfo: "",
+  });
+
+  const getDefaultMethods = () => [
+    { id: "cash", label: "Tiền mặt", icon: "💵" },
+    { id: "transfer", label: "Chuyển khoản", icon: "🏦" },
+    { id: "vnpay", label: "VNPay", icon: "💳" },
+    { id: "momo", label: "MoMo", icon: "📱" },
+  ];
+
+  const getMethodConfig = (methodId: string) => {
+    const defaults = getDefaultMethods().find(m => m.id === methodId);
+    const custom = paymentSettings?.find(p => p.method === methodId);
+    return {
+      id: methodId,
+      label: custom?.label || defaults?.label || methodId,
+      icon: custom?.icon || defaults?.icon || "💳",
+      qrImageUrl: custom?.qrImageUrl || null,
+      accountName: custom?.accountName || null,
+      accountNumber: custom?.accountNumber || null,
+      bankName: custom?.bankName || null,
+      additionalInfo: custom?.additionalInfo || null,
+    };
+  };
+
+  const openSettings = (method: string) => {
+    const config = getMethodConfig(method);
+    setSettingForm({
+      label: config.label,
+      icon: config.icon,
+      qrImageUrl: config.qrImageUrl || "",
+      accountName: config.accountName || "",
+      accountNumber: config.accountNumber || "",
+      bankName: config.bankName || "",
+      additionalInfo: config.additionalInfo || "",
+    });
+    setEditingSetting(method);
+  };
+
+  const saveSettings = () => {
+    if (editingSetting) {
+      updatePaymentSetting.mutate({
+        method: editingSetting,
+        ...settingForm,
+      });
+      setEditingSetting(null);
+    }
+  };
 
   const filteredOrders = orders?.filter(o => 
     filter === "All" ? true : o.status === filter || (filter === "Active" && o.status !== "Complete")
@@ -91,6 +150,13 @@ export default function Orders() {
             {f === "All" ? "Tất cả" : f === "Active" ? "Đang xử lý" : STATUS_LABELS[f] || f}
           </button>
         ))}
+        <button
+          onClick={() => setShowSettingsModal(true)}
+          className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          Cài đặt thanh toán
+        </button>
       </div>
 
       {isLoading ? (
@@ -261,27 +327,64 @@ export default function Orders() {
               <h3 className="text-2xl font-bold mb-6">Chọn phương thức thanh toán</h3>
               
               <div className="grid grid-cols-2 gap-3 mb-6">
-                {[
-                  { id: "cash", label: "Tiền mặt", icon: "💵" },
-                  { id: "transfer", label: "Chuyển khoản", icon: "🏦" },
-                  { id: "vnpay", label: "VNPay", icon: "💳" },
-                  { id: "momo", label: "MoMo", icon: "📱" },
-                ].map((method) => (
-                  <button
-                    key={method.id}
-                    onClick={() => setPaymentMethod(method.id)}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all text-left",
-                      paymentMethod === method.id 
-                        ? "border-primary bg-primary/5" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <span className="text-2xl">{method.icon}</span>
-                    <span className="block font-semibold mt-1">{method.label}</span>
-                  </button>
-                ))}
+                {getDefaultMethods().map((defaultMethod) => {
+                  const config = getMethodConfig(defaultMethod.id);
+                  return (
+                    <button
+                      key={defaultMethod.id}
+                      onClick={() => setPaymentMethod(defaultMethod.id)}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left relative",
+                        paymentMethod === defaultMethod.id 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <span className="text-2xl">{config.icon}</span>
+                      <span className="block font-semibold mt-1">{config.label}</span>
+                      {config.qrImageUrl && paymentMethod === defaultMethod.id && (
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
+
+              {paymentMethod !== "cash" && (() => {
+                const config = getMethodConfig(paymentMethod);
+                return (
+                  <div className="mb-6 p-4 bg-secondary/50 rounded-xl">
+                    {config.qrImageUrl ? (
+                      <div className="text-center">
+                        <p className="text-sm font-semibold mb-3 text-muted-foreground">Quét mã QR</p>
+                        <img 
+                          src={config.qrImageUrl} 
+                          alt="QR Code" 
+                          className="max-h-48 mx-auto rounded-lg"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground text-sm">
+                        <p>Chưa cài đặt mã QR cho phương thức này.</p>
+                        <button
+                          onClick={() => { setShowPayModal(null); setShowSettingsModal(true); openSettings(paymentMethod); }}
+                          className="mt-2 text-primary underline text-xs"
+                        >
+                          Cài đặt ngay
+                        </button>
+                      </div>
+                    )}
+                    {config.accountName && (
+                      <div className="mt-3 text-sm space-y-1">
+                        <p className="font-semibold">{config.accountName}</p>
+                        {config.accountNumber && <p>Số tài khoản: {config.accountNumber}</p>}
+                        {config.bankName && <p>Ngân hàng: {config.bankName}</p>}
+                        {config.additionalInfo && <p className="text-muted-foreground">{config.additionalInfo}</p>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex gap-3">
                 <button
@@ -298,6 +401,173 @@ export default function Orders() {
                   {payOrder.isPending ? "Đang xử lý..." : "Xác nhận thanh toán"}
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSettingsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+            onClick={() => setShowSettingsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-border max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold">Cài đặt thanh toán</h3>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {getDefaultMethods().map((method) => {
+                  const config = getMethodConfig(method.id);
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => openSettings(method.id)}
+                      className={cn(
+                        "p-4 rounded-xl border-2 transition-all text-left relative",
+                        editingSetting === method.id 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <span className="text-2xl">{config.icon}</span>
+                      <span className="block font-semibold mt-1">{config.label}</span>
+                      {(config.qrImageUrl || config.accountNumber) && (
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {editingSetting && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">{getMethodConfig(editingSetting).icon}</span>
+                    <h4 className="font-bold">Cài đặt: {getMethodConfig(editingSetting).label}</h4>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Tên hiển thị</label>
+                    <input
+                      type="text"
+                      value={settingForm.label}
+                      onChange={(e) => setSettingForm({ ...settingForm, label: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: Chuyển khoản MB Bank"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Icon (emoji)</label>
+                    <input
+                      type="text"
+                      value={settingForm.icon}
+                      onChange={(e) => setSettingForm({ ...settingForm, icon: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: 🏦"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">URL Ảnh QR</label>
+                    <input
+                      type="text"
+                      value={settingForm.qrImageUrl}
+                      onChange={(e) => setSettingForm({ ...settingForm, qrImageUrl: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="https://..."
+                    />
+                    {settingForm.qrImageUrl && (
+                      <div className="mt-2">
+                        <img src={settingForm.qrImageUrl} alt="Preview" className="h-24 rounded-lg border" onError={(e) => e.currentTarget.style.display = 'none'} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Tên tài khoản</label>
+                      <input
+                        type="text"
+                        value={settingForm.accountName}
+                        onChange={(e) => setSettingForm({ ...settingForm, accountName: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                        placeholder="VD: NGUYEN VAN A"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Số tài khoản</label>
+                      <input
+                        type="text"
+                        value={settingForm.accountNumber}
+                        onChange={(e) => setSettingForm({ ...settingForm, accountNumber: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                        placeholder="VD: 1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Tên ngân hàng</label>
+                    <input
+                      type="text"
+                      value={settingForm.bankName}
+                      onChange={(e) => setSettingForm({ ...settingForm, bankName: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: MB Bank"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Thông tin thêm</label>
+                    <textarea
+                      value={settingForm.additionalInfo}
+                      onChange={(e) => setSettingForm({ ...settingForm, additionalInfo: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background resize-none h-20"
+                      placeholder="VD: Nội dung chuyển khoản: Thanh toan ban..."
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setEditingSetting(null)}
+                      className="flex-1 px-4 py-3 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={saveSettings}
+                      disabled={updatePaymentSetting.isPending}
+                      className="flex-1 px-4 py-3 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {updatePaymentSetting.isPending ? "Đang lưu..." : "Lưu"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!editingSetting && (
+                <p className="text-center text-muted-foreground text-sm">
+                  Chọn phương thức thanh toán để cài đặt QR và thông tin tài khoản
+                </p>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -243,3 +243,48 @@ export function useBestSellers() {
     },
   });
 }
+
+export type PaymentSetting = {
+  id: number;
+  method: string;
+  label: string | null;
+  icon: string | null;
+  qrImageUrl: string | null;
+  accountName: string | null;
+  accountNumber: string | null;
+  bankName: string | null;
+  additionalInfo: string | null;
+  isEnabled: boolean | null;
+};
+
+export function usePaymentSettings() {
+  return useQuery({
+    queryKey: ["/api/payment-settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/payment-settings", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch payment settings");
+      return res.json() as Promise<PaymentSetting[]>;
+    },
+  });
+}
+
+export function useUpdatePaymentSetting() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ method, ...data }: { method: string } & Partial<PaymentSetting>) => {
+      const res = await fetch(`/api/payment-settings/${method}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to update payment setting");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payment-settings"] });
+    },
+  });
+}

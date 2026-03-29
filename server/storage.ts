@@ -4,12 +4,15 @@ import {
   orders, 
   categories,
   kitchenOrders,
+  paymentSettings,
   type InsertMenuItem,
   type InsertOrder,
   type InsertCategory,
   type InsertKitchenOrder,
+  type InsertPaymentSetting,
   type Order,
-  type KitchenOrder
+  type KitchenOrder,
+  type PaymentSetting
 } from "@shared/schema";
 import { eq, inArray, and, desc } from "drizzle-orm";
 import { startOfDay, endOfDay } from "date-fns";
@@ -42,6 +45,9 @@ export interface IStorage {
   
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
+
+  getPaymentSettings(): Promise<PaymentSetting[]>;
+  updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>): Promise<PaymentSetting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -235,6 +241,25 @@ export class DatabaseStorage implements IStorage {
       .map(([name, totalQuantity]) => ({ name, totalQuantity }))
       .sort((a, b) => b.totalQuantity - a.totalQuantity)
       .slice(0, 10);
+  }
+
+  async getPaymentSettings() {
+    return await db.select().from(paymentSettings);
+  }
+
+  async updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>) {
+    const [updated] = await db.update(paymentSettings)
+      .set(data)
+      .where(eq(paymentSettings.method, method))
+      .returning();
+    
+    if (!updated) {
+      const [created] = await db.insert(paymentSettings)
+        .values({ method, ...data })
+        .returning();
+      return created;
+    }
+    return updated;
   }
 }
 

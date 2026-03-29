@@ -50,10 +50,24 @@ export const kitchenOrders = pgTable("kitchen_orders", {
   notes: text("notes"),
 });
 
+export const paymentSettings = pgTable("payment_settings", {
+  id: serial("id").primaryKey(),
+  method: text("method").notNull().unique(),
+  label: text("label"),
+  icon: text("icon"),
+  qrImageUrl: text("qr_image_url"),
+  accountName: text("account_name"),
+  accountNumber: text("account_number"),
+  bankName: text("bank_name"),
+  additionalInfo: text("additional_info"),
+  isEnabled: boolean("is_enabled").default(true),
+});
+
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
 export const insertKitchenOrderSchema = createInsertSchema(kitchenOrders).omit({ id: true, sentAt: true, startedAt: true, completedAt: true });
+export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({ id: true });
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
@@ -80,3 +94,6 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 
 export type KitchenOrder = typeof kitchenOrders.$inferSelect;
 export type InsertKitchenOrder = z.infer<typeof insertKitchenOrderSchema>;
+
+export type PaymentSetting = typeof paymentSettings.$inferSelect;
+export type InsertPaymentSetting = z.infer<typeof insertPaymentSettingSchema>;

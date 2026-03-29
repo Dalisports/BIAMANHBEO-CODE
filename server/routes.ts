@@ -71,7 +71,12 @@ export async function registerRoutes(
   app.post(api.orders.create.path, async (req, res) => {
     try {
       const input = api.orders.create.input.parse(req.body);
-      const ord = await storage.createOrder(input);
+      const tableNum = input.tableNumber;
+      const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
+      const ord = await storage.createOrder({
+        ...input,
+        customerName: input.customerName || customerName,
+      });
       res.status(201).json(ord);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -121,6 +126,25 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete order" });
+    }
+  });
+
+  app.get("/api/payment-settings", async (req, res) => {
+    const settings = await storage.getPaymentSettings();
+    res.json(settings);
+  });
+
+  app.patch("/api/payment-settings/:method", async (req, res) => {
+    try {
+      const method = req.params.method;
+      const { label, icon, qrImageUrl, accountName, accountNumber, bankName, additionalInfo, isEnabled } = req.body;
+      const updated = await storage.updatePaymentSetting(method, {
+        label, icon, qrImageUrl, accountName, accountNumber, bankName, additionalInfo,
+        ...(isEnabled !== undefined ? { isEnabled } : {})
+      });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update payment setting" });
     }
   });
 
@@ -247,8 +271,9 @@ Các hành động có thể thực hiện:
 2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId, tableNumber, items: [{name, quantity, notes?}] }
 3. PAY_ORDER: Thanh toán order. Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
 4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, categoryId, description? }
-5. QUERY: Hỏi thông tin. Không cần data.
-6. NONE: Chỉ trò chuyện, không hành động.
+5. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
+6. QUERY: Hỏi thông tin. Không cần data.
+7. NONE: Chỉ trò chuyện, không hành động.
 
 Trả về JSON:
 {
@@ -283,9 +308,12 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
       const parsedResponse = JSON.parse(content);
       
       if (parsedResponse.action === 'CREATE_ORDER' && parsedResponse.data?.tableNumber && parsedResponse.data?.items?.length > 0) {
+        const tableNum = parsedResponse.data.tableNumber;
+        const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
+        
         await storage.createOrder({
-          tableNumber: parsedResponse.data.tableNumber,
-          customerName: parsedResponse.data.customerName || null,
+          tableNumber: tableNum,
+          customerName: parsedResponse.data.customerName || customerName,
           phone: parsedResponse.data.phone || null,
           totalAmount: parsedResponse.data.totalAmount || 0,
           items: parsedResponse.data.items,
@@ -306,6 +334,8 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           isAvailable: true,
           isActive: true,
         });
+      } else if (parsedResponse.action === 'DELETE_ORDER' && parsedResponse.data?.orderId) {
+        await storage.deleteOrder(parsedResponse.data.orderId);
       }
 
       res.json(parsedResponse);
