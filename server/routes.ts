@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
+import { broadcast } from "./websocket";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -77,6 +78,7 @@ export async function registerRoutes(
         ...input,
         customerName: input.customerName || customerName,
       });
+      broadcast({ type: "ORDER_CREATED", data: ord });
       res.status(201).json(ord);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -123,6 +125,7 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       await storage.deleteOrder(id);
+      broadcast({ type: "ORDER_DELETED", data: { id } });
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete order" });
@@ -163,6 +166,7 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       const kitchenOrder = await storage.sendToKitchen(id);
+      broadcast({ type: "KITCHEN_ORDER_CREATED", data: kitchenOrder });
       res.status(201).json(kitchenOrder);
     } catch (err) {
       res.status(400).json({ message: "Error sending to kitchen" });
@@ -178,6 +182,8 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       await storage.startKitchenOrder(id);
+      const order = await storage.getKitchenOrder(id);
+      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error starting" });
@@ -188,9 +194,37 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       await storage.completeKitchenOrder(id);
+      const order = await storage.getKitchenOrder(id);
+      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error completing" });
+    }
+  });
+
+  app.post("/api/kitchen/:id/start-item", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { itemName } = req.body;
+      await storage.startKitchenItem(id, itemName);
+      const order = await storage.getKitchenOrder(id);
+      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error starting item" });
+    }
+  });
+
+  app.post("/api/kitchen/:id/complete-item", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { itemName } = req.body;
+      await storage.completeKitchenItem(id, itemName);
+      const order = await storage.getKitchenOrder(id);
+      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error completing item" });
     }
   });
 
@@ -242,11 +276,12 @@ export async function registerRoutes(
       const { message } = api.chat.process.input.parse(req.body);
       
       const menuItems = await storage.getMenuItems();
-      const categories = await storage.getCategories();
       const pendingOrders = await storage.getPendingOrders();
       const activeKitchenOrders = await storage.getActiveKitchenOrders();
       const allOrders = await storage.getOrders();
       const dailyReport = await storage.getDailyReport();
+      
+      const nonPendingOrders = allOrders.filter(o => o.status !== "Pending");
       
       const systemPrompt = `Bạn là AI assistant quản lý NHÀ HÀNG F&B. 
 Bạn trò chuyện với nhân viên để:
@@ -258,19 +293,29 @@ Bạn trò chuyện với nhân viên để:
 
 Ngữ cảnh hiện tại:
 Menu: ${JSON.stringify(menuItems)}
-Danh mục: ${JSON.stringify(categories)}
-Order đang chờ: ${JSON.stringify(pendingOrders)}
+Tất cả đơn hàng: ${JSON.stringify(allOrders)}
+Order đang chờ xử lý: ${JSON.stringify(pendingOrders)}
 Order đang nấu ở bếp: ${JSON.stringify(activeKitchenOrders)}
+Đơn hàng cần thanh toán: ${JSON.stringify(nonPendingOrders.filter(o => o.status !== "Complete"))}
 Báo cáo hôm nay: Doanh thu ${dailyReport.todayRevenue}đ, ${dailyReport.completedOrders} đơn đã thanh toán
 
+QUAN TRỌNG: Khi nhân viên hỏi về đơn hàng, LUÔN kiểm tra trong "Tất cả đơn hàng" để tìm đơn hàng theo số bàn hoặc tên khách.
+Để gửi bếp hoặc thanh toán, cần sử dụng orderId từ danh sách đơn hàng.
+
 Luôn trả lời bằng tiếng Việt.
-Tên của bạn: 'SÓI int' - Trợ lý Nhà hàng.
+Tên của bạn: 'SÓI F&B' - Trợ lý Nhà hàng F&B.
+
+Trạng thái đơn hàng:
+- Pending = CHƯA XỬ LÝ
+- InKitchen = ĐANG NẤU  
+- Ready = CHƯA THANH TOÁN (đã hoàn thành nấu, chờ thanh toán)
+- Complete = ĐÃ THANH TOÁN
 
 Các hành động có thể thực hiện:
 1. CREATE_ORDER: Tạo order mới. Data: { tableNumber, items: [{menuItemId, name, quantity, price}], totalAmount, customerName?, phone?, notes? }
-2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId, tableNumber, items: [{name, quantity, notes?}] }
-3. PAY_ORDER: Thanh toán order. Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
-4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, categoryId, description? }
+2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId }
+3. PAY_ORDER: Thanh toán order (mọi trạng thái trừ Complete). Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
+4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, description? }
 5. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
 6. QUERY: Hỏi thông tin. Không cần data.
 7. NONE: Chỉ trò chuyện, không hành động.
@@ -329,7 +374,6 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         await storage.createMenuItem({
           name: parsedResponse.data.name,
           price: Number(parsedResponse.data.price),
-          categoryId: parsedResponse.data.categoryId || null,
           description: parsedResponse.data.description || null,
           isAvailable: true,
           isActive: true,

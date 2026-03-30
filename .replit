@@ -11,6 +11,7 @@ externalPort = 80
 
 [env]
 PORT = "5000"
+DATABASE_URL = "postgresql://neondb_owner:npg_fDSswA8mZO9k@ep-ancient-brook-a12t15zb-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 [deployment]
 deploymentTarget = "autoscale"

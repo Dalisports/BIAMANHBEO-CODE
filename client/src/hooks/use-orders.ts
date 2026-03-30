@@ -24,11 +24,18 @@ export type Order = {
   paidAt: Date | null;
 };
 
+export type KitchenItem = {
+  name: string;
+  quantity: number;
+  notes?: string;
+  cookingStatus?: "pending" | "cooking" | "done";
+};
+
 export type KitchenOrder = {
   id: number;
   orderId: number;
   tableNumber: string;
-  items: OrderItem[];
+  items: KitchenItem[];
   status: string;
   priority: string;
   sentAt: Date | null;
@@ -213,6 +220,50 @@ export function useCompleteKitchenOrder() {
       });
       
       if (!res.ok) throw new Error("Failed to complete kitchen order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useStartKitchenItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
+      const res = await fetch(`/api/kitchen/${kitchenOrderId}/start-item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemName }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to start kitchen item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useCompleteKitchenItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
+      const res = await fetch(`/api/kitchen/${kitchenOrderId}/complete-item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemName }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to complete kitchen item");
       return res.json();
     },
     onSuccess: () => {

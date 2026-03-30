@@ -8,17 +8,31 @@ import {
 } from "lucide-react";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Pending: { bg: "bg-yellow-50", text: "text-yellow-600", border: "border-yellow-400" },
-  InKitchen: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-400" },
-  Ready: { bg: "bg-green-50", text: "text-green-600", border: "border-green-400" },
-  Complete: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-400" },
+  Pending: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-400" },
+  InKitchen: { bg: "bg-red-100", text: "text-red-700", border: "border-red-400" },
+  Ready: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-400" },
+  Complete: { bg: "bg-green-100", text: "text-green-700", border: "border-green-400" },
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  Pending: "CHỜ GỬI BẾP",
+  Pending: "CHƯA XỬ LÝ",
   InKitchen: "ĐANG NẤU",
-  Ready: "SẴN SÀNG",
+  Ready: "CHƯA THANH TOÁN",
   Complete: "ĐÃ THANH TOÁN",
+};
+
+const TAB_COLORS: Record<string, { active: string; hover: string }> = {
+  Pending: { active: "bg-yellow-400 text-black", hover: "hover:bg-yellow-100 hover:text-yellow-700" },
+  InKitchen: { active: "bg-red-500 text-white", hover: "hover:bg-red-100 hover:text-red-700" },
+  Ready: { active: "bg-blue-500 text-white", hover: "hover:bg-blue-100 hover:text-blue-700" },
+  Complete: { active: "bg-green-500 text-white", hover: "hover:bg-green-100 hover:text-green-700" },
+};
+
+const isToday = (date: Date | string | null) => {
+  if (!date) return false;
+  const d = new Date(date);
+  const today = new Date();
+  return d.toDateString() === today.toDateString();
 };
 
 export default function Orders() {
@@ -90,9 +104,11 @@ export default function Orders() {
     }
   };
 
-  const filteredOrders = orders?.filter(o => 
-    filter === "All" ? true : o.status === filter || (filter === "Active" && o.status !== "Complete")
-  );
+  const filteredOrders = orders?.filter(o => {
+    const isTodayOrder = isToday(o.createdAt);
+    if (filter === "All") return isTodayOrder;
+    return isTodayOrder && o.status === filter;
+  });
 
   const toggleOrder = (id: number) => {
     setExpandedOrders(prev => {
@@ -119,7 +135,7 @@ export default function Orders() {
     }
   };
 
-  const activeOrders = orders?.filter(o => o.status !== "Complete") || [];
+  const activeOrders = orders?.filter(o => ["Pending", "InKitchen", "Ready"].includes(o.status)) || [];
 
   return (
     <div className="h-full">
@@ -136,20 +152,28 @@ export default function Orders() {
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
-        {["All", "Active", "Pending", "InKitchen", "Ready", "Complete"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200",
-              filter === f 
-                ? "bg-primary text-primary-foreground shadow-md" 
-                : "bg-secondary text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {f === "All" ? "Tất cả" : f === "Active" ? "Đang xử lý" : STATUS_LABELS[f] || f}
-          </button>
-        ))}
+        {["All", "Pending", "InKitchen", "Ready", "Complete"].map((f) => {
+          const colors = TAB_COLORS[f];
+          const isPending = f === "Pending";
+          
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={cn(
+                "px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 relative",
+                filter === f && colors 
+                  ? colors.active + " shadow-md" 
+                  : colors 
+                    ? "bg-secondary " + colors.hover
+                    : "bg-secondary text-muted-foreground hover:text-foreground",
+                isPending && filter !== f && "animate-pulse"
+              )}
+            >
+              {f === "All" ? "Tất cả" : STATUS_LABELS[f] || f}
+            </button>
+          );
+        })}
         <button
           onClick={() => setShowSettingsModal(true)}
           className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
@@ -187,7 +211,8 @@ export default function Orders() {
                 key={order.id}
                 className={cn(
                   "bg-card rounded-3xl border-2 transition-all duration-300 hover:shadow-xl",
-                  colors.border
+                  colors.border,
+                  order.status === "Pending" && "animate-pulse shadow-lg shadow-yellow-400/50"
                 )}
               >
                 <div className="p-4">
@@ -281,7 +306,7 @@ export default function Orders() {
                               </button>
                             )}
                             
-                            {!isPaid && order.status !== "Pending" && (
+                            {!isPaid && order.status !== "Complete" && (
                               <button
                                 onClick={() => setShowPayModal(order.id)}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-green-500 text-white hover:bg-green-600 transition-colors"

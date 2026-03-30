@@ -11,6 +11,7 @@ import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
 import Kitchen from "@/pages/Kitchen";
 import Reports from "@/pages/Reports";
+import History from "@/pages/History";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/kitchen" component={Kitchen} />
         <Route path="/menu" component={Menu} />
         <Route path="/reports" component={Reports} />
+        <Route path="/history" component={History} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

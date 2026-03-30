@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, Bot, User, Volume2, VolumeX, UtensilsCrossed, ChefHat, DollarSign, Clock } from "lucide-react";
+import { Mic, Send, Bot, User, Volume2, VolumeX, UtensilsCrossed, ChefHat, DollarSign, Clock, ThumbsUp } from "lucide-react";
 import { useProcessChat } from "@/hooks/use-chat";
 import { useSpeech } from "@/hooks/use-speech";
 import { useOrders, useKitchenOrders } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency, cn } from "@/lib/utils";
 
 type Message = {
@@ -12,22 +13,27 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  action?: string;
+  actionData?: any;
 };
 
 export default function Home() {
   const { data: orders } = useOrders();
   const { data: kitchenOrders } = useKitchenOrders();
   const { data: menuItems } = useMenuItems();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
+      content: "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng F&B của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [pendingAction, setPendingAction] = useState<{ action: string; data: any; messageId: string } | null>(null);
+  const [confirmingLike, setConfirmingLike] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
   const chatMutation = useProcessChat();
@@ -76,19 +82,107 @@ export default function Home() {
 
     chatMutation.mutate(textToSend, {
       onSuccess: (data) => {
+        const messageId = (Date.now() + 1).toString();
         const aiMsg: Message = {
-          id: (Date.now() + 1).toString(),
+          id: messageId,
           role: "assistant",
           content: data.reply,
-          timestamp: new Date()
+          timestamp: new Date(),
+          action: data.action !== "NONE" && data.action !== "QUERY" ? data.action : undefined,
+          actionData: data.data
         };
         setMessages(prev => [...prev, aiMsg]);
+        
+        if (data.action && data.action !== "NONE" && data.action !== "QUERY") {
+          setPendingAction({ action: data.action, data: data.data, messageId });
+        }
         
         if (autoSpeak) {
           speak(data.reply);
         }
       }
     });
+  };
+
+  const handleLikeConfirm = async () => {
+    if (!pendingAction) return;
+    
+    setConfirmingLike(true);
+    const { action, data } = pendingAction;
+    
+    try {
+      let endpoint = "";
+      let method = "POST";
+      let body: any = {};
+      
+      switch (action) {
+        case "CREATE_ORDER":
+          endpoint = "/api/orders";
+          body = {
+            tableNumber: data.tableNumber,
+            items: data.items,
+            totalAmount: data.totalAmount || 0,
+            customerName: data.customerName,
+            phone: data.phone,
+            notes: data.notes,
+            status: "Pending",
+            paymentStatus: "Unpaid"
+          };
+          break;
+        case "SEND_TO_KITCHEN":
+          endpoint = `/api/orders/${data.orderId}/send-to-kitchen`;
+          body = {};
+          break;
+        case "PAY_ORDER":
+          endpoint = `/api/orders/${data.orderId}/pay`;
+          body = { method: data.paymentMethod || "cash" };
+          break;
+        case "CREATE_MENU_ITEM":
+          endpoint = "/api/products";
+          body = {
+            name: data.name,
+            price: Number(data.price),
+            categoryId: data.categoryId || null,
+            description: data.description || null,
+            isAvailable: true
+          };
+          break;
+        case "DELETE_ORDER":
+          endpoint = `/api/orders/${data.orderId}`;
+          method = "DELETE";
+          break;
+        default:
+          break;
+      }
+      
+      if (endpoint) {
+        const res = await fetch(endpoint, {
+          method,
+          headers: method !== "DELETE" ? { "Content-Type": "application/json" } : {},
+          body: method !== "DELETE" ? JSON.stringify(body) : undefined,
+          credentials: "include"
+        });
+        
+        if (res.ok) {
+          queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+          
+          const confirmMsg: Message = {
+            id: (Date.now() + 2).toString(),
+            role: "assistant",
+            content: `✅ Đã xác nhận thực hiện: ${action.replace(/_/g, " ").toLowerCase()}`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, confirmMsg]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to confirm action:", err);
+    } finally {
+      setConfirmingLike(false);
+      setPendingAction(null);
+    }
   };
 
   const activeOrders = orders?.filter(o => o.status !== "Complete").length || 0;
@@ -164,6 +258,13 @@ export default function Home() {
                   : "bg-card border border-border text-foreground rounded-tl-sm"
               )}>
                 <p>{msg.content}</p>
+                {msg.action && (
+                  <div className="mt-3 pt-2 border-t border-border/50">
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+                      {msg.action.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                )}
                 <span className={cn(
                   "text-[10px] font-medium mt-2 block opacity-50",
                   msg.role === "user" ? "text-right" : "text-left"
@@ -171,6 +272,27 @@ export default function Home() {
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
+              {msg.action && msg.action !== "NONE" && msg.action !== "QUERY" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2 mt-1 ml-14"
+                >
+                  <button
+                    onClick={handleLikeConfirm}
+                    disabled={confirmingLike || pendingAction?.messageId !== msg.id}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+                      pendingAction?.messageId === msg.id
+                        ? "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30"
+                        : "bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    {confirmingLike && pendingAction?.messageId === msg.id ? "Đang xác nhận..." : "Xác nhận"}
+                  </button>
+                </motion.div>
+              )}
             </motion.div>
           ))}
           {chatMutation.isPending && (

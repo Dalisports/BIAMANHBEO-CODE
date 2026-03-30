@@ -1,6 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer } from "lucide-react";
+import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWebSocket } from "@/hooks/use-websocket";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
 
 const NAV_ITEMS = [
   { href: "/", label: "Trợ Lý AI", icon: MessageSquare },
@@ -8,10 +10,16 @@ const NAV_ITEMS = [
   { href: "/kitchen", label: "Bếp", icon: ChefHat },
   { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
   { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
+  { href: "/history", label: "Lịch Sử", icon: History },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const playSound = useNotificationSound();
+  
+  useWebSocket(() => {
+    playSound();
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
@@ -21,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Beer className="w-8 h-8 text-black" />
           </div>
           <div>
-            <h1 className="font-display text-2xl leading-none font-black tracking-tight">
+            <h1 className="text-2xl leading-none font-extrabold tracking-tight">
               <span className="text-amber-500">BIA MẠNH BÉO</span>
             </h1>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Restaurant</p>
@@ -43,7 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110")} />
-                <span className="font-sans font-bold">{item.label}</span>
+                <span className="font-bold">{item.label}</span>
               </Link>
             );
           })}
@@ -76,7 +84,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Beer className="w-6 h-6 text-black" />
           </div>
           <div>
-            <h1 className="font-display text-xl leading-none font-black">
+            <h1 className="text-xl leading-none font-extrabold">
               <span className="text-amber-500">BIA MẠNH BÉO</span>
             </h1>
             <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-widest">Restaurant</p>
@@ -101,7 +109,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
             >
               <item.icon className={cn("w-6 h-6", isActive && "fill-amber-500/20")} />
-              <span className="font-sans text-[10px] font-bold">{item.label}</span>
+              <span className="text-[10px] font-bold">{item.label}</span>
             </Link>
           );
         })}

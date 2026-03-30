@@ -71,7 +71,8 @@ export function useSpeech(onResult: (text: string) => void) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "vi-VN";
     utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.pitch = 1.25;
+    utterance.volume = 1.0;
     
     window.speechSynthesis.speak(utterance);
   }, []);

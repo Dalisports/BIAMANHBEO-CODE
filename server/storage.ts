@@ -42,6 +42,8 @@ export interface IStorage {
   getKitchenOrders(): Promise<KitchenOrder[]>;
   startKitchenOrder(id: number): Promise<void>;
   completeKitchenOrder(id: number): Promise<void>;
+  startKitchenItem(kitchenOrderId: number, itemName: string): Promise<void>;
+  completeKitchenItem(kitchenOrderId: number, itemName: string): Promise<void>;
   
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
@@ -144,6 +146,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteOrder(id: number) {
+    await db.delete(kitchenOrders).where(eq(kitchenOrders.orderId, id));
     await db.delete(orders).where(eq(orders.id, id));
   }
 
@@ -154,7 +157,8 @@ export class DatabaseStorage implements IStorage {
     const kitchenItems = (order.items as any[]).map(item => ({
       name: item.name,
       quantity: item.quantity,
-      notes: item.notes || null
+      notes: item.notes || null,
+      cookingStatus: "pending"
     }));
 
     const [created] = await db.insert(kitchenOrders).values({
@@ -176,10 +180,36 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(kitchenOrders).orderBy(desc(kitchenOrders.sentAt));
   }
 
+  async getKitchenOrder(id: number) {
+    const [order] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, id));
+    return order;
+  }
+
   async startKitchenOrder(id: number) {
     await db.update(kitchenOrders)
       .set({ status: "Cooking", startedAt: new Date() })
       .where(eq(kitchenOrders.id, id));
+  }
+
+  async startKitchenItem(kitchenOrderId: number, itemName: string) {
+    const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
+    if (!kitchenOrder) return;
+
+    const items = kitchenOrder.items as any[];
+    const updatedItems = items.map(item => {
+      if (item.name === itemName) {
+        return { ...item, cookingStatus: "cooking" };
+      }
+      return item;
+    });
+
+    await db.update(kitchenOrders)
+      .set({ 
+        items: updatedItems,
+        status: "Cooking",
+        startedAt: kitchenOrder.startedAt || new Date()
+      })
+      .where(eq(kitchenOrders.id, kitchenOrderId));
   }
 
   async completeKitchenOrder(id: number) {
@@ -190,6 +220,37 @@ export class DatabaseStorage implements IStorage {
         .where(eq(kitchenOrders.id, id));
 
       const relatedOrder = await this.getOrder(kitchenOrder[0].orderId);
+      if (relatedOrder) {
+        await db.update(orders)
+          .set({ status: "Ready" })
+          .where(eq(orders.id, relatedOrder.id));
+      }
+    }
+  }
+
+  async completeKitchenItem(kitchenOrderId: number, itemName: string) {
+    const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
+    if (!kitchenOrder) return;
+
+    const items = kitchenOrder.items as any[];
+    const updatedItems = items.map(item => {
+      if (item.name === itemName) {
+        return { ...item, cookingStatus: "done" };
+      }
+      return item;
+    });
+
+    await db.update(kitchenOrders)
+      .set({ items: updatedItems })
+      .where(eq(kitchenOrders.id, kitchenOrderId));
+
+    const allDone = updatedItems.every(item => item.cookingStatus === "done");
+    if (allDone) {
+      await db.update(kitchenOrders)
+        .set({ status: "Done", completedAt: new Date() })
+        .where(eq(kitchenOrders.id, kitchenOrderId));
+
+      const relatedOrder = await this.getOrder(kitchenOrder.orderId);
       if (relatedOrder) {
         await db.update(orders)
           .set({ status: "Ready" })

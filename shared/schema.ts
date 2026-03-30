@@ -63,6 +63,20 @@ export const paymentSettings = pgTable("payment_settings", {
   isEnabled: boolean("is_enabled").default(true),
 });
 
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
@@ -87,6 +101,7 @@ export type KitchenItem = {
   name: string;
   quantity: number;
   notes?: string;
+  cookingStatus?: "pending" | "cooking" | "done";
 };
 
 export type Order = typeof orders.$inferSelect;
@@ -97,3 +112,11 @@ export type InsertKitchenOrder = z.infer<typeof insertKitchenOrderSchema>;
 
 export type PaymentSetting = typeof paymentSettings.$inferSelect;
 export type InsertPaymentSetting = z.infer<typeof insertPaymentSettingSchema>;
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
