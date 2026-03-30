@@ -243,6 +243,17 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/categories/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { name, displayOrder } = req.body;
+      const updated = await storage.updateCategory(id, { ...(name !== undefined ? { name } : {}), ...(displayOrder !== undefined ? { displayOrder } : {}) });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update category" });
+    }
+  });
+
   app.delete("/api/categories/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -275,7 +286,8 @@ export async function registerRoutes(
     try {
       const { message } = api.chat.process.input.parse(req.body);
       
-      const menuItems = await storage.getMenuItems();
+      const menuItemsList = await storage.getMenuItems();
+      const categoriesList = await storage.getCategories();
       const pendingOrders = await storage.getPendingOrders();
       const activeKitchenOrders = await storage.getActiveKitchenOrders();
       const allOrders = await storage.getOrders();
@@ -287,12 +299,14 @@ export async function registerRoutes(
 Bạn trò chuyện với nhân viên để:
 1. Tạo order cho khách (cần số bàn)
 2. Gửi món vào bếp
-3. Quản lý menu (món ăn, đồ uống)
+3. Quản lý menu (món ăn, đồ uống) và danh mục
 4. Thanh toán
 5. Xem báo cáo
+6. Cập nhật ảnh món ăn
 
 Ngữ cảnh hiện tại:
-Menu: ${JSON.stringify(menuItems)}
+Danh mục: ${JSON.stringify(categoriesList)}
+Menu: ${JSON.stringify(menuItemsList)}
 Tất cả đơn hàng: ${JSON.stringify(allOrders)}
 Order đang chờ xử lý: ${JSON.stringify(pendingOrders)}
 Order đang nấu ở bếp: ${JSON.stringify(activeKitchenOrders)}
@@ -315,10 +329,16 @@ Các hành động có thể thực hiện:
 1. CREATE_ORDER: Tạo order mới. Data: { tableNumber, items: [{menuItemId, name, quantity, price}], totalAmount, customerName?, phone?, notes? }
 2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId }
 3. PAY_ORDER: Thanh toán order (mọi trạng thái trừ Complete). Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
-4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, description? }
-5. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
-6. QUERY: Hỏi thông tin. Không cần data.
-7. NONE: Chỉ trò chuyện, không hành động.
+4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, description?, categoryId? }
+5. UPDATE_MENU_ITEM: Sửa món ăn (tên, giá, mô tả, danh mục). Data: { menuItemId, name?, price?, description?, categoryId? }
+6. DELETE_MENU_ITEM: Xóa món ăn. Data: { menuItemId }
+7. UPDATE_MENU_ITEM_IMAGE: Cập nhật ảnh cho món ăn. Data: { menuItemId, imageUrl }
+8. CREATE_CATEGORY: Thêm danh mục mới. Data: { name, displayOrder? }
+9. UPDATE_CATEGORY: Sửa tên danh mục. Data: { categoryId, name }
+10. DELETE_CATEGORY: Xóa danh mục. Data: { categoryId }
+11. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
+12. QUERY: Hỏi thông tin. Không cần data.
+13. NONE: Chỉ trò chuyện, không hành động.
 
 Trả về JSON:
 {
@@ -333,6 +353,11 @@ Ví dụ:
 - "Thanh toán bàn 3" -> PAY_ORDER
 - "Xem doanh thu hôm nay" -> QUERY với reply chứa thông tin dailyReport
 - "Thêm món trà sữa trân châu giá 35k" -> CREATE_MENU_ITEM
+- "Đổi tên danh mục 2 thành Đồ uống" -> UPDATE_CATEGORY với categoryId=2
+- "Thêm danh mục Tráng miệng" -> CREATE_CATEGORY
+- "Xóa danh mục Tráng miệng" -> DELETE_CATEGORY
+- "Cập nhật ảnh món Đầu lợn bằng link https://..." -> UPDATE_MENU_ITEM_IMAGE
+- "Sửa giá món Cốc bia thành 8000" -> UPDATE_MENU_ITEM
 
 Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.`;
 
@@ -356,7 +381,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         const tableNum = parsedResponse.data.tableNumber;
         const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
         
-        await storage.createOrder({
+        const newOrder = await storage.createOrder({
           tableNumber: tableNum,
           customerName: parsedResponse.data.customerName || customerName,
           phone: parsedResponse.data.phone || null,
@@ -366,6 +391,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           paymentStatus: "Unpaid",
           notes: parsedResponse.data.notes || null,
         });
+        broadcast({ type: "ORDER_CREATED", data: newOrder });
       } else if (parsedResponse.action === 'SEND_TO_KITCHEN' && parsedResponse.data?.orderId) {
         await storage.sendToKitchen(parsedResponse.data.orderId);
       } else if (parsedResponse.action === 'PAY_ORDER' && parsedResponse.data?.orderId) {
@@ -375,11 +401,34 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           name: parsedResponse.data.name,
           price: Number(parsedResponse.data.price),
           description: parsedResponse.data.description || null,
+          categoryId: parsedResponse.data.categoryId || null,
           isAvailable: true,
           isActive: true,
         });
+      } else if (parsedResponse.action === 'UPDATE_MENU_ITEM' && parsedResponse.data?.menuItemId) {
+        const { menuItemId, name, price, description, categoryId } = parsedResponse.data;
+        await storage.updateMenuItem(menuItemId, {
+          ...(name !== undefined ? { name } : {}),
+          ...(price !== undefined ? { price: Number(price) } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(categoryId !== undefined ? { categoryId } : {}),
+        });
+      } else if (parsedResponse.action === 'DELETE_MENU_ITEM' && parsedResponse.data?.menuItemId) {
+        await storage.deleteMenuItem(parsedResponse.data.menuItemId);
+      } else if (parsedResponse.action === 'UPDATE_MENU_ITEM_IMAGE' && parsedResponse.data?.menuItemId && parsedResponse.data?.imageUrl) {
+        await storage.updateMenuItem(parsedResponse.data.menuItemId, { image: parsedResponse.data.imageUrl });
+      } else if (parsedResponse.action === 'CREATE_CATEGORY' && parsedResponse.data?.name) {
+        await storage.createCategory({
+          name: parsedResponse.data.name,
+          displayOrder: parsedResponse.data.displayOrder || 0,
+        });
+      } else if (parsedResponse.action === 'UPDATE_CATEGORY' && parsedResponse.data?.categoryId && parsedResponse.data?.name) {
+        await storage.updateCategory(parsedResponse.data.categoryId, { name: parsedResponse.data.name });
+      } else if (parsedResponse.action === 'DELETE_CATEGORY' && parsedResponse.data?.categoryId) {
+        await storage.deleteCategory(parsedResponse.data.categoryId);
       } else if (parsedResponse.action === 'DELETE_ORDER' && parsedResponse.data?.orderId) {
         await storage.deleteOrder(parsedResponse.data.orderId);
+        broadcast({ type: "ORDER_DELETED", data: { id: parsedResponse.data.orderId } });
       }
 
       res.json(parsedResponse);

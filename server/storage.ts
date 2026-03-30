@@ -20,6 +20,7 @@ import { startOfDay, endOfDay } from "date-fns";
 export interface IStorage {
   getCategories(): Promise<typeof categories.$inferSelect[]>;
   createCategory(category: InsertCategory): Promise<typeof categories.$inferSelect>;
+  updateCategory(id: number, data: Partial<InsertCategory>): Promise<typeof categories.$inferSelect>;
   deleteCategory(id: number): Promise<void>;
 
   getMenuItems(): Promise<typeof menuItems.$inferSelect[]>;
@@ -60,6 +61,14 @@ export class DatabaseStorage implements IStorage {
   async createCategory(category: InsertCategory) {
     const [created] = await db.insert(categories).values(category).returning();
     return created;
+  }
+
+  async updateCategory(id: number, data: Partial<InsertCategory>) {
+    const [updated] = await db.update(categories)
+      .set(data)
+      .where(eq(categories.id, id))
+      .returning();
+    return updated;
   }
 
   async deleteCategory(id: number) {
