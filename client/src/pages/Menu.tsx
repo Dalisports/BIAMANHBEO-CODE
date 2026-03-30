@@ -153,22 +153,21 @@ export default function Menu() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                <Beer className="w-8 h-8 text-black" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight">
-                  <span className="text-amber-500">BIA MẠNH BÉO</span>
-                </h1>
-                <p className="text-xs text-muted-foreground font-medium">Thực Đơn Nhà Hàng</p>
-              </div>
+          {/* Search with Cart */}
+          <div className="relative flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm món..."
+                className="w-full pl-12 pr-4 py-3 rounded-2xl bg-secondary/50 border-2 border-transparent focus:border-amber-400 transition-all outline-none"
+              />
             </div>
-            
             <button
               onClick={() => setShowCart(true)}
-              className="relative p-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
+              className="relative p-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all flex-shrink-0"
             >
               <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
@@ -182,23 +181,11 @@ export default function Menu() {
               )}
             </button>
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm món..."
-              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-secondary/50 border-2 border-transparent focus:border-amber-400 transition-all outline-none"
-            />
-          </div>
         </div>
       </div>
 
       {/* Categories */}
-      <div className="sticky top-[140px] z-30 bg-background/95 backdrop-blur-md border-b border-border/50 py-3">
+      <div className="sticky top-[72px] z-30 bg-background/95 backdrop-blur-md border-b border-border/50 py-3">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <button
