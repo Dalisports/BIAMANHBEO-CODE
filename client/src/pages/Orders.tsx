@@ -184,10 +184,6 @@ export default function Orders() {
   return (
     <div className="h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-sans font-bold text-foreground">Đơn Hàng</h2>
-          <p className="text-muted-foreground mt-1 text-sm">Quản lý order theo bàn</p>
-        </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 rounded-xl bg-orange-100 text-orange-700 font-semibold">
             <span className="text-2xl">{activeOrders.length}</span> đơn đang xử lý
