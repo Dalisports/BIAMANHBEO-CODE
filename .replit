@@ -17,7 +17,6 @@ DATABASE_URL = "postgresql://neondb_owner:npg_fDSswA8mZO9k@ep-ancient-brook-a12t
 deploymentTarget = "autoscale"
 run = ["node", "./dist/index.cjs"]
 build = ["npm", "run", "build"]
-publicDir = "dist/public"
 
 [workflows]
 runButton = "Project"
