@@ -98,7 +98,12 @@ export default function Home() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    chatMutation.mutate(textToSend, {
+    const history = messages
+      .filter(m => m.id !== "intro")
+      .slice(-20)
+      .map(m => ({ role: m.role, content: m.content }));
+
+    chatMutation.mutate({ message: textToSend, history }, {
       onSuccess: (data) => {
         const messageId = (Date.now() + 1).toString();
         const aiMsg: Message = {
@@ -116,6 +121,7 @@ export default function Home() {
 
         if (data.action && data.action !== "NONE" && data.action !== "QUERY") {
           setPendingAction({ action: data.action, data: data.data, messageId });
+          executeAction(data.action, data.data);
         }
 
         if (autoSpeak) {
@@ -123,6 +129,82 @@ export default function Home() {
         }
       },
     });
+  };
+
+  const executeAction = async (action: string, data: any) => {
+    try {
+      let endpoint = "";
+      let method = "POST";
+      let body: any = {};
+
+      switch (action) {
+        case "CREATE_ORDER":
+          endpoint = "/api/orders";
+          body = {
+            tableNumber: data.tableNumber,
+            items: data.items,
+            totalAmount: data.totalAmount || 0,
+            customerName: data.customerName,
+            phone: data.phone,
+            notes: data.notes,
+            status: "Pending",
+            paymentStatus: "Unpaid",
+          };
+          break;
+        case "SEND_TO_KITCHEN":
+          endpoint = `/api/orders/${data.orderId}/send-to-kitchen`;
+          body = {};
+          break;
+        case "PAY_ORDER":
+          endpoint = `/api/orders/${data.orderId}/pay`;
+          body = { method: data.paymentMethod || "cash" };
+          break;
+        case "CREATE_MENU_ITEM":
+          endpoint = "/api/products";
+          body = {
+            name: data.name,
+            price: Number(data.price),
+            categoryId: data.categoryId || null,
+            description: data.description || null,
+            isAvailable: true,
+          };
+          break;
+        case "DELETE_ORDER":
+          endpoint = `/api/orders/${data.orderId}`;
+          method = "DELETE";
+          break;
+        default:
+          break;
+      }
+
+      if (endpoint) {
+        const res = await fetch(endpoint, {
+          method,
+          headers:
+            method !== "DELETE" ? { "Content-Type": "application/json" } : {},
+          body: method !== "DELETE" ? JSON.stringify(body) : undefined,
+          credentials: "include",
+        });
+
+        if (res.ok) {
+          queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+
+          const confirmMsg: Message = {
+            id: (Date.now() + 2).toString(),
+            role: "assistant",
+            content: `✅ Đã th��c hiện: ${action.replace(/_/g, " ").toLowerCase()}`,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, confirmMsg]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to execute action:", err);
+    } finally {
+      setPendingAction(null);
+    }
   };
 
   const handleLikeConfirm = async () => {
@@ -201,9 +283,6 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Failed to confirm action:", err);
-    } finally {
-      setConfirmingLike(false);
-      setPendingAction(null);
     }
   };
 

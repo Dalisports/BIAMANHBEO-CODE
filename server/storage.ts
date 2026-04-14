@@ -14,7 +14,7 @@ import {
   type KitchenOrder,
   type PaymentSetting
 } from "@shared/schema";
-import { eq, inArray, and, desc, lt } from "drizzle-orm";
+import { eq, inArray, and, desc, lt, ne } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
@@ -31,8 +31,10 @@ export interface IStorage {
   getOrders(): Promise<Order[]>;
   getOrder(id: number): Promise<Order | undefined>;
   getPendingOrders(): Promise<Order[]>;
+  getPendingOrderByTable(tableNumber: string): Promise<Order | undefined>;
+  getActiveOrderByTable(tableNumber: string): Promise<Order | undefined>;
   getActiveKitchenOrders(): Promise<KitchenOrder[]>;
-  createOrder(order: InsertOrder): Promise<Order>;
+  createOrder(order: InsertOrder): Promise<Order | { merged: true; order: Order }>;
   updateOrder(id: number, order: Partial<InsertOrder>): Promise<Order>;
   deleteOrder(id: number): Promise<void>;
   completeOrders(ids: number[]): Promise<void>;
@@ -163,6 +165,16 @@ export class DatabaseStorage implements IStorage {
       and(
         eq(orders.tableNumber, tableNumber),
         eq(orders.status, "Pending")
+      )
+    );
+    return order;
+  }
+
+  async getActiveOrderByTable(tableNumber: string) {
+    const [order] = await db.select().from(orders).where(
+      and(
+        eq(orders.tableNumber, tableNumber),
+        ne(orders.status, "Complete")
       )
     );
     return order;

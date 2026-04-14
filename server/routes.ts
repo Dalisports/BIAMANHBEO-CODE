@@ -40,8 +40,8 @@ export async function registerRoutes(
   app.patch("/api/products/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { name, price, categoryId, description, isAvailable } = req.body;
-      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, isAvailable });
+      const { name, price, categoryId, description, image, isAvailable } = req.body;
+      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable });
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Failed to update product" });
@@ -302,7 +302,7 @@ export async function registerRoutes(
 
   app.post(api.chat.process.path, async (req, res) => {
     try {
-      const { message } = api.chat.process.input.parse(req.body);
+      const { message, history } = api.chat.process.input.parse(req.body);
       
       const menuItemsList = await storage.getMenuItems();
       const categoriesList = await storage.getCategories();
@@ -345,18 +345,21 @@ Trạng thái đơn hàng:
 
 Các hành động có thể thực hiện:
 1. CREATE_ORDER: Tạo order mới. Data: { tableNumber, items: [{menuItemId, name, quantity, price}], totalAmount, customerName?, phone?, notes? }
-2. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId }
-3. PAY_ORDER: Thanh toán order (mọi trạng thái trừ Complete). Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
-4. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, description?, categoryId? }
-5. UPDATE_MENU_ITEM: Sửa món ăn (tên, giá, mô tả, danh mục). Data: { menuItemId, name?, price?, description?, categoryId? }
-6. DELETE_MENU_ITEM: Xóa món ăn. Data: { menuItemId }
-7. UPDATE_MENU_ITEM_IMAGE: Cập nhật ảnh cho món ăn. Data: { menuItemId, imageUrl }
-8. CREATE_CATEGORY: Thêm danh mục mới. Data: { name, displayOrder? }
-9. UPDATE_CATEGORY: Sửa tên danh mục. Data: { categoryId, name }
-10. DELETE_CATEGORY: Xóa danh mục. Data: { categoryId }
-11. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
-12. QUERY: Hỏi thông tin. Không cần data.
-13. NONE: Chỉ trò chuyện, không hành động.
+2. ADD_TO_TABLE: Thêm món vào bàn đang có đơn. Data: { tableNumber, items: [{menuItemId, name, quantity, price}], totalAmount }
+3. SEND_TO_KITCHEN: Gửi order vào bếp. Data: { orderId }
+4. PAY_ORDER: Thanh toán order (mọi trạng thái trừ Complete). Data: { orderId, paymentMethod: "cash" | "transfer" | "vnpay" | "momo" }
+5. CREATE_MENU_ITEM: Thêm món mới vào menu. Data: { name, price, description?, categoryId? }
+6. UPDATE_MENU_ITEM: Sửa món ăn (tên, giá, mô tả, danh mục). Data: { menuItemId, name?, price?, description?, categoryId? }
+7. DELETE_MENU_ITEM: Xóa món ăn. Data: { menuItemId }
+8. UPDATE_MENU_ITEM_IMAGE: Cập nhật ảnh cho món ăn. Data: { menuItemId, imageUrl }
+9. CREATE_CATEGORY: Thêm danh mục mới. Data: { name, displayOrder? }
+10. UPDATE_CATEGORY: Sửa tên danh mục. Data: { categoryId, name }
+11. DELETE_CATEGORY: Xóa danh mục. Data: { categoryId }
+12. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
+13. QUERY: Hỏi thông tin. Không cần data.
+14. NONE: Chỉ trò chuyện, không hành động.
+
+LUÔN ưu tiên ADD_TO_TABLE khi khách muốn thêm món vào bàn đang có đơn (status != Complete).
 
 Trả về JSON:
 {
@@ -379,10 +382,17 @@ Ví dụ:
 
 Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.`;
 
+      const recentHistory = (history || []).slice(-20);
+      const historyMessages = recentHistory.map(h => ({
+        role: h.role as "user" | "assistant",
+        content: h.content,
+      }));
+
       const response = await openai.chat.completions.create({
         model: "gpt-5.2",
         messages: [
           { role: "system", content: systemPrompt },
+          ...historyMessages,
           { role: "user", content: message }
         ],
         response_format: { type: "json_object" }
@@ -414,6 +424,32 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           broadcast({ type: "ORDER_UPDATED", data: result.order });
         } else {
           broadcast({ type: "ORDER_CREATED", data: result });
+        }
+      } else if (parsedResponse.action === 'ADD_TO_TABLE' && parsedResponse.data?.tableNumber && parsedResponse.data?.items?.length > 0) {
+        const tableNum = parsedResponse.data.tableNumber;
+        const pendingOrder = await storage.getActiveOrderByTable(tableNum);
+        
+        if (pendingOrder) {
+          const existingItems = pendingOrder.items as any[];
+          const newItems = parsedResponse.data.items as any[];
+          
+          for (const newItem of newItems) {
+            const existingIndex = existingItems.findIndex(
+              i => i.menuItemId === newItem.menuItemId
+            );
+            if (existingIndex >= 0) {
+              existingItems[existingIndex] = {
+                ...existingItems[existingIndex],
+                quantity: existingItems[existingIndex].quantity + newItem.quantity
+              };
+            } else {
+              existingItems.push(newItem);
+            }
+          }
+          
+          const newTotal = existingItems.reduce((sum, item: any) => sum + item.price * item.quantity, 0);
+          await storage.updateOrder(pendingOrder.id, { items: existingItems, totalAmount: newTotal });
+          broadcast({ type: "ORDER_UPDATED", data: { ...pendingOrder, items: existingItems, totalAmount: newTotal } });
         }
       } else if (parsedResponse.action === 'SEND_TO_KITCHEN' && parsedResponse.data?.orderId) {
         await storage.sendToKitchen(parsedResponse.data.orderId);

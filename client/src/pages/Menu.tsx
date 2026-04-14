@@ -5,7 +5,7 @@ import { useCreateOrder } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed
+  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Image, Link
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGES = [
@@ -51,12 +51,14 @@ export default function Menu() {
     name: "",
     price: "",
     description: "",
+    image: "",
   });
   
   const [editForm, setEditForm] = useState({
     name: "",
     price: "",
     description: "",
+    image: "",
   });
 
   const filteredItems = menuItems?.filter(item => {
@@ -112,10 +114,11 @@ export default function Menu() {
         name: newItem.name, 
         price: parseInt(newItem.price, 10), 
         description: newItem.description,
+        image: newItem.image || null,
       },
       { onSuccess: () => {
         setShowAddDialog(false);
-        setNewItem({ name: "", price: "", description: "" });
+        setNewItem({ name: "", price: "", description: "", image: "" });
       }}
     );
   };
@@ -130,6 +133,7 @@ export default function Menu() {
       name: item.name,
       price: item.price.toString(),
       description: item.description || "",
+      image: item.image || "",
     });
     setShowEditDialog(true);
   };
@@ -144,6 +148,7 @@ export default function Menu() {
         name: editForm.name,
         price: parseInt(editForm.price, 10),
         description: editForm.description,
+        image: editForm.image || null,
       },
       {
         onSuccess: () => {
@@ -555,6 +560,32 @@ export default function Menu() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-bold mb-2">Ảnh món ăn</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="url"
+                        value={newItem.image}
+                        onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                        placeholder="Link ảnh..."
+                      />
+                    </div>
+                  </div>
+                  {newItem.image && (
+                    <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
+                      <img 
+                        src={newItem.image} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => e.currentTarget.style.display = 'none'} 
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
@@ -638,6 +669,32 @@ export default function Menu() {
                     rows={2}
                     placeholder="Mô tả món ăn..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2">Ảnh món ăn</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="url"
+                        value={editForm.image}
+                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
+                        placeholder="Link ảnh..."
+                      />
+                    </div>
+                  </div>
+                  {editForm.image && (
+                    <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
+                      <img 
+                        src={editForm.image} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => e.currentTarget.style.display = 'none'} 
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-2">

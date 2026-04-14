@@ -106,7 +106,11 @@ export const api = {
       method: 'POST' as const,
       path: '/api/chat/process' as const,
       input: z.object({
-        message: z.string()
+        message: z.string(),
+        history: z.array(z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        })).optional(),
       }),
       responses: {
         200: z.object({

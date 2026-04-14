@@ -4,6 +4,7 @@ export type MenuItem = {
   id: number;
   name: string;
   price: number;
+  categoryId: number | null;
   description: string | null;
   image: string | null;
   isAvailable: boolean;
@@ -26,7 +27,7 @@ export function useCreateMenuItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: { name: string; price: number; description?: string }) => {
+    mutationFn: async (data: { name: string; price: number; description?: string; image?: string | null }) => {
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,7 +52,7 @@ export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; isAvailable?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isAvailable?: boolean }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History } from "lucide-react";
+import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Trợ Lý AI", icon: MessageSquare },
-  { href: "/orders", label: "Đơn Hàng", icon: Receipt },
+  { href: "/", label: "Bàn", icon: LayoutGrid },
+  { href: "/home", label: "Trợ Lý AI", icon: MessageSquare },
   { href: "/kitchen", label: "Bếp", icon: ChefHat },
   { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
   { href: "/reports", label: "Báo Cáo", icon: BarChart3 },

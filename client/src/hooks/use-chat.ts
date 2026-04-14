@@ -1,15 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 
+type HistoryMessage = { role: "user" | "assistant"; content: string };
+
 export function useProcessChat() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({ message, history }: { message: string; history?: HistoryMessage[] }) => {
       const res = await fetch(api.chat.process.path, {
         method: api.chat.process.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, history }),
         credentials: "include",
       });
       
@@ -17,10 +19,10 @@ export function useProcessChat() {
       return api.chat.process.responses[200].parse(await res.json());
     },
     onSuccess: (data) => {
-      // Invalidate relevant queries based on the action returned by the LLM
       if (data.action) {
-        if (data.action.includes("PRODUCT")) {
+        if (data.action.includes("PRODUCT") || data.action.includes("MENU_ITEM") || data.action.includes("CATEGORY")) {
           queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+          queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
         }
         if (data.action.includes("ORDER")) {
           queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
