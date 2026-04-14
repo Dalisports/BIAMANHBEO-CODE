@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, Bot, User, Volume2, VolumeX, UtensilsCrossed, ChefHat, DollarSign, Clock, ThumbsUp } from "lucide-react";
+import {
+  Mic,
+  Send,
+  Bot,
+  User,
+  Volume2,
+  VolumeX,
+  UtensilsCrossed,
+  ChefHat,
+  DollarSign,
+  Clock,
+  ThumbsUp,
+} from "lucide-react";
 import { useProcessChat } from "@/hooks/use-chat";
 import { useSpeech } from "@/hooks/use-speech";
 import { useOrders, useKitchenOrders } from "@/hooks/use-orders";
@@ -26,24 +38,30 @@ export default function Home() {
     {
       id: "intro",
       role: "assistant",
-      content: "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng F&B của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
-      timestamp: new Date()
-    }
+      content:
+        "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng F&B của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
+      timestamp: new Date(),
+    },
   ]);
   const [input, setInput] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
-  const [pendingAction, setPendingAction] = useState<{ action: string; data: any; messageId: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    action: string;
+    data: any;
+    messageId: string;
+  } | null>(null);
   const [confirmingLike, setConfirmingLike] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  
+
   const chatMutation = useProcessChat();
-  
+
   const handleSpeechResult = (text: string) => {
     setInput(text);
     handleSend(text);
   };
 
-  const { isListening, listen, stop, speak, supported } = useSpeech(handleSpeechResult);
+  const { isListening, listen, stop, speak, supported } =
+    useSpeech(handleSpeechResult);
   const [isPressing, setIsPressing] = useState(false);
 
   const handleMouseDown = () => {
@@ -69,15 +87,15 @@ export default function Home() {
 
   const handleSend = (textToSend = input) => {
     if (!textToSend.trim() || chatMutation.isPending) return;
-    
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
       content: textToSend,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, userMsg]);
+
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
     chatMutation.mutate(textToSend, {
@@ -88,33 +106,36 @@ export default function Home() {
           role: "assistant",
           content: data.reply,
           timestamp: new Date(),
-          action: data.action !== "NONE" && data.action !== "QUERY" ? data.action : undefined,
-          actionData: data.data
+          action:
+            data.action !== "NONE" && data.action !== "QUERY"
+              ? data.action
+              : undefined,
+          actionData: data.data,
         };
-        setMessages(prev => [...prev, aiMsg]);
-        
+        setMessages((prev) => [...prev, aiMsg]);
+
         if (data.action && data.action !== "NONE" && data.action !== "QUERY") {
           setPendingAction({ action: data.action, data: data.data, messageId });
         }
-        
+
         if (autoSpeak) {
           speak(data.reply);
         }
-      }
+      },
     });
   };
 
   const handleLikeConfirm = async () => {
     if (!pendingAction) return;
-    
+
     setConfirmingLike(true);
     const { action, data } = pendingAction;
-    
+
     try {
       let endpoint = "";
       let method = "POST";
       let body: any = {};
-      
+
       switch (action) {
         case "CREATE_ORDER":
           endpoint = "/api/orders";
@@ -126,7 +147,7 @@ export default function Home() {
             phone: data.phone,
             notes: data.notes,
             status: "Pending",
-            paymentStatus: "Unpaid"
+            paymentStatus: "Unpaid",
           };
           break;
         case "SEND_TO_KITCHEN":
@@ -144,7 +165,7 @@ export default function Home() {
             price: Number(data.price),
             categoryId: data.categoryId || null,
             description: data.description || null,
-            isAvailable: true
+            isAvailable: true,
           };
           break;
         case "DELETE_ORDER":
@@ -154,27 +175,28 @@ export default function Home() {
         default:
           break;
       }
-      
+
       if (endpoint) {
         const res = await fetch(endpoint, {
           method,
-          headers: method !== "DELETE" ? { "Content-Type": "application/json" } : {},
+          headers:
+            method !== "DELETE" ? { "Content-Type": "application/json" } : {},
           body: method !== "DELETE" ? JSON.stringify(body) : undefined,
-          credentials: "include"
+          credentials: "include",
         });
-        
+
         if (res.ok) {
           queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
           queryClient.invalidateQueries({ queryKey: ["/api/products"] });
           queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
-          
+
           const confirmMsg: Message = {
             id: (Date.now() + 2).toString(),
             role: "assistant",
             content: `✅ Đã xác nhận thực hiện: ${action.replace(/_/g, " ").toLowerCase()}`,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
-          setMessages(prev => [...prev, confirmMsg]);
+          setMessages((prev) => [...prev, confirmMsg]);
         }
       }
     } catch (err) {
@@ -185,49 +207,71 @@ export default function Home() {
     }
   };
 
-  const activeOrders = orders?.filter(o => o.status !== "Complete").length || 0;
-  const kitchenActive = kitchenOrders?.filter(o => o.status !== "Done").length || 0;
-  const todayRevenue = orders?.filter(o => o.paymentStatus === "Paid")
-    .reduce((acc, o) => acc + o.totalAmount, 0) || 0;
+  const activeOrders =
+    orders?.filter((o) => o.status !== "Complete").length || 0;
+  const kitchenActive =
+    kitchenOrders?.filter((o) => o.status !== "Done").length || 0;
+  const todayRevenue =
+    orders
+      ?.filter((o) => o.paymentStatus === "Paid")
+      .reduce((acc, o) => acc + o.totalAmount, 0) || 0;
 
   return (
     <div className="h-full flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-3xl font-sans font-bold text-foreground">Trợ Lý AI</h2>
-          <p className="text-muted-foreground mt-1 text-sm">Quản lý nhà hàng F&B của bạn</p>
+          <h2 className="text-3xl font-sans font-bold text-foreground">
+            Trợ Lý AI
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Quản lý nhà hàng F&B của bạn
+          </p>
         </div>
         <button
           onClick={() => setAutoSpeak(!autoSpeak)}
           className={cn(
             "p-3 rounded-full transition-all duration-300",
-            autoSpeak ? "bg-accent/10 text-accent hover:bg-accent/20" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+            autoSpeak
+              ? "bg-accent/10 text-accent hover:bg-accent/20"
+              : "bg-secondary text-muted-foreground hover:bg-secondary/80",
           )}
           title={autoSpeak ? "Tắt tự động đọc" : "Bật tự động đọc"}
         >
-          {autoSpeak ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          {autoSpeak ? (
+            <Volume2 className="w-5 h-5" />
+          ) : (
+            <VolumeX className="w-5 h-5" />
+          )}
         </button>
       </div>
 
       <div className="grid grid-cols-4 gap-2 mb-2">
         <div className="bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
           <UtensilsCrossed className="w-3 h-3 text-orange-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-orange-600">{activeOrders}</span>
+          <span className="text-lg font-bold text-orange-600">
+            {activeOrders}
+          </span>
           <p className="text-[10px] text-orange-600">Đơn đang xử lý</p>
         </div>
         <div className="bg-red-50 rounded-lg p-2 border border-red-200 text-center">
           <ChefHat className="w-3 h-3 text-red-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-red-600">{kitchenActive}</span>
+          <span className="text-lg font-bold text-red-600">
+            {kitchenActive}
+          </span>
           <p className="text-[10px] text-red-600">Đang nấu</p>
         </div>
         <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-center">
           <UtensilsCrossed className="w-3 h-3 text-blue-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-blue-600">{menuItems?.length || 0}</span>
+          <span className="text-lg font-bold text-blue-600">
+            {menuItems?.length || 0}
+          </span>
           <p className="text-[10px] text-blue-600">Món trong menu</p>
         </div>
         <div className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
           <DollarSign className="w-3 h-3 text-green-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-green-600">{formatCurrency(todayRevenue)}</span>
+          <span className="text-lg font-bold text-green-600">
+            {formatCurrency(todayRevenue)}
+          </span>
           <p className="text-[10px] text-green-600">Doanh thu</p>
         </div>
       </div>
@@ -242,21 +286,31 @@ export default function Home() {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className={cn(
                 "flex gap-4 max-w-[85%]",
-                msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
+                msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto",
               )}
             >
-              <div className={cn(
-                "flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm",
-                msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"
-              )}>
-                {msg.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5 text-primary" />}
+              <div
+                className={cn(
+                  "flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm",
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border",
+                )}
+              >
+                {msg.role === "user" ? (
+                  <User className="w-5 h-5" />
+                ) : (
+                  <Bot className="w-5 h-5 text-primary" />
+                )}
               </div>
-              <div className={cn(
-                "p-4 rounded-2xl shadow-sm leading-relaxed",
-                msg.role === "user" 
-                  ? "bg-primary text-primary-foreground rounded-tr-sm" 
-                  : "bg-card border border-border text-foreground rounded-tl-sm"
-              )}>
+              <div
+                className={cn(
+                  "p-4 rounded-2xl shadow-sm leading-relaxed",
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-tr-sm"
+                    : "bg-card border border-border text-foreground rounded-tl-sm",
+                )}
+              >
                 <p>{msg.content}</p>
                 {msg.action && (
                   <div className="mt-3 pt-2 border-t border-border/50">
@@ -265,34 +319,45 @@ export default function Home() {
                     </span>
                   </div>
                 )}
-                <span className={cn(
-                  "text-[10px] font-medium mt-2 block opacity-50",
-                  msg.role === "user" ? "text-right" : "text-left"
-                )}>
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <span
+                  className={cn(
+                    "text-[10px] font-medium mt-2 block opacity-50",
+                    msg.role === "user" ? "text-right" : "text-left",
+                  )}
+                >
+                  {msg.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </div>
-              {msg.action && msg.action !== "NONE" && msg.action !== "QUERY" && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-2 mt-1 ml-14"
-                >
-                  <button
-                    onClick={handleLikeConfirm}
-                    disabled={confirmingLike || pendingAction?.messageId !== msg.id}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                      pendingAction?.messageId === msg.id
-                        ? "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30"
-                        : "bg-secondary text-muted-foreground"
-                    )}
+              {msg.action &&
+                msg.action !== "NONE" &&
+                msg.action !== "QUERY" && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2 mt-1 ml-14"
                   >
-                    <ThumbsUp className="w-4 h-4" />
-                    {confirmingLike && pendingAction?.messageId === msg.id ? "Đang xác nhận..." : "Xác nhận"}
-                  </button>
-                </motion.div>
-              )}
+                    <button
+                      onClick={handleLikeConfirm}
+                      disabled={
+                        confirmingLike || pendingAction?.messageId !== msg.id
+                      }
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+                        pendingAction?.messageId === msg.id
+                          ? "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30"
+                          : "bg-secondary text-muted-foreground",
+                      )}
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      {confirmingLike && pendingAction?.messageId === msg.id
+                        ? "Đang xác nhận..."
+                        : "Xác nhận"}
+                    </button>
+                  </motion.div>
+                )}
             </motion.div>
           ))}
           {chatMutation.isPending && (
@@ -305,9 +370,18 @@ export default function Home() {
                 <Bot className="w-5 h-5 text-primary animate-pulse" />
               </div>
               <div className="p-4 rounded-2xl bg-card border border-border rounded-tl-sm flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <div
+                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
               </div>
             </motion.div>
           )}
@@ -321,12 +395,12 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
               }
             }}
-            placeholder="Hãy ra lệnh cho nhà hàng..."
+            placeholder="nói gì ? nói luôn..."
             className="w-full max-h-32 min-h-[48px] bg-transparent resize-none outline-none py-3 px-4 text-foreground placeholder:text-muted-foreground"
             rows={1}
           />
@@ -349,9 +423,9 @@ export default function Home() {
               onTouchEnd={handleMouseUp}
               className={cn(
                 "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 text-white shadow-lg",
-                isListening 
-                  ? "bg-accent animate-pulse-ring" 
-                  : "bg-primary hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 active:translate-y-0"
+                isListening
+                  ? "bg-accent animate-pulse-ring"
+                  : "bg-primary hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 active:translate-y-0",
               )}
             >
               <Mic className={cn("w-6 h-6", isListening && "scale-110")} />

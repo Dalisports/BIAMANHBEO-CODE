@@ -51,7 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110")} />
-                <span className="font-bold">{item.label}</span>
+                <span className="text-sm font-bold">{item.label}</span>
               </Link>
             );
           })}

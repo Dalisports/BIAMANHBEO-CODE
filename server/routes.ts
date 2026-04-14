@@ -74,12 +74,18 @@ export async function registerRoutes(
       const input = api.orders.create.input.parse(req.body);
       const tableNum = input.tableNumber;
       const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
-      const ord = await storage.createOrder({
+      const result = await storage.createOrder({
         ...input,
         customerName: input.customerName || customerName,
       });
-      broadcast({ type: "ORDER_CREATED", data: ord });
-      res.status(201).json(ord);
+      
+      if ('merged' in result) {
+        broadcast({ type: "ORDER_UPDATED", data: result.order });
+        res.status(200).json({ ...result.order, merged: true });
+      } else {
+        broadcast({ type: "ORDER_CREATED", data: result });
+        res.status(201).json(result);
+      }
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
@@ -225,6 +231,18 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error completing item" });
+    }
+  });
+
+  app.post("/api/kitchen/clear-completed", async (req, res) => {
+    try {
+      console.log("[CLEAR] Starting to clear old completed kitchen orders...");
+      const deletedCount = await storage.clearOldCompletedKitchenOrders();
+      console.log(`[CLEAR] Deleted ${deletedCount} orders`);
+      res.json({ success: true, deletedCount });
+    } catch (err) {
+      console.error("[CLEAR] Error:", err);
+      res.status(500).json({ message: "Error clearing completed orders" });
     }
   });
 
@@ -381,7 +399,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         const tableNum = parsedResponse.data.tableNumber;
         const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
         
-        const newOrder = await storage.createOrder({
+        const result = await storage.createOrder({
           tableNumber: tableNum,
           customerName: parsedResponse.data.customerName || customerName,
           phone: parsedResponse.data.phone || null,
@@ -391,7 +409,12 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           paymentStatus: "Unpaid",
           notes: parsedResponse.data.notes || null,
         });
-        broadcast({ type: "ORDER_CREATED", data: newOrder });
+        
+        if ('merged' in result) {
+          broadcast({ type: "ORDER_UPDATED", data: result.order });
+        } else {
+          broadcast({ type: "ORDER_CREATED", data: result });
+        }
       } else if (parsedResponse.action === 'SEND_TO_KITCHEN' && parsedResponse.data?.orderId) {
         await storage.sendToKitchen(parsedResponse.data.orderId);
       } else if (parsedResponse.action === 'PAY_ORDER' && parsedResponse.data?.orderId) {

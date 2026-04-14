@@ -1,8 +1,8 @@
 import { useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useKitchenOrders, useStartKitchenItem, useCompleteKitchenItem, type KitchenItem } from "@/hooks/use-orders";
+import { useKitchenOrders, useStartKitchenItem, useCompleteKitchenItem, useClearCompletedKitchenOrders, type KitchenItem } from "@/hooks/use-orders";
 import { cn } from "@/lib/utils";
-import { Clock, CheckCircle2, Flame, Loader2, Pin } from "lucide-react";
+import { Clock, CheckCircle2, Flame, Loader2, Pin, Trash2 } from "lucide-react";
 
 interface FlattenedItem {
   kitchenOrderId: number;
@@ -77,6 +77,7 @@ export default function Kitchen() {
   const { data: kitchenOrders, isLoading } = useKitchenOrders();
   const startItem = useStartKitchenItem();
   const completeItem = useCompleteKitchenItem();
+  const clearCompleted = useClearCompletedKitchenOrders();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const flattenedItems = useMemo(() => flattenKitchenOrders(kitchenOrders), [kitchenOrders]);
@@ -118,6 +119,14 @@ export default function Kitchen() {
     });
   };
 
+  const handleClearCompleted = () => {
+    console.log("[KITCHEN] handleClearCompleted called");
+    if (confirm("Xóa tất cả các mục hoàn thành từ ngày hôm trước?")) {
+      console.log("[KITCHEN] User confirmed, calling mutate");
+      clearCompleted.mutate();
+    }
+  };
+
   return (
     <div className="h-full">
       <audio ref={audioRef} src="/notification.mp3" />
@@ -148,11 +157,11 @@ export default function Kitchen() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-yellow-500" />
-              <h3 className="text-lg font-bold text-yellow-600">CHỜ NẤU ({pendingItems.length})</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-4 h-4 text-yellow-500" />
+              <h3 className="text-sm font-bold text-yellow-600">CHỜ NẤU ({pendingItems.length})</h3>
             </div>
-            <div className="space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto pr-2">
               {pendingItems.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-dashed">
                   Không có món nào
@@ -163,18 +172,18 @@ export default function Kitchen() {
                     key={`${flatItem.kitchenOrderId}-${flatItem.item.name}-${idx}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-yellow-50 rounded-xl border-2 border-yellow-400 p-3 cursor-pointer hover:bg-yellow-100 transition-colors"
+                    className="bg-yellow-50 rounded-xl border-2 border-yellow-400 p-4 cursor-pointer hover:bg-yellow-100 transition-colors"
                     onClick={() => handleStartItem(flatItem)}
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl font-bold text-yellow-800">Bàn {flatItem.tableNumber}</span>
+                        <span className="text-3xl font-bold text-yellow-800">B{flatItem.tableNumber}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="w-7 h-7 rounded-full bg-yellow-500 text-white flex items-center justify-center text-sm font-bold">
                           {flatItem.item.quantity}
                         </span>
-                        <span className="font-semibold text-yellow-900">{flatItem.item.name}</span>
+                        <span className="text-lg font-semibold text-yellow-900">{flatItem.item.name}</span>
                       </div>
                     </div>
                     {flatItem.item.notes && (
@@ -190,11 +199,11 @@ export default function Kitchen() {
           </div>
 
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <h3 className="text-lg font-bold text-orange-600">ĐANG NẤU ({mergedCookingItems.length})</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <h3 className="text-sm font-bold text-orange-600">ĐANG NẤU ({mergedCookingItems.length})</h3>
             </div>
-            <div className="space-y-2 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
               {mergedCookingItems.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-dashed">
                   Không có món nào
@@ -205,12 +214,12 @@ export default function Kitchen() {
                     key={`${item.kitchenOrderId}-${item.name}-${idx}`}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-orange-50 rounded-xl border-2 border-orange-400 p-2 relative overflow-hidden"
+                    className="bg-orange-50 rounded-xl border-2 border-orange-400 p-3 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-10 h-10 bg-orange-500/10 rounded-bl-full" />
                     <div className="flex justify-between items-center relative">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-orange-800">Bàn {item.tableNumber}</span>
+                        <span className="text-base font-bold text-orange-800">B{item.tableNumber}</span>
                       </div>
                       <button
                         onClick={() => handleCompleteItem(item)}
@@ -229,7 +238,7 @@ export default function Kitchen() {
                       <span className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">
                         {item.totalQuantity}
                       </span>
-                      <span className="text-base font-bold text-orange-900">{item.name}</span>
+                      <span className="text-lg font-bold text-orange-900">{item.name}</span>
                     </div>
                     {item.notes && (
                       <div className="text-xs text-orange-700 mt-1">Ghi chú: {item.notes}</div>
@@ -241,10 +250,27 @@ export default function Kitchen() {
           </div>
 
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 className="w-5 h-5 text-green-500" />
-              <h3 className="text-lg font-bold text-green-600">HOÀN THÀNH ({doneItems.length})</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <h3 className="text-lg font-bold text-green-600">HOÀN THÀNH ({doneItems.length})</h3>
+              </div>
+              {doneItems.length > 0 && (
+                <button
+                  onClick={handleClearCompleted}
+                  disabled={clearCompleted.isPending}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 transition-colors",
+                    clearCompleted.isPending && "opacity-50 cursor-not-allowed"
+                  )}
+                  title="Xóa các mục hoàn thành từ ngày hôm trước (tự động xóa lúc 00:00)"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Xóa cũ
+                </button>
+              )}
             </div>
+            <p className="text-xs text-green-600 mb-2">Tự động xóa sau 24h00 hàng ngày</p>
             <div className="space-y-2 max-h-[calc(100vh-220px)] overflow-y-auto pr-2">
               {doneItems.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-dashed">

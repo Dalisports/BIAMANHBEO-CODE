@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useOrders, useSendToKitchen, usePayOrder, useDeleteOrder, usePaymentSettings, useUpdatePaymentSetting } from "@/hooks/use-orders";
+import { useOrders, useSendToKitchen, usePayOrder, useDeleteOrder, usePaymentSettings, useUpdatePaymentSetting, useUpdateOrder, type OrderItem } from "@/hooks/use-orders";
 import { formatCurrency, cn } from "@/lib/utils";
 import { 
   CheckCircle2, Clock, Loader2, Receipt, Trash2, ChevronDown, 
-  Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy
+  Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy, Edit2, Plus, Minus
 } from "lucide-react";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -42,12 +42,20 @@ export default function Orders() {
   const payOrder = usePayOrder();
   const deleteOrder = useDeleteOrder();
   const updatePaymentSetting = useUpdatePaymentSetting();
+  const updateOrder = useUpdateOrder();
   const [filter, setFilter] = useState<string>("All");
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [editingSetting, setEditingSetting] = useState<string | null>(null);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    customerName: "",
+    phone: "",
+    notes: "",
+    items: [] as OrderItem[],
+  });
   const [settingForm, setSettingForm] = useState({
     label: "",
     icon: "",
@@ -135,13 +143,49 @@ export default function Orders() {
     }
   };
 
+  const handleOpenEdit = (order: any) => {
+    setEditingOrder(order);
+    setEditForm({
+      customerName: order.customerName || "",
+      phone: order.phone || "",
+      notes: order.notes || "",
+      items: [...order.items],
+    });
+  };
+
+  const handleUpdateItemQuantity = (index: number, delta: number) => {
+    const newItems = [...editForm.items];
+    newItems[index] = { ...newItems[index], quantity: Math.max(1, newItems[index].quantity + delta) };
+    setEditForm({ ...editForm, items: newItems });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    const newItems = editForm.items.filter((_, i) => i !== index);
+    setEditForm({ ...editForm, items: newItems });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingOrder) return;
+    const newTotalAmount = editForm.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    updateOrder.mutate({
+      id: editingOrder.id,
+      customerName: editForm.customerName,
+      phone: editForm.phone,
+      notes: editForm.notes,
+      items: editForm.items,
+      totalAmount: newTotalAmount,
+    }, {
+      onSuccess: () => setEditingOrder(null),
+    });
+  };
+
   const activeOrders = orders?.filter(o => ["Pending", "InKitchen", "Ready"].includes(o.status)) || [];
 
   return (
     <div className="h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-sans font-bold text-foreground">Đơn Hàng</h2>
+          <h2 className="text-xl font-sans font-bold text-foreground">Đơn Hàng</h2>
           <p className="text-muted-foreground mt-1 text-sm">Quản lý order theo bàn</p>
         </div>
         <div className="flex items-center gap-3">
@@ -228,14 +272,14 @@ export default function Orders() {
                           {isPaid ? "ĐÃ THANH TOÁN" : STATUS_LABELS[order.status]}
                         </span>
                       </div>
-                      {order.customerName && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Users className="w-3 h-3" /> {order.customerName}
-                          {order.phone && <><Phone className="w-3 h-3 ml-2" /> {order.phone}</>}
-                        </div>
-                      )}
                     </div>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEdit(order)}
+                        className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleDelete(order.id)}
                         className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
@@ -593,6 +637,132 @@ export default function Orders() {
                   Chọn phương thức thanh toán để cài đặt QR và thông tin tài khoản
                 </p>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editingOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+            onClick={() => setEditingOrder(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-border max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold">Sửa Đơn Hàng</h3>
+                <button
+                  onClick={() => setEditingOrder(null)}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-primary/10 rounded-xl p-3 text-center">
+                  <span className="text-sm text-muted-foreground">Bàn {editingOrder.tableNumber}</span>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tên khách hàng</label>
+                  <input
+                    type="text"
+                    value={editForm.customerName}
+                    onChange={(e) => setEditForm({ ...editForm, customerName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                    placeholder="Nhập tên khách hàng"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Số điện thoại</label>
+                  <input
+                    type="text"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                    placeholder="Nhập số điện thoại"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Món đã đặt</label>
+                  <div className="space-y-2">
+                    {editForm.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleUpdateItemQuantity(idx, -1)}
+                            className="w-7 h-7 rounded-lg bg-background border flex items-center justify-center hover:bg-secondary"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-8 text-center font-bold">{item.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateItemQuantity(idx, 1)}
+                            className="w-7 h-7 rounded-lg bg-background border flex items-center justify-center hover:bg-secondary"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveItem(idx)}
+                            className="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Ghi chú</label>
+                  <textarea
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background resize-none h-20"
+                    placeholder="Thêm ghi chú cho đơn hàng"
+                  />
+                </div>
+
+                <div className="bg-accent/20 rounded-xl p-3 text-center">
+                  <span className="text-sm text-muted-foreground">Tổng tiền: </span>
+                  <span className="text-xl font-bold text-accent">
+                    {formatCurrency(editForm.items.reduce((sum, item) => sum + item.price * item.quantity, 0))}
+                  </span>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setEditingOrder(null)}
+                    className="flex-1 px-4 py-3 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={updateOrder.isPending}
+                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    {updateOrder.isPending ? "Đang lưu..." : "Lưu"}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

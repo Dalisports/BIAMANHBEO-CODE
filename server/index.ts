@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { initWebSocket } from "./websocket";
+import { storage } from "./storage";
+import { startOfTomorrow } from "date-fns";
 
 const app = express();
 const httpServer = createServer(app);
@@ -63,6 +65,28 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
   initWebSocket(httpServer);
+
+  function scheduleMidnightClear() {
+    const now = new Date();
+    const tomorrow = startOfTomorrow();
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+    
+    setTimeout(async () => {
+      try {
+        const deletedCount = await storage.clearOldCompletedKitchenOrders();
+        if (deletedCount > 0) {
+          log(`[SCHEDULER] Đã xóa ${deletedCount} đơn bếp hoàn thành từ ngày hôm trước`);
+        }
+      } catch (err) {
+        console.error("[SCHEDULER] Lỗi khi xóa đơn bếp hoàn thành:", err);
+      }
+      
+      scheduleMidnightClear();
+    }, msUntilMidnight);
+  }
+  
+  scheduleMidnightClear();
+  log("[SCHEDULER] Đã lên lịch tự động xóa đơn bếp hoàn thành lúc 00:00 hàng ngày");
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

@@ -14,8 +14,8 @@ import {
   type KitchenOrder,
   type PaymentSetting
 } from "@shared/schema";
-import { eq, inArray, and, desc } from "drizzle-orm";
-import { startOfDay, endOfDay } from "date-fns";
+import { eq, inArray, and, desc, lt } from "drizzle-orm";
+import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
   getCategories(): Promise<typeof categories.$inferSelect[]>;
@@ -48,6 +48,7 @@ export interface IStorage {
   
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
+  clearOldCompletedKitchenOrders(): Promise<number>;
 
   getPaymentSettings(): Promise<PaymentSetting[]>;
   updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>): Promise<PaymentSetting>;
@@ -117,9 +118,54 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
-  async createOrder(order: InsertOrder) {
+  async createOrder(order: InsertOrder): Promise<Order | { merged: true; order: Order }> {
+    const pendingOrder = await this.getPendingOrderByTable(order.tableNumber);
+    
+    if (pendingOrder) {
+      const existingItems = pendingOrder.items as any[];
+      const newItems = order.items as any[];
+      
+      const mergedItems = [...existingItems];
+      
+      for (const newItem of newItems) {
+        const existingIndex = mergedItems.findIndex(
+          i => i.menuItemId === newItem.menuItemId && i.notes === newItem.notes
+        );
+        if (existingIndex >= 0) {
+          mergedItems[existingIndex] = {
+            ...mergedItems[existingIndex],
+            quantity: mergedItems[existingIndex].quantity + newItem.quantity
+          };
+        } else {
+          mergedItems.push(newItem);
+        }
+      }
+      
+      const newTotal = mergedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+      const [updated] = await db.update(orders)
+        .set({ 
+          items: mergedItems,
+          totalAmount: newTotal
+        })
+        .where(eq(orders.id, pendingOrder.id))
+        .returning();
+      
+      return { merged: true, order: updated };
+    }
+    
     const [created] = await db.insert(orders).values(order).returning();
     return created;
+  }
+  
+  async getPendingOrderByTable(tableNumber: string) {
+    const [order] = await db.select().from(orders).where(
+      and(
+        eq(orders.tableNumber, tableNumber),
+        eq(orders.status, "Pending")
+      )
+    );
+    return order;
   }
 
   async updateOrder(id: number, updates: Partial<InsertOrder>) {
@@ -315,6 +361,24 @@ export class DatabaseStorage implements IStorage {
 
   async getPaymentSettings() {
     return await db.select().from(paymentSettings);
+  }
+
+  async clearOldCompletedKitchenOrders(): Promise<number> {
+    const todayStart = startOfToday();
+    
+    const ordersToDelete = await db.select().from(kitchenOrders).where(
+      and(
+        eq(kitchenOrders.status, "Done"),
+        lt(kitchenOrders.completedAt, todayStart)
+      )
+    );
+    
+    if (ordersToDelete.length === 0) return 0;
+    
+    const idsToDelete = ordersToDelete.map(o => o.id);
+    await db.delete(kitchenOrders).where(inArray(kitchenOrders.id, idsToDelete));
+    
+    return ordersToDelete.length;
   }
 
   async updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>) {

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/use-menu";
+import { useCreateOrder } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import { 
-  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle
+  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGES = [
@@ -32,6 +34,8 @@ export default function Menu() {
   const createMenuItem = useCreateMenuItem();
   const updateMenuItem = useUpdateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
+  const createOrder = useCreateOrder();
+  const { toast } = useToast();
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
@@ -41,6 +45,7 @@ export default function Menu() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
+  const [selectedTable, setSelectedTable] = useState("");
   
   const [newItem, setNewItem] = useState({
     name: "",
@@ -160,6 +165,47 @@ export default function Menu() {
       onSuccess: () => {
         setShowDeleteDialog(false);
         setDeleteItemId(null);
+      },
+    });
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!selectedTable.trim()) {
+      toast({
+        title: "Chưa chọn bàn",
+        description: "Vui lòng chọn số bàn trước khi đặt hàng",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const orderData = {
+      tableNumber: selectedTable.trim(),
+      items: cart.map(item => ({
+        menuItemId: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: cartTotal,
+    };
+
+    createOrder.mutate(orderData, {
+      onSuccess: () => {
+        toast({
+          title: "Đặt hàng thành công!",
+          description: `Đơn hàng bàn ${selectedTable} đã được tạo`,
+        });
+        setCart([]);
+        setSelectedTable("");
+        setShowCart(false);
+      },
+      onError: (error) => {
+        toast({
+          title: "Lỗi",
+          description: error instanceof Error ? error.message : "Không thể tạo đơn hàng",
+          variant: "destructive",
+        });
       },
     });
   };
@@ -368,6 +414,20 @@ export default function Menu() {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      <div className="p-4 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-2xl border-2 border-amber-300">
+                        <label className="flex items-center gap-2 text-sm font-bold text-amber-800 mb-2">
+                          <UtensilsCrossed className="w-4 h-4" />
+                          Chọn bàn
+                        </label>
+                        <input
+                          type="text"
+                          value={selectedTable}
+                          onChange={(e) => setSelectedTable(e.target.value)}
+                          placeholder="VD: Bàn 1, Quầy bar..."
+                          className="w-full px-4 py-3 rounded-xl bg-white border-2 border-amber-300 focus:border-amber-500 transition-all outline-none font-medium"
+                        />
+                      </div>
+                      
                       {cart.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 p-4 bg-card rounded-2xl border-2 border-border">
                           <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100 overflow-hidden flex-shrink-0">
@@ -410,8 +470,19 @@ export default function Menu() {
                       <span className="text-lg font-bold text-muted-foreground">Tổng cộng:</span>
                       <span className="text-3xl font-black text-amber-600">{formatCurrency(cartTotal)}</span>
                     </div>
-                    <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all">
-                      ĐẶT HÀNG NGAY
+                    <button 
+                      onClick={handleSubmitOrder}
+                      disabled={createOrder.isPending}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all disabled:opacity-50"
+                    >
+                      {createOrder.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Đang xử lý...
+                        </span>
+                      ) : (
+                        "ĐẶT HÀNG NGAY"
+                      )}
                     </button>
                   </div>
                 )}

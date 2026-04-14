@@ -273,6 +273,36 @@ export function useCompleteKitchenItem() {
   });
 }
 
+export function useClearCompletedKitchenOrders() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      console.log("[CLEAR] Calling clear-completed API...");
+      const res = await fetch("/api/kitchen/clear-completed", {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      console.log("[CLEAR] Response status:", res.status);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to clear completed orders");
+      }
+      const data = await res.json();
+      console.log("[CLEAR] Response data:", data);
+      return data as { success: boolean; deletedCount: number };
+    },
+    onSuccess: (data) => {
+      console.log("[CLEAR] Success, invalidating queries. Deleted:", data.deletedCount);
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+    },
+    onError: (error) => {
+      console.error("[CLEAR] Error:", error);
+    },
+  });
+}
+
 export function useDailyReport() {
   return useQuery({
     queryKey: ["/api/reports/daily"],
