@@ -127,6 +127,16 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/orders/:id/unpay", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      await storage.unpayOrder(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error unpaying" });
+    }
+  });
+
   app.delete("/api/orders/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -355,9 +365,10 @@ Các hành động có thể thực hiện:
 9. CREATE_CATEGORY: Thêm danh mục mới. Data: { name, displayOrder? }
 10. UPDATE_CATEGORY: Sửa tên danh mục. Data: { categoryId, name }
 11. DELETE_CATEGORY: Xóa danh mục. Data: { categoryId }
-12. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
-13. QUERY: Hỏi thông tin. Không cần data.
-14. NONE: Chỉ trò chuyện, không hành động.
+12. UNPAY_ORDER: Hoàn tác thanh toán (đưa về chưa thanh toán). Data: { orderId }
+13. DELETE_ORDER: Xóa đơn hàng. Data: { orderId }
+14. QUERY: Hỏi thông tin. Không cần data.
+15. NONE: Chỉ trò chuyện, không hành động.
 
 LUÔN ưu tiên ADD_TO_TABLE khi khách muốn thêm món vào bàn đang có đơn (status != Complete).
 
@@ -485,6 +496,8 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         await storage.updateCategory(parsedResponse.data.categoryId, { name: parsedResponse.data.name });
       } else if (parsedResponse.action === 'DELETE_CATEGORY' && parsedResponse.data?.categoryId) {
         await storage.deleteCategory(parsedResponse.data.categoryId);
+      } else if (parsedResponse.action === 'UNPAY_ORDER' && parsedResponse.data?.orderId) {
+        await storage.unpayOrder(parsedResponse.data.orderId);
       } else if (parsedResponse.action === 'DELETE_ORDER' && parsedResponse.data?.orderId) {
         await storage.deleteOrder(parsedResponse.data.orderId);
         broadcast({ type: "ORDER_DELETED", data: { id: parsedResponse.data.orderId } });

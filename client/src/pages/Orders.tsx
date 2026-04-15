@@ -233,7 +233,7 @@ export default function Orders() {
             <Receipt className="w-8 h-8" />
           </div>
           <h3 className="text-xl font-bold text-foreground mb-2">Chưa có đơn hàng nào</h3>
-          <p className="text-muted-foreground max-w-sm">Sử dụng trợ lý AI: "Order bàn 5: 2 gà rán, 1 cocacola"</p>
+          <p className="text-muted-foreground max-w-sm">Sử dụng trợ lý AI: "Order bàn 5: 2 bia, 1 đầu lợn"</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

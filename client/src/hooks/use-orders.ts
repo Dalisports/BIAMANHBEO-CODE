@@ -349,6 +349,24 @@ export function usePaymentSettings() {
   });
 }
 
+export function useUnpayOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const res = await fetch(`/api/orders/${orderId}/unpay`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to unpay order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
 export function useUpdatePaymentSetting() {
   const queryClient = useQueryClient();
   

@@ -22,6 +22,7 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<typeof categories.$inferSelect>;
   updateCategory(id: number, data: Partial<InsertCategory>): Promise<typeof categories.$inferSelect>;
   deleteCategory(id: number): Promise<void>;
+  unpayOrder(id: number): Promise<void>;
 
   getMenuItems(): Promise<typeof menuItems.$inferSelect[]>;
   createMenuItem(item: InsertMenuItem): Promise<typeof menuItems.$inferSelect>;
@@ -212,6 +213,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.id, id));
   }
 
+  async unpayOrder(id: number) {
+    await db.update(orders)
+      .set({ 
+        paymentStatus: "Unpaid",
+        paymentMethod: null,
+        paidAt: null,
+        status: "Ready",
+        completedAt: null
+      })
+      .where(eq(orders.id, id));
+  }
+
   async deleteOrder(id: number) {
     await db.delete(kitchenOrders).where(eq(kitchenOrders.orderId, id));
     await db.delete(orders).where(eq(orders.id, id));
@@ -225,22 +238,36 @@ export class DatabaseStorage implements IStorage {
       name: item.name,
       quantity: item.quantity,
       notes: item.notes || null,
-      cookingStatus: "pending"
+      cookingStatus: "cooking"
     }));
 
-    const [created] = await db.insert(kitchenOrders).values({
-      orderId: order.id,
-      tableNumber: order.tableNumber,
-      items: kitchenItems,
-      status: "Waiting",
-      priority: "normal"
-    }).returning();
+    const [existing] = await db.select().from(kitchenOrders)
+      .where(eq(kitchenOrders.orderId, orderId))
+      .limit(1);
+
+    let result;
+    if (existing) {
+      const [updated] = await db.update(kitchenOrders)
+        .set({ items: kitchenItems, status: "Cooking" })
+        .where(eq(kitchenOrders.id, existing.id))
+        .returning();
+      result = updated;
+    } else {
+      const [created] = await db.insert(kitchenOrders).values({
+        orderId: order.id,
+        tableNumber: order.tableNumber,
+        items: kitchenItems,
+        status: "Cooking",
+        priority: "normal"
+      }).returning();
+      result = created;
+    }
 
     await db.update(orders)
       .set({ status: "InKitchen" })
       .where(eq(orders.id, orderId));
 
-    return created;
+    return result;
   }
 
   async getKitchenOrders() {
