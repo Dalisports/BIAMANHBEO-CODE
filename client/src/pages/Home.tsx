@@ -62,22 +62,12 @@ export default function Home() {
 
   const { isListening, listen, stop, speak, supported } =
     useSpeech(handleSpeechResult);
-  const [isPressing, setIsPressing] = useState(false);
 
-  const handleMouseDown = () => {
-    setIsPressing(true);
-    listen();
-  };
-
-  const handleMouseUp = () => {
-    setIsPressing(false);
-    stop();
-  };
-
-  const handleMouseLeave = () => {
-    if (isPressing) {
-      setIsPressing(false);
+  const handleToggleVoice = () => {
+    if (isListening) {
       stop();
+    } else {
+      listen();
     }
   };
 
@@ -495,11 +485,7 @@ export default function Home() {
         {supported && (
           <div className="flex flex-col-reverse items-center gap-2">
             <button
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseLeave}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
+              onClick={handleToggleVoice}
               className={cn(
                 "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 text-white shadow-lg",
                 isListening
@@ -510,7 +496,7 @@ export default function Home() {
               <Mic className={cn("w-6 h-6", isListening && "scale-110")} />
             </button>
             <span className="text-xs text-muted-foreground whitespace-nowrap italic">
-              {isListening ? "Đang nghe..." : "Bấm giữ để nói"}
+              {isListening ? "Đang nghe..." : "Bấm để nói"}
             </span>
           </div>
         )}
