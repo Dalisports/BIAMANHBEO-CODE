@@ -5,6 +5,7 @@ import {
   categories,
   kitchenOrders,
   paymentSettings,
+  settings,
   type InsertMenuItem,
   type InsertOrder,
   type InsertCategory,
@@ -22,6 +23,8 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<typeof categories.$inferSelect>;
   updateCategory(id: number, data: Partial<InsertCategory>): Promise<typeof categories.$inferSelect>;
   deleteCategory(id: number): Promise<void>;
+  getSetting(key: string): Promise<any>;
+  setSetting(key: string, value: string): Promise<any>;
   unpayOrder(id: number): Promise<void>;
 
   getMenuItems(): Promise<typeof menuItems.$inferSelect[]>;
@@ -60,6 +63,26 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getCategories() {
     return await db.select().from(categories).orderBy(categories.displayOrder);
+  }
+
+  async getSetting(key: string) {
+    const [setting] = await db.select().from(settings).where(eq(settings.key, key));
+    return setting;
+  }
+
+  async setSetting(key: string, value: string) {
+    const existing = await this.getSetting(key);
+    if (existing) {
+      const [updated] = await db.update(settings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(settings.key, key))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(settings)
+      .values({ key, value })
+      .returning();
+    return created;
   }
 
   async createCategory(category: InsertCategory) {

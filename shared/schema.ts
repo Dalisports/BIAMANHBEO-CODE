@@ -9,6 +9,13 @@ export const categories = pgTable("categories", {
   isActive: boolean("is_active").default(true),
 });
 
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const menuItems = pgTable("menu_items", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -18,6 +25,7 @@ export const menuItems = pgTable("menu_items", {
   image: text("image"),
   isAvailable: boolean("is_available").default(true),
   isActive: boolean("is_active").default(true),
+  isSticky: boolean("is_sticky").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

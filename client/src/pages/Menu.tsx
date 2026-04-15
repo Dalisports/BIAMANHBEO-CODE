@@ -59,6 +59,7 @@ export default function Menu() {
     price: "",
     description: "",
     image: "",
+    isSticky: false,
   });
 
   const filteredItems = menuItems?.filter(item => {
@@ -134,6 +135,7 @@ export default function Menu() {
       price: item.price.toString(),
       description: item.description || "",
       image: item.image || "",
+      isSticky: item.isSticky || false,
     });
     setShowEditDialog(true);
   };
@@ -149,6 +151,7 @@ export default function Menu() {
         price: parseInt(editForm.price, 10),
         description: editForm.description,
         image: editForm.image || null,
+        isSticky: editItem.isSticky || false,
       },
       {
         onSuccess: () => {
@@ -695,6 +698,26 @@ export default function Menu() {
                       />
                     </div>
                   )}
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border-2 border-yellow-300">
+                  <div>
+                    <p className="font-bold text-yellow-800">Sticky TV</p>
+                    <p className="text-xs text-yellow-600">Hiển thị trên màn hình TV</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSticky = !editForm.isSticky;
+                      setEditForm({ ...editForm, isSticky: newSticky });
+                      if (editItem) {
+                        updateMenuItem.mutate({ id: editItem.id, isSticky: newSticky });
+                      }
+                    }}
+                    className={`w-14 h-8 rounded-full transition-colors relative ${editForm.isSticky ? 'bg-yellow-500' : 'bg-gray-300'}`}
+                  >
+                    <span className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-transform ${editForm.isSticky ? 'translate-x-7' : 'translate-x-1'}`} />
+                  </button>
                 </div>
 
                 <div className="flex gap-3 pt-2">

@@ -249,6 +249,21 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/orders/:id/move", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { tableNumber } = req.body;
+      if (!tableNumber) {
+        return res.status(400).json({ message: "Missing table number" });
+      }
+      const updated = await storage.updateOrder(id, { tableNumber });
+      broadcast({ type: "ORDER_UPDATED", data: updated });
+      res.json(updated);
+    } catch (err) {
+      res.status(400).json({ message: "Error moving order" });
+    }
+  });
+
   app.get("/api/kitchen", async (req, res) => {
     const kitchenOrders = await storage.getKitchenOrders();
     res.json(kitchenOrders);
@@ -319,6 +334,42 @@ export async function registerRoutes(
   app.get("/api/categories", async (req, res) => {
     const cats = await storage.getCategories();
     res.json(cats);
+  });
+
+  app.get("/api/settings/:key", async (req, res) => {
+    try {
+      const key = req.params.key;
+      const setting = await storage.getSetting(key);
+      res.json(setting || { key, value: null });
+    } catch (err) {
+      res.status(500).json({ message: "Error getting setting" });
+    }
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    try {
+      const { key, value } = req.body;
+      if (!key) {
+        return res.status(400).json({ message: "Missing key" });
+      }
+      const setting = await storage.setSetting(key, value);
+      res.json(setting);
+    } catch (err) {
+      res.status(500).json({ message: "Error saving setting" });
+    }
+  });
+
+  app.post("/api/ticker", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Missing text" });
+      }
+      await storage.setSetting("tickerText", text);
+      res.json({ success: true, text });
+    } catch (err) {
+      res.status(500).json({ message: "Error updating ticker" });
+    }
   });
 
   app.post("/api/categories", async (req, res) => {

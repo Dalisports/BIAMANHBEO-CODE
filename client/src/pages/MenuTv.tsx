@@ -1,4 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    updateTickerText?: (text: string) => void;
+  }
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useKitchenOrders } from "@/hooks/use-orders";
@@ -23,20 +29,40 @@ export default function MenuTv() {
   const { data: kitchenOrders } = useKitchenOrders();
 
   const [featuredIndex, setFeaturedIndex] = useState(0);
-
-  const activeCookingOrders =
-    kitchenOrders?.filter(
-      (o) => o.status === "Cooking" || o.status === "Waiting",
-    ) || [];
-  const doneOrders = kitchenOrders?.filter((o) => o.status === "Done") || [];
+  const [tickerText, setTickerText] = useState("🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺");
 
   useEffect(() => {
-    if (!menuItems || menuItems.length === 0) return;
-    const interval = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % menuItems.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [menuItems]);
+    fetch("/api/settings/tickerText", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.value) setTickerText(data.value);
+      })
+      .catch(() => {});
+  }, []);
+
+  const updateTicker = async (text: string) => {
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "tickerText", value: text }),
+        credentials: "include",
+      });
+      setTickerText(text);
+    } catch (err) {
+      console.error("Failed to update ticker:", err);
+    }
+  };
+
+  useEffect(() => {
+    window.updateTickerText = updateTicker;
+  }, []);
+
+const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" || o.status === "Waiting") || [];
+  const doneOrders = kitchenOrders?.filter(o => o.status === "Done") || [];
+  const stickyItems = menuItems?.filter(item => item.isSticky) || [];
+  const normalItems = menuItems?.filter(item => !item.isSticky) || [];
+  const sortedItems = [...stickyItems, ...normalItems];
 
   const getCookingItems = () => {
     const items: { name: string; quantity: number; tableNumber: string }[] = [];
@@ -55,7 +81,15 @@ export default function MenuTv() {
   };
 
   const cookingItems = getCookingItems();
-  const featuredItem = menuItems?.[featuredIndex];
+  const featuredItem = sortedItems?.[featuredIndex];
+
+  useEffect(() => {
+    if (!sortedItems || sortedItems.length === 0) return;
+    const interval = setInterval(() => {
+      setFeaturedIndex((prev) => (prev + 1) % sortedItems.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sortedItems]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
@@ -69,7 +103,7 @@ export default function MenuTv() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 px-[3vw] py-2 bg-gradient-to-b from-black/60 to-transparent">
+      <div className="relative z-10 px-4 py-2 bg-gradient-to-b from-black/60 to-transparent">
         <div className="flex items-center justify-between">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -150,10 +184,10 @@ export default function MenuTv() {
         </div>
       </div>
 
-      {/* Main content - auto height */}
-      <div className="relative z-10 px-[3vw] py-[2vh] flex gap-[2vw] items-stretch">
+      {/* Main content */}
+      <div className="relative z-10 px-[3vw] py-2 flex gap-[2vw] items-start overflow-hidden">
         {/* Menu grid */}
-        <div className="flex-1 grid grid-cols-5 gap-[1vw] content-start self-start">
+        <div className="flex-1 grid grid-cols-4 gap-2 content-start self-start">
           {isLoading ? (
             <div className="flex items-center justify-center col-span-full h-full">
               <motion.div
@@ -165,7 +199,7 @@ export default function MenuTv() {
               </motion.div>
             </div>
           ) : (
-            menuItems?.slice(0, 20).map((item, idx) => (
+            sortedItems?.slice(0, 20).map((item, idx) => (
               <motion.div
                 key={item.id}
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -214,8 +248,8 @@ export default function MenuTv() {
           )}
         </div>
 
-        {/* Featured box - chiều cao tự theo ảnh */}
-        <div className="w-[30vw] self-center">
+        {/* Featured box - tự theo ảnh */}
+        <div className="w-[30vw] self-start">
           <motion.div
             key={featuredIndex}
             initial={{ scale: 0.9, opacity: 0, x: 30 }}
@@ -234,8 +268,8 @@ export default function MenuTv() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  {/* Square image */}
-                  <div className="aspect-square w-full relative">
+                  {/* Image - tự theo kích thước ảnh */}
+                  <div className="w-full relative">
                     <motion.div
                       animate={{ y: [0, -3, 0] }}
                       transition={{
@@ -280,24 +314,24 @@ export default function MenuTv() {
                     />
                   </div>
 
-                  {/* Info at bottom with 50% transparent background */}
+                  {/* Info at bottom - larger text */}
                   <motion.div
-                    className="mt-auto p-[1.5vw] text-center bg-black/50 flex-shrink-0"
+                    className="mt-auto p-3 text-center bg-black/50 flex-shrink-0"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <div className="flex items-center justify-center gap-[1vw]">
+                    <div className="flex items-center justify-center gap-3">
                       <motion.p
                         animate={{
                           textShadow: [
                             "0px 0px 0px #fff",
-                            "0.15vw 0.15vw 0.5vw #fbbf24",
+                            "2px 2px 8px #fbbf24",
                             "0px 0px 0px #fff",
                           ],
                         }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className="font-bold text-[1.3vw] truncate"
+                        className="font-bold text-2xl truncate"
                       >
                         {featuredItem.name}
                       </motion.p>
@@ -305,7 +339,7 @@ export default function MenuTv() {
                         initial={{ scale: 1 }}
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 0.5, delay: 0.3 }}
-                        className="text-yellow-400 font-black text-[2vw]"
+                        className="text-yellow-400 font-black text-3xl"
                       >
                         {formatCurrency(featuredItem.price)}
                       </motion.p>
@@ -357,11 +391,8 @@ export default function MenuTv() {
           }}
           className="whitespace-nowrap py-[1vh]"
         >
-          <span className="inline-block px-[4vw] text-black text-[1.2vw] font-bold">
-            🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH
-            BÉO 🌟 Miễn phí đỗ xe 🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟
-            Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺 BIA MẠNH BÉO - Đặc sản
-            Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺
+          <span className="inline-block px-[4vw] text-black text-xl font-bold">
+            {tickerText} {tickerText} {tickerText}
           </span>
         </motion.div>
       </div>

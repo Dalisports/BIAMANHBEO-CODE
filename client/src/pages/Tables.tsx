@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
@@ -14,20 +14,45 @@ const TABLE_STATUS = {
 };
 
 const QUICK_ITEMS = [
-  { id: 100, name: "Cốc bia",  price: 15000 },
-  { id: 101, name: "Ca bia",   price: 25000 },
-  { id: 102, name: "Lạc",      price: 20000 },
+  { id: 100, name: "Cốc bia",  price: 6000 },
+  { id: 101, name: "Ca bia",   price: 30000 },
+  { id: 102, name: "Lạc",     price: 20000 },
 ];
 
 const MAX_TABLES = 12;
-const TABLE_NAMES_KEY = "soi_table_names";
+const TABLE_NAMES_KEY = "tableNames";
 
-function loadTableNames(): Record<number, string> {
-  try { return JSON.parse(localStorage.getItem(TABLE_NAMES_KEY) || "{}"); }
-  catch { return {}; }
-}
-function saveTableNames(n: Record<number, string>) {
-  localStorage.setItem(TABLE_NAMES_KEY, JSON.stringify(n));
+function useTableNames() {
+  const [tableNames, setTableNames] = useState<Record<number, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings/tableNames", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.value) {
+          try { setTableNames(JSON.parse(data.value)); } catch { setTableNames({}); }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const saveTableNames = async (names: Record<number, string>) => {
+    setTableNames(names);
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "tableNames", value: JSON.stringify(names) }),
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Failed to save table names:", err);
+    }
+  };
+
+  return { tableNames, saveTableNames, isLoading };
 }
 
 function getActiveStatus(order: Order): keyof typeof TABLE_STATUS {
@@ -47,12 +72,14 @@ export default function Tables() {
   const updateOrder = useUpdateOrder();
   const payOrder = usePayOrder();
   const unpayOrder = useUnpayOrder();
+  const { tableNames, saveTableNames } = useTableNames();
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [searchMenu, setSearchMenu] = useState("");
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState<number | null>(null);
+  const [moveTargetTable, setMoveTargetTable] = useState<number | null>(null);
   const [payMethod, setPayMethod] = useState("cash");
-  const [tableNames, setTableNames] = useState<Record<number, string>>(loadTableNames);
   const [renamingTable, setRenamingTable] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -113,7 +140,7 @@ export default function Tables() {
     const updated = { ...tableNames };
     if (trimmed && trimmed !== `Bàn ${num}`) updated[num] = trimmed;
     else delete updated[num];
-    setTableNames(updated);
+    saveTableNames(updated);
     saveTableNames(updated);
     setRenamingTable(null);
   };
@@ -150,6 +177,17 @@ export default function Tables() {
     if (items.length === 0) return;
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
     updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
+  };
+
+  const handleMoveToTable = async (orderId: number, newTableNumber: string) => {
+    await fetch(`/api/orders/${orderId}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tableNumber: newTableNumber }),
+      credentials: "include",
+    });
+    setShowMoveModal(null);
+    setMoveTargetTable(null);
   };
 
   const handleUpdateQuantity = (index: number, delta: number) => {
@@ -268,7 +306,7 @@ export default function Tables() {
             exit={{ y: 100, opacity: 0 }}
             className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm p-4 flex flex-col"
           >
-            <div className="flex-1 max-w-2xl mx-auto w-full flex flex-col gap-4">
+            <div className="flex-1 max-w-2xl mx-auto w-full flex flex-col gap-4 pb-20 md:pb-4">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -357,8 +395,17 @@ export default function Tables() {
                 </div>
               </div>
 
-              {/* Pay button */}
+              {/* Action buttons */}
               <div className="flex gap-2 flex-shrink-0">
+                {selectedOrder && (
+                  <button
+                    onClick={() => setShowMoveModal(selectedOrder.id)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                  >
+                    <span className="text-lg">🔄</span>
+                    Đổi Bàn
+                  </button>
+                )}
                 {selectedOrder && (currentStatus === "ready" || currentStatus === "cooking") && (
                   <button
                     data-testid="pay-order-btn"
@@ -481,6 +528,82 @@ export default function Tables() {
                   className="flex-1 px-4 py-3 rounded-xl font-bold bg-green-500 text-white hover:bg-green-600 transition-colors disabled:opacity-50"
                 >
                   {payOrder.isPending ? "Đang xử lý..." : "Xác nhận thanh toán"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Move table modal */}
+      <AnimatePresence>
+        {showMoveModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => { setShowMoveModal(null); setMoveTargetTable(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-blue-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-black text-blue-500">ĐỔI BÀN</h3>
+                <button
+                  onClick={() => { setShowMoveModal(null); setMoveTargetTable(null); }}
+                  className="p-2 rounded-full hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-4">Chọn bàn muốn chuyển đến:</p>
+
+              <div className="grid grid-cols-4 gap-2 mb-6">
+                {Array.from({ length: MAX_TABLES }, (_, i) => i + 1).map(num => {
+                  const hasOrder = !!getActiveOrder(num);
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => setMoveTargetTable(num)}
+                      disabled={hasOrder}
+                      className={cn(
+                        "p-3 rounded-xl border-2 font-bold transition-colors",
+                        moveTargetTable === num
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : hasOrder
+                            ? "border-red-300 bg-red-50 text-red-400 cursor-not-allowed"
+                            : "border-border hover:border-blue-300"
+                      )}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowMoveModal(null); setMoveTargetTable(null); }}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => {
+                    if (showMoveModal && moveTargetTable) {
+                      handleMoveToTable(showMoveModal, moveTargetTable.toString());
+                    }
+                  }}
+                  disabled={!moveTargetTable}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  Xác nhận
                 </button>
               </div>
             </motion.div>
