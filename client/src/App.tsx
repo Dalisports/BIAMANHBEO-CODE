@@ -13,22 +13,27 @@ import Kitchen from "@/pages/Kitchen";
 import Reports from "@/pages/Reports";
 import History from "@/pages/History";
 import Tables from "@/pages/Tables";
+import MenuTv from "@/pages/MenuTv";
 
 function Router() {
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Tables} />
-        <Route path="/orders" component={Orders} />
-        <Route path="/kitchen" component={Kitchen} />
-        <Route path="/menu" component={Menu} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/history" component={History} />
-        <Route path="/tables" component={Tables} />
-        <Route path="/home" component={Home} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/menu-tv" component={MenuTv} />
+      <Route path="/" />
+      <Layout>
+        <Switch>
+          <Route path="/" component={Tables} />
+          <Route path="/orders" component={Orders} />
+          <Route path="/kitchen" component={Kitchen} />
+          <Route path="/menu" component={Menu} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/history" component={History} />
+          <Route path="/tables" component={Tables} />
+          <Route path="/home" component={Home} />
+        </Switch>
+      </Layout>
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 

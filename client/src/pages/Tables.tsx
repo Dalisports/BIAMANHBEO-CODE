@@ -4,7 +4,7 @@ import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, 
 import { useMenuItems } from "@/hooks/use-menu";
 import { formatCurrency, cn } from "@/lib/utils";
 import { 
-  Plus, Minus, X, CreditCard, Loader2, Pencil, Check, RotateCcw
+  Plus, Minus, X, CreditCard, Loader2, Pencil, Check
 } from "lucide-react";
 
 const TABLE_STATUS = {
@@ -239,9 +239,8 @@ export default function Tables() {
                       data-testid={`unpay-card-${tableNum}`}
                       onClick={e => handleUnpayFromCard(e, paidOrder.id)}
                       disabled={unpayOrder.isPending}
-                      className="mt-1.5 flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-100 border border-orange-300 text-orange-700 text-xs font-semibold hover:bg-orange-200 transition-colors disabled:opacity-50"
+                      className="absolute bottom-1 left-1 right-1 flex items-center justify-center gap-1 px-1 py-0.5 rounded bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-medium hover:bg-orange-200 transition-colors disabled:opacity-50"
                     >
-                      <RotateCcw className="w-3 h-3" />
                       Hoàn tác TT
                     </button>
                   )}
@@ -289,7 +288,7 @@ export default function Tables() {
 
               {/* Current items */}
               {selectedOrder && selectedOrder.items && selectedOrder.items.length > 0 && (
-                <div className="bg-card rounded-xl border p-3 flex-shrink-0 max-h-48 overflow-y-auto">
+                <div className="bg-card rounded-xl border p-3 flex-shrink-0 max-h-[300px] overflow-y-auto">
                   <h4 className="text-sm font-bold text-muted-foreground mb-2">
                     Đã đặt ({selectedOrder.items.length} món)
                   </h4>
@@ -343,7 +342,7 @@ export default function Tables() {
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-[300px] overflow-y-auto">
                   {filteredMenuItems.map(item => (
                     <button
                       key={item.id}
