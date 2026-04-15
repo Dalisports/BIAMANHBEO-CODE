@@ -12,6 +12,7 @@ import {
   DollarSign,
   Clock,
   ThumbsUp,
+  Trash2,
 } from "lucide-react";
 import { useProcessChat } from "@/hooks/use-chat";
 import { useSpeech } from "@/hooks/use-speech";
@@ -29,20 +30,41 @@ type Message = {
   actionData?: any;
 };
 
+const INTRO_MESSAGE: Message = {
+  id: "intro",
+  role: "assistant",
+  content: "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng F&B của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
+  timestamp: new Date(),
+};
+
+const CHAT_STORAGE_KEY = "soi-fb-chat-history";
+const MAX_STORED_INTERACTIONS = 10;
+
+function loadMessages(): Message[] {
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return [INTRO_MESSAGE];
+    const parsed = JSON.parse(raw) as Message[];
+    return [INTRO_MESSAGE, ...parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) }))];
+  } catch {
+    return [INTRO_MESSAGE];
+  }
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    const withoutIntro = msgs.filter(m => m.id !== "intro");
+    const recent = withoutIntro.slice(-(MAX_STORED_INTERACTIONS * 2));
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(recent));
+  } catch {}
+}
+
 export default function Home() {
   const { data: orders } = useOrders();
   const { data: kitchenOrders } = useKitchenOrders();
   const { data: menuItems } = useMenuItems();
   const queryClient = useQueryClient();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "intro",
-      role: "assistant",
-      content:
-        "Xin chào! Tôi là SÓI F&B - Trợ lý nhà hàng F&B của bạn. Tôi có thể giúp bạn: Order món, gửi bếp, thanh toán và xem báo cáo.",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [input, setInput] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [pendingAction, setPendingAction] = useState<{
@@ -74,6 +96,10 @@ export default function Home() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, chatMutation.isPending]);
+
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   const handleSend = (textToSend = input) => {
     if (!textToSend.trim() || chatMutation.isPending) return;
@@ -296,22 +322,36 @@ export default function Home() {
             Quản lý nhà hàng F&B của bạn
           </p>
         </div>
-        <button
-          onClick={() => setAutoSpeak(!autoSpeak)}
-          className={cn(
-            "p-3 rounded-full transition-all duration-300",
-            autoSpeak
-              ? "bg-accent/10 text-accent hover:bg-accent/20"
-              : "bg-secondary text-muted-foreground hover:bg-secondary/80",
-          )}
-          title={autoSpeak ? "Tắt tự động đọc" : "Bật tự động đọc"}
-        >
-          {autoSpeak ? (
-            <Volume2 className="w-5 h-5" />
-          ) : (
-            <VolumeX className="w-5 h-5" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (confirm("Xóa toàn bộ lịch sử trò chuyện?")) {
+                localStorage.removeItem(CHAT_STORAGE_KEY);
+                setMessages([INTRO_MESSAGE]);
+              }
+            }}
+            className="p-3 rounded-full bg-secondary text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+            title="Xóa lịch sử trò chuyện"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setAutoSpeak(!autoSpeak)}
+            className={cn(
+              "p-3 rounded-full transition-all duration-300",
+              autoSpeak
+                ? "bg-accent/10 text-accent hover:bg-accent/20"
+                : "bg-secondary text-muted-foreground hover:bg-secondary/80",
+            )}
+            title={autoSpeak ? "Tắt tự động đọc" : "Bật tự động đọc"}
+          >
+            {autoSpeak ? (
+              <Volume2 className="w-5 h-5" />
+            ) : (
+              <VolumeX className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-4 gap-2 mb-2">
