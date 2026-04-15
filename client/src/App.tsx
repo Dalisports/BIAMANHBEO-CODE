@@ -19,7 +19,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/menu-tv" component={MenuTv} />
-      <Route path="/" />
       <Layout>
         <Switch>
           <Route path="/" component={Tables} />
