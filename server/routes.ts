@@ -40,11 +40,22 @@ export async function registerRoutes(
   app.patch("/api/products/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { name, price, categoryId, description, image, isAvailable } = req.body;
-      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable });
+      const { name, price, categoryId, description, image, isAvailable, isSticky } = req.body;
+      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky });
       res.json(updated);
     } catch (err) {
+      console.error("Update product error:", err);
       res.status(500).json({ message: "Failed to update product" });
+    }
+  });
+
+  app.post("/api/migrate/add-sticky-column", async (req, res) => {
+    try {
+      await storage.addIsStickyColumn();
+      res.json({ success: true, message: "Column added" });
+    } catch (err) {
+      console.error("Migration error:", err);
+      res.status(500).json({ message: "Migration failed" });
     }
   });
 
@@ -231,7 +242,10 @@ export async function registerRoutes(
     try {
       const id = Number(req.params.id);
       const { method } = req.body;
+      const order = await storage.getOrder(id);
       await storage.payOrder(id, method);
+      broadcast({ type: "KITCHEN_ORDER_DELETED", data: { orderId: id } });
+      broadcast({ type: "ORDER_UPDATED", data: { ...order, status: "Complete", paymentStatus: "Paid" } });
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error paying" });

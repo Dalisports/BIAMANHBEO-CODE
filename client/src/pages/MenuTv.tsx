@@ -29,12 +29,14 @@ export default function MenuTv() {
   const { data: kitchenOrders } = useKitchenOrders();
 
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [tickerText, setTickerText] = useState("🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺");
+  const [tickerText, setTickerText] = useState(
+    "🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺",
+  );
 
   useEffect(() => {
     fetch("/api/settings/tickerText", { credentials: "include" })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data?.value) setTickerText(data.value);
       })
       .catch(() => {});
@@ -58,11 +60,13 @@ export default function MenuTv() {
     window.updateTickerText = updateTicker;
   }, []);
 
-const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" || o.status === "Waiting") || [];
-  const doneOrders = kitchenOrders?.filter(o => o.status === "Done") || [];
-  const stickyItems = menuItems?.filter(item => item.isSticky) || [];
-  const normalItems = menuItems?.filter(item => !item.isSticky) || [];
-  const sortedItems = [...stickyItems, ...normalItems];
+  const activeCookingOrders =
+    kitchenOrders?.filter(
+      (o) => o.status === "Cooking" || o.status === "Waiting",
+    ) || [];
+  const doneOrders = kitchenOrders?.filter((o) => o.status === "Done") || [];
+  const stickyItems = menuItems?.filter((item) => item.isSticky) || [];
+  const displayItems = stickyItems.slice(0, 12);
 
   const getCookingItems = () => {
     const items: { name: string; quantity: number; tableNumber: string }[] = [];
@@ -81,15 +85,15 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
   };
 
   const cookingItems = getCookingItems();
-  const featuredItem = sortedItems?.[featuredIndex];
+  const featuredItem = displayItems?.[featuredIndex];
 
   useEffect(() => {
-    if (!sortedItems || sortedItems.length === 0) return;
+    if (!displayItems || displayItems.length === 0) return;
     const interval = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % sortedItems.length);
+      setFeaturedIndex((prev) => (prev + 1) % displayItems.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [sortedItems]);
+  }, [displayItems]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
@@ -126,9 +130,7 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 2, repeat: Infinity }}
               className="text-[1vw] text-orange-400 font-medium"
-            >
-              THỰC ĐƠN ĐẶC BIỆT
-            </motion.p>
+            ></motion.p>
           </motion.div>
 
           <div className="flex gap-[2vw]">
@@ -185,9 +187,9 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 px-[3vw] py-2 flex gap-[2vw] items-start overflow-hidden">
-        {/* Menu grid */}
-        <div className="flex-1 grid grid-cols-4 gap-2 content-start self-start">
+      <div className="relative z-10 px-[3vw] py-2 flex gap-[3vw] items-start overflow-hidden">
+        {/* Menu grid - 12 sticky items in 3x4 grid */}
+        <div className="w-[40%] grid grid-cols-3 gap-3 content-start self-start">
           {isLoading ? (
             <div className="flex items-center justify-center col-span-full h-full">
               <motion.div
@@ -198,8 +200,15 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
                 🍺
               </motion.div>
             </div>
+          ) : displayItems.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-400">
+              <p className="text-[2vw] font-bold">Chưa có món Sticky TV nào</p>
+              <p className="text-[1vw] mt-2">
+                Bật Sticky TV trong mục sửa món để hiển thị
+              </p>
+            </div>
           ) : (
-            sortedItems?.slice(0, 20).map((item, idx) => (
+            displayItems.slice(0, 12).map((item, idx) => (
               <motion.div
                 key={item.id}
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -249,15 +258,15 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
         </div>
 
         {/* Featured box - tự theo ảnh */}
-        <div className="w-[30vw] self-start">
-          <motion.div
-            key={featuredIndex}
-            initial={{ scale: 0.9, opacity: 0, x: 30 }}
-            animate={{ scale: 1, opacity: 1, x: 0 }}
-            exit={{ scale: 0.9, opacity: 0, x: -30 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="relative rounded-2xl overflow-hidden bg-slate-800/80 border-2 border-yellow-500/50"
-          >
+        <div className="w-[55vw] self-start">
+            <motion.div
+              key={featuredIndex}
+              initial={{ scale: 0.9, opacity: 0, x: 30 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ scale: 0.9, opacity: 0, x: -30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="relative rounded-2xl overflow-hidden bg-slate-800/80 border-2 border-yellow-500/50 min-h-[50vh]"
+            >
             <AnimatePresence mode="wait">
               {featuredItem && (
                 <motion.div
@@ -269,7 +278,7 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
                   transition={{ duration: 0.4 }}
                 >
                   {/* Image - tự theo kích thước ảnh */}
-                  <div className="w-full relative">
+                  <div className="w-full relative aspect-[16/9]">
                     <motion.div
                       animate={{ y: [0, -3, 0] }}
                       transition={{
@@ -316,12 +325,12 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
 
                   {/* Info at bottom - larger text */}
                   <motion.div
-                    className="mt-auto p-3 text-center bg-black/50 flex-shrink-0"
+                    className="mt-auto p-4 md:p-5 text-center bg-black/50 flex-shrink-0"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
                       <motion.p
                         animate={{
                           textShadow: [
@@ -331,7 +340,7 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
                           ],
                         }}
                         transition={{ duration: 2, repeat: Infinity }}
-                        className="font-bold text-2xl truncate"
+                        className="font-black text-3xl md:text-4xl lg:text-5xl truncate max-w-full"
                       >
                         {featuredItem.name}
                       </motion.p>
@@ -339,7 +348,7 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
                         initial={{ scale: 1 }}
                         animate={{ scale: [1, 1.1, 1] }}
                         transition={{ duration: 0.5, delay: 0.3 }}
-                        className="text-yellow-400 font-black text-3xl"
+                        className="text-yellow-400 font-black text-2xl md:text-3xl lg:text-4xl"
                       >
                         {formatCurrency(featuredItem.price)}
                       </motion.p>
@@ -349,7 +358,7 @@ const activeCookingOrders = kitchenOrders?.filter(o => o.status === "Cooking" ||
                         initial={{ y: 10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="text-slate-300 text-[0.8vw] mt-[0.3vw] line-clamp-2"
+                        className="text-slate-300 text-base md:text-lg mt-2 line-clamp-2"
                       >
                         {featuredItem.description}
                       </motion.p>

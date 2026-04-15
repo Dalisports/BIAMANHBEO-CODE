@@ -123,6 +123,7 @@ async function seedMenuIfEmpty() {
 (async () => {
   await registerRoutes(httpServer, app);
   initWebSocket(httpServer);
+  await storage.runMigrations();
   await seedMenuIfEmpty();
 
   function scheduleMidnightClear() {

@@ -4,7 +4,7 @@ import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, 
 import { useMenuItems } from "@/hooks/use-menu";
 import { formatCurrency, cn } from "@/lib/utils";
 import { 
-  Plus, Minus, X, CreditCard, Loader2, Pencil, Check
+  Plus, Minus, X, CreditCard, Loader2, Pencil, Check, AlertTriangle, Trash2
 } from "lucide-react";
 
 const TABLE_STATUS = {
@@ -16,7 +16,7 @@ const TABLE_STATUS = {
 const QUICK_ITEMS = [
   { id: 100, name: "Cốc bia",  price: 6000 },
   { id: 101, name: "Ca bia",   price: 30000 },
-  { id: 102, name: "Lạc",     price: 20000 },
+  { id: 102, name: "Lạc rang",     price: 10000 },
 ];
 
 const MAX_TABLES = 12;
@@ -82,6 +82,8 @@ export default function Tables() {
   const [payMethod, setPayMethod] = useState("cash");
   const [renamingTable, setRenamingTable] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [showDeleteItemModal, setShowDeleteItemModal] = useState<number | null>(null);
+  const [showClearTableModal, setShowClearTableModal] = useState(false);
 
   // Active order: non-complete (pending/in-kitchen/ready)
   const getActiveOrder = (tableNum: number): Order | undefined =>
@@ -171,12 +173,30 @@ export default function Tables() {
   };
 
   const handleRemoveItem = (index: number) => {
-    if (!selectedOrder) return;
+    setShowDeleteItemModal(index);
+  };
+
+  const handleConfirmDeleteItem = () => {
+    if (showDeleteItemModal === null || !selectedOrder) return;
     const items = [...selectedOrder.items];
-    items.splice(index, 1);
-    if (items.length === 0) return;
+    items.splice(showDeleteItemModal, 1);
+    if (items.length === 0) {
+      handleClearTable();
+      return;
+    }
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
     updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
+    setShowDeleteItemModal(null);
+  };
+
+  const handleClearTable = async () => {
+    if (!selectedOrder) return;
+    await fetch(`/api/orders/${selectedOrder.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    setShowClearTableModal(false);
+    setSelectedTable(null);
   };
 
   const handleMoveToTable = async (orderId: number, newTableNumber: string) => {
@@ -327,9 +347,18 @@ export default function Tables() {
               {/* Current items */}
               {selectedOrder && selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div className="bg-card rounded-xl border p-3 flex-shrink-0 max-h-[300px] overflow-y-auto">
-                  <h4 className="text-sm font-bold text-muted-foreground mb-2">
-                    Đã đặt ({selectedOrder.items.length} món)
-                  </h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-bold text-muted-foreground">
+                      Đã đặt ({selectedOrder.items.length} món)
+                    </h4>
+                    <button
+                      onClick={() => setShowClearTableModal(true)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Xóa tất cả
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between">
@@ -604,6 +633,99 @@ export default function Tables() {
                   className="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
                 >
                   Xác nhận
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Item Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteItemModal !== null && selectedOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowDeleteItemModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-red-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-black text-center mb-2">XÁC NHẬN XÓA</h3>
+              <p className="text-center text-muted-foreground mb-6">
+                Bạn có chắc muốn xóa món <span className="font-bold text-foreground">{selectedOrder.items[showDeleteItemModal]?.name}</span> khỏi đơn hàng?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteItemModal(null)}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleConfirmDeleteItem}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-colors"
+                >
+                  Xóa
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear Table Confirmation Modal */}
+      <AnimatePresence>
+        {showClearTableModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowClearTableModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-red-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+              </div>
+              <h3 className="text-xl font-black text-center mb-2">XÓA TẤT CẢ</h3>
+              <p className="text-center text-muted-foreground mb-2">
+                Bạn có chắc muốn xóa tất cả các món trong đơn hàng này?
+              </p>
+              <p className="text-center text-sm text-red-500 mb-6">
+                Bàn sẽ được trả về trạng thái "TRỐNG"
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowClearTableModal(false)}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleClearTable}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-colors"
+                >
+                  Xóa tất cả
                 </button>
               </div>
             </motion.div>

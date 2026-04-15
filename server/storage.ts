@@ -15,7 +15,7 @@ import {
   type KitchenOrder,
   type PaymentSetting
 } from "@shared/schema";
-import { eq, inArray, and, desc, lt, ne } from "drizzle-orm";
+import { eq, inArray, and, desc, lt, ne, sql } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
@@ -55,6 +55,8 @@ export interface IStorage {
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
   clearOldCompletedKitchenOrders(): Promise<number>;
+  addIsStickyColumn(): Promise<void>;
+  runMigrations(): Promise<void>;
 
   getPaymentSettings(): Promise<PaymentSetting[]>;
   updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>): Promise<PaymentSetting>;
@@ -117,6 +119,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(menuItems.id, id))
       .returning();
     return updated;
+  }
+
+  async addIsStickyColumn() {
+    try {
+      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_sticky boolean DEFAULT false`);
+    } catch (err) {
+      console.log("Column is_sticky might already exist or error:", err);
+    }
+  }
+
+  async runMigrations() {
+    await this.addIsStickyColumn();
   }
 
   async deleteMenuItem(id: number) {
@@ -225,6 +239,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async payOrder(id: number, method: string) {
+    await db.delete(kitchenOrders).where(eq(kitchenOrders.orderId, id));
     await db.update(orders)
       .set({ 
         paymentStatus: "Paid", 
