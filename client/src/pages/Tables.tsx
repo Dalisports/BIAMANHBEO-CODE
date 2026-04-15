@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
@@ -8,10 +8,9 @@ import {
 } from "lucide-react";
 
 const TABLE_STATUS = {
-  empty:   { label: "Trống",            bg: "bg-green-50",  border: "border-green-300",  text: "text-green-700"  },
-  cooking: { label: "Đang nấu",         bg: "bg-red-50",    border: "border-red-400",    text: "text-red-700"    },
-  ready:   { label: "Chờ thanh toán",   bg: "bg-blue-50",   border: "border-blue-400",   text: "text-blue-700"   },
-  paid:    { label: "Đã thanh toán",    bg: "bg-gray-50",   border: "border-gray-300",   text: "text-gray-500"   },
+  empty:   { label: "Trống",           bg: "bg-green-50",  border: "border-green-300",  text: "text-green-700"  },
+  cooking: { label: "Đang nấu",        bg: "bg-red-50",    border: "border-red-400",    text: "text-red-700"    },
+  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-50",   border: "border-blue-400",   text: "text-blue-700"   },
 };
 
 const QUICK_ITEMS = [
@@ -24,30 +23,20 @@ const MAX_TABLES = 12;
 const TABLE_NAMES_KEY = "soi_table_names";
 
 function loadTableNames(): Record<number, string> {
-  try {
-    return JSON.parse(localStorage.getItem(TABLE_NAMES_KEY) || "{}");
-  } catch {
-    return {};
-  }
+  try { return JSON.parse(localStorage.getItem(TABLE_NAMES_KEY) || "{}"); }
+  catch { return {}; }
+}
+function saveTableNames(n: Record<number, string>) {
+  localStorage.setItem(TABLE_NAMES_KEY, JSON.stringify(n));
 }
 
-function saveTableNames(names: Record<number, string>) {
-  localStorage.setItem(TABLE_NAMES_KEY, JSON.stringify(names));
-}
-
-function getTableStatus(order: Order | undefined): keyof typeof TABLE_STATUS {
-  if (!order) return "empty";
-  if (order.paymentStatus === "Paid") return "paid";
+function getActiveStatus(order: Order): keyof typeof TABLE_STATUS {
   if (order.status === "Ready") return "ready";
-  if (order.status === "InKitchen" || order.status === "Pending") return "cooking";
-  return "empty";
+  return "cooking";
 }
 
 async function autoSendToKitchen(orderId: number) {
-  await fetch(`/api/orders/${orderId}/send-to-kitchen`, {
-    method: "POST",
-    credentials: "include",
-  });
+  await fetch(`/api/orders/${orderId}/send-to-kitchen`, { method: "POST", credentials: "include" });
 }
 
 export default function Tables() {
@@ -61,34 +50,37 @@ export default function Tables() {
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [searchMenu, setSearchMenu] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
   const [payMethod, setPayMethod] = useState("cash");
   const [tableNames, setTableNames] = useState<Record<number, string>>(loadTableNames);
   const [renamingTable, setRenamingTable] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
-  const getOrderByTable = (tableNum: number): Order | undefined => {
-    return orders?.find(o => {
-      if (o.tableNumber !== tableNum.toString()) return false;
-      if (o.status === "Complete" && o.paymentStatus !== "Paid") return false;
-      if (o.status === "Complete" && o.paymentStatus === "Paid") return true;
-      return true;
-    });
+  // Active order: non-complete (pending/in-kitchen/ready)
+  const getActiveOrder = (tableNum: number): Order | undefined =>
+    orders?.find(o => o.tableNumber === tableNum.toString() && o.status !== "Complete");
+
+  // Most recent paid order (Complete+Paid), only if no active order
+  const getRecentPaidOrder = (tableNum: number): Order | undefined => {
+    if (getActiveOrder(tableNum)) return undefined;
+    return orders?.find(o =>
+      o.tableNumber === tableNum.toString() &&
+      o.status === "Complete" &&
+      o.paymentStatus === "Paid"
+    );
   };
 
   const getDefaultMethods = () => [
-    { id: "cash",     label: "Tiền mặt",      icon: "💵" },
-    { id: "transfer", label: "Chuyển khoản",  icon: "🏦" },
-    { id: "vnpay",    label: "VNPay",          icon: "💳" },
-    { id: "momo",     label: "MoMo",           icon: "📱" },
+    { id: "cash",     label: "Tiền mặt",     icon: "💵" },
+    { id: "transfer", label: "Chuyển khoản", icon: "🏦" },
+    { id: "vnpay",    label: "VNPay",         icon: "💳" },
+    { id: "momo",     label: "MoMo",          icon: "📱" },
   ];
 
   const getMethodConfig = (methodId: string) => {
     const defaults = getDefaultMethods().find(m => m.id === methodId);
     const custom = paymentSettings?.find((p: any) => p.method === methodId);
     return {
-      id: methodId,
       label: custom?.label || defaults?.label || methodId,
       icon: custom?.icon || defaults?.icon || "💳",
       qrImageUrl: custom?.qrImageUrl || null,
@@ -99,14 +91,13 @@ export default function Tables() {
     };
   };
 
-  const selectedOrder = selectedTable ? getOrderByTable(selectedTable) : undefined;
-  const currentTableStatus = selectedOrder ? getTableStatus(selectedOrder) : "empty";
-  const statusInfo = TABLE_STATUS[currentTableStatus];
+  const selectedOrder = selectedTable ? getActiveOrder(selectedTable) : undefined;
+  const currentStatus: keyof typeof TABLE_STATUS = selectedOrder ? getActiveStatus(selectedOrder) : "empty";
+  const statusInfo = TABLE_STATUS[currentStatus];
 
   const filteredMenuItems = menuItems?.filter(item => {
     const matchSearch = item.name.toLowerCase().includes(searchMenu.toLowerCase());
-    const matchCategory = !selectedCategory || item.categoryId === selectedCategory;
-    return matchSearch && matchCategory && item.isAvailable;
+    return matchSearch && item.isAvailable;
   }) || [];
 
   const tableName = (num: number) => tableNames[num] || `Bàn ${num}`;
@@ -120,11 +111,8 @@ export default function Tables() {
   const commitRename = (num: number) => {
     const trimmed = renameValue.trim();
     const updated = { ...tableNames };
-    if (trimmed && trimmed !== `Bàn ${num}`) {
-      updated[num] = trimmed;
-    } else {
-      delete updated[num];
-    }
+    if (trimmed && trimmed !== `Bàn ${num}`) updated[num] = trimmed;
+    else delete updated[num];
     setTableNames(updated);
     saveTableNames(updated);
     setRenamingTable(null);
@@ -132,22 +120,15 @@ export default function Tables() {
 
   const handleAddItem = (menuItem: any, quantity: number = 1) => {
     if (!selectedTable) return;
-    const newItem: OrderItem = {
-      menuItemId: menuItem.id,
-      name: menuItem.name,
-      quantity,
-      price: menuItem.price,
-    };
-    if (selectedOrder && selectedOrder.paymentStatus !== "Paid") {
-      const existingItems = [...selectedOrder.items];
-      const existingIndex = existingItems.findIndex(i => i.menuItemId === menuItem.id);
-      if (existingIndex >= 0) {
-        existingItems[existingIndex] = { ...existingItems[existingIndex], quantity: existingItems[existingIndex].quantity + quantity };
-      } else {
-        existingItems.push(newItem);
-      }
-      const newTotal = existingItems.reduce((s, i) => s + i.price * i.quantity, 0);
-      updateOrder.mutate({ id: selectedOrder.id, items: existingItems, totalAmount: newTotal }, {
+    const newItem: OrderItem = { menuItemId: menuItem.id, name: menuItem.name, quantity, price: menuItem.price };
+
+    if (selectedOrder) {
+      const items = [...selectedOrder.items];
+      const idx = items.findIndex(i => i.menuItemId === menuItem.id);
+      if (idx >= 0) items[idx] = { ...items[idx], quantity: items[idx].quantity + quantity };
+      else items.push(newItem);
+      const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+      updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total }, {
         onSuccess: () => autoSendToKitchen(selectedOrder.id),
       });
     } else {
@@ -163,27 +144,27 @@ export default function Tables() {
   };
 
   const handleRemoveItem = (index: number) => {
-    if (!selectedOrder || selectedOrder.paymentStatus === "Paid") return;
-    const existingItems = [...selectedOrder.items];
-    existingItems.splice(index, 1);
-    if (existingItems.length === 0) return;
-    const newTotal = existingItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    updateOrder.mutate({ id: selectedOrder.id, items: existingItems, totalAmount: newTotal });
+    if (!selectedOrder) return;
+    const items = [...selectedOrder.items];
+    items.splice(index, 1);
+    if (items.length === 0) return;
+    const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
   };
 
   const handleUpdateQuantity = (index: number, delta: number) => {
-    if (!selectedOrder || selectedOrder.paymentStatus === "Paid") return;
-    const existingItems = [...selectedOrder.items];
-    const newQty = existingItems[index].quantity + delta;
+    if (!selectedOrder) return;
+    const items = [...selectedOrder.items];
+    const newQty = items[index].quantity + delta;
     if (newQty <= 0) { handleRemoveItem(index); return; }
-    existingItems[index] = { ...existingItems[index], quantity: newQty };
-    const newTotal = existingItems.reduce((s, i) => s + i.price * i.quantity, 0);
-    updateOrder.mutate({ id: selectedOrder.id, items: existingItems, totalAmount: newTotal });
+    items[index] = { ...items[index], quantity: newQty };
+    const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
   };
 
-  const handleUnpay = () => {
-    if (!selectedOrder) return;
-    unpayOrder.mutate(selectedOrder.id);
+  const handleUnpayFromCard = (e: React.MouseEvent, orderId: number) => {
+    e.stopPropagation();
+    unpayOrder.mutate(orderId);
   };
 
   if (ordersLoading || menuLoading) {
@@ -196,17 +177,16 @@ export default function Tables() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Quản lý Bàn</h2>
-          <p className="text-sm text-muted-foreground">Chọn bàn để thêm / xem món</p>
-        </div>
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-foreground">Quản lý Bàn</h2>
+        <p className="text-sm text-muted-foreground">Chọn bàn để thêm / xem món</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 overflow-y-auto pr-1">
+      <div className="grid grid-cols-3 gap-3 overflow-y-auto pr-1">
         {Array.from({ length: MAX_TABLES }, (_, i) => i + 1).map(tableNum => {
-          const order = getOrderByTable(tableNum);
-          const status = getTableStatus(order);
+          const activeOrder = getActiveOrder(tableNum);
+          const paidOrder = getRecentPaidOrder(tableNum);
+          const status: keyof typeof TABLE_STATUS = activeOrder ? getActiveStatus(activeOrder) : "empty";
           const sc = TABLE_STATUS[status];
           const isSelected = selectedTable === tableNum;
           const isRenaming = renamingTable === tableNum;
@@ -220,7 +200,7 @@ export default function Tables() {
               onClick={() => !isRenaming && setSelectedTable(tableNum)}
               onKeyDown={e => { if (e.key === "Enter" && !isRenaming) setSelectedTable(tableNum); }}
               className={cn(
-                "aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 p-2 relative group cursor-pointer",
+                "aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 p-2 relative group cursor-pointer select-none",
                 isSelected ? "ring-2 ring-primary ring-offset-2 shadow-lg" : "hover:scale-105 hover:shadow-md",
                 sc.bg, sc.border
               )}
@@ -231,21 +211,41 @@ export default function Tables() {
                     autoFocus
                     value={renameValue}
                     onChange={e => setRenameValue(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") commitRename(tableNum); if (e.key === "Escape") setRenamingTable(null); }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") commitRename(tableNum);
+                      if (e.key === "Escape") setRenamingTable(null);
+                    }}
                     className="w-full text-center text-sm rounded border px-1 py-0.5 bg-white"
                   />
-                  <button onClick={() => commitRename(tableNum)} className="p-1 rounded bg-primary text-white">
+                  <button
+                    onClick={() => commitRename(tableNum)}
+                    className="p-1 rounded bg-primary text-white"
+                  >
                     <Check className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
                 <>
                   <span className="text-base font-bold leading-tight text-center">{tableName(tableNum)}</span>
-                  {order && (
+
+                  {activeOrder && (
                     <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-white/70 mt-1">
-                      {order.items?.length || 0} món
+                      {activeOrder.items?.length || 0} món
                     </span>
                   )}
+
+                  {!activeOrder && paidOrder && (
+                    <button
+                      data-testid={`unpay-card-${tableNum}`}
+                      onClick={e => handleUnpayFromCard(e, paidOrder.id)}
+                      disabled={unpayOrder.isPending}
+                      className="mt-1.5 flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-100 border border-orange-300 text-orange-700 text-xs font-semibold hover:bg-orange-200 transition-colors disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Hoàn tác TT
+                    </button>
+                  )}
+
                   <button
                     data-testid={`rename-table-${tableNum}`}
                     onClick={e => startRename(tableNum, e)}
@@ -260,6 +260,7 @@ export default function Tables() {
         })}
       </div>
 
+      {/* Order detail modal */}
       <AnimatePresence>
         {selectedTable && (
           <motion.div
@@ -269,6 +270,7 @@ export default function Tables() {
             className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm p-4 flex flex-col"
           >
             <div className="flex-1 max-w-2xl mx-auto w-full flex flex-col gap-4">
+              {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className={cn("px-3 py-1 rounded-full text-sm font-bold border", statusInfo.bg, statusInfo.border, statusInfo.text)}>
@@ -285,9 +287,12 @@ export default function Tables() {
                 </button>
               </div>
 
+              {/* Current items */}
               {selectedOrder && selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div className="bg-card rounded-xl border p-3 flex-shrink-0 max-h-48 overflow-y-auto">
-                  <h4 className="text-sm font-bold text-muted-foreground mb-2">Đã đặt ({selectedOrder.items.length} món)</h4>
+                  <h4 className="text-sm font-bold text-muted-foreground mb-2">
+                    Đã đặt ({selectedOrder.items.length} món)
+                  </h4>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between">
@@ -298,14 +303,12 @@ export default function Tables() {
                           <span className="font-medium text-sm">{item.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">{formatCurrency(item.price * item.quantity)}</span>
-                          {currentTableStatus !== "paid" && (
-                            <>
-                              <button data-testid={`qty-minus-${idx}`} onClick={() => handleUpdateQuantity(idx, -1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Minus className="w-3 h-3" /></button>
-                              <button data-testid={`qty-plus-${idx}`} onClick={() => handleUpdateQuantity(idx, 1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Plus className="w-3 h-3" /></button>
-                              <button data-testid={`remove-item-${idx}`} onClick={() => handleRemoveItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200"><X className="w-3 h-3" /></button>
-                            </>
-                          )}
+                          <span className="text-sm text-muted-foreground">
+                            {formatCurrency(item.price * item.quantity)}
+                          </span>
+                          <button data-testid={`qty-minus-${idx}`} onClick={() => handleUpdateQuantity(idx, -1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                          <button data-testid={`qty-plus-${idx}`} onClick={() => handleUpdateQuantity(idx, 1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                          <button data-testid={`remove-item-${idx}`} onClick={() => handleRemoveItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200"><X className="w-3 h-3" /></button>
                         </div>
                       </div>
                     ))}
@@ -317,57 +320,47 @@ export default function Tables() {
                 </div>
               )}
 
-              {currentTableStatus !== "paid" && (
-                <div className="bg-secondary/50 rounded-xl p-2 flex-shrink-0">
-                  <input
-                    data-testid="search-menu"
-                    type="text"
-                    placeholder="Tìm món..."
-                    value={searchMenu}
-                    onChange={(e) => setSearchMenu(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-background border mb-2"
-                  />
-                  <div className="grid grid-cols-3 gap-2 mb-2">
-                    {QUICK_ITEMS.map(item => (
-                      <button
-                        key={item.id}
-                        data-testid={`quick-item-${item.id}`}
-                        onClick={() => handleQuickAdd(item)}
-                        className="p-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-center"
-                      >
-                        <p className="font-bold text-sm">{item.name}</p>
-                        <p className="text-xs text-yellow-700 font-semibold">{formatCurrency(item.price)}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
-                    {filteredMenuItems.map(item => (
-                      <button
-                        key={item.id}
-                        data-testid={`menu-item-${item.id}`}
-                        onClick={() => handleAddItem(item, 1)}
-                        className="p-2 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left"
-                      >
-                        <p className="font-medium text-sm truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
-                      </button>
-                    ))}
-                  </div>
+              {/* Menu panel */}
+              <div className="bg-secondary/50 rounded-xl p-2 flex-shrink-0">
+                <input
+                  data-testid="search-menu"
+                  type="text"
+                  placeholder="Tìm món..."
+                  value={searchMenu}
+                  onChange={e => setSearchMenu(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-background border mb-2"
+                />
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  {QUICK_ITEMS.map(item => (
+                    <button
+                      key={item.id}
+                      data-testid={`quick-item-${item.id}`}
+                      onClick={() => handleQuickAdd(item)}
+                      className="p-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-center"
+                    >
+                      <p className="font-bold text-sm">{item.name}</p>
+                      <p className="text-xs text-yellow-700 font-semibold">{formatCurrency(item.price)}</p>
+                    </button>
+                  ))}
                 </div>
-              )}
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                  {filteredMenuItems.map(item => (
+                    <button
+                      key={item.id}
+                      data-testid={`menu-item-${item.id}`}
+                      onClick={() => handleAddItem(item, 1)}
+                      className="p-2 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                    >
+                      <p className="font-medium text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
+              {/* Pay button */}
               <div className="flex gap-2 flex-shrink-0">
-                {currentTableStatus === "paid" ? (
-                  <button
-                    data-testid="unpay-order-btn"
-                    onClick={handleUnpay}
-                    disabled={unpayOrder.isPending}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold bg-orange-100 text-orange-700 border-2 border-orange-300 hover:bg-orange-200 transition-colors disabled:opacity-50"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    {unpayOrder.isPending ? "Đang xử lý..." : "Hoàn tác thanh toán"}
-                  </button>
-                ) : (selectedOrder && (currentTableStatus === "ready" || currentTableStatus === "cooking")) && (
+                {selectedOrder && (currentStatus === "ready" || currentStatus === "cooking") && (
                   <button
                     data-testid="pay-order-btn"
                     onClick={() => setShowPayModal(selectedOrder.id)}
@@ -384,6 +377,7 @@ export default function Tables() {
         )}
       </AnimatePresence>
 
+      {/* Payment modal */}
       <AnimatePresence>
         {showPayModal && (
           <motion.div
@@ -398,7 +392,7 @@ export default function Tables() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border-2 border-green-200"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-black text-green-500">THANH TOÁN</h3>
@@ -413,19 +407,23 @@ export default function Tables() {
 
               <div className="mb-4 p-4 bg-green-50 rounded-xl border-2 border-green-200">
                 <p className="text-sm text-muted-foreground">{tableName(selectedTable!)}</p>
-                <p className="text-2xl font-black text-green-600">{formatCurrency(selectedOrder?.totalAmount || 0)}</p>
+                <p className="text-2xl font-black text-green-600">
+                  {formatCurrency(selectedOrder?.totalAmount || 0)}
+                </p>
               </div>
 
               <h4 className="text-sm font-bold mb-3">Chọn phương thức:</h4>
               <div className="grid grid-cols-2 gap-2 mb-4">
-                {getDefaultMethods().map((method) => (
+                {getDefaultMethods().map(method => (
                   <button
                     key={method.id}
                     data-testid={`pay-method-${method.id}`}
                     onClick={() => setPayMethod(method.id)}
                     className={cn(
                       "p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-colors",
-                      payMethod === method.id ? "border-green-500 bg-green-50 text-green-700" : "border-border hover:border-green-300"
+                      payMethod === method.id
+                        ? "border-green-500 bg-green-50 text-green-700"
+                        : "border-border hover:border-green-300"
                     )}
                   >
                     <span className="text-xl">{method.icon}</span>

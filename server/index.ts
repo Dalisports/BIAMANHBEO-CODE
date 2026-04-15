@@ -62,9 +62,68 @@ app.use((req, res, next) => {
   next();
 });
 
+const SEED_MENU_ITEMS = [
+  { name: "Đầu lợn", price: 145000 },
+  { name: "TIẾT LUỘC", price: 40000 },
+  { name: "Đậu tẩm hành", price: 40000 },
+  { name: "Đậu chiên giòn", price: 30000 },
+  { name: "Lòng xào dưa", price: 30000 },
+  { name: "Lòng khìa nước dừa", price: 100000 },
+  { name: "Nầm chiên", price: 150000 },
+  { name: "Nọng heo chiên", price: 150000 },
+  { name: "Sườn rán", price: 145000 },
+  { name: "Sườn sốt cay", price: 145000 },
+  { name: "Rau xào theo mùa", price: 30000 },
+  { name: "Nộm tai", price: 90000 },
+  { name: "Đuôi lợn luộc", price: 100000 },
+  { name: "Ba chỉ rang giềng", price: 130000 },
+  { name: "Cật trần", price: 100000 },
+  { name: "Gan xào cay", price: 90000 },
+  { name: "Gan cháy tỏi", price: 90000 },
+  { name: "Tóp mỡ dưa chua", price: 110000 },
+  { name: "Pate xúc phồng tôm", price: 100000 },
+  { name: "Má đào chiên hạt dổi", price: 120000 },
+  { name: "Cốc bia", price: 6000 },
+  { name: "Rượu men lá", price: 35000 },
+  { name: "Chai bia Hà Nội", price: 15000 },
+  { name: "Chai bia Sài Gòn", price: 19000 },
+  { name: "Chai bia Tiger Bạc", price: 200000 },
+  { name: "Lạc rang", price: 10000 },
+  { name: "Bánh đa", price: 5000 },
+  { name: "Mực nướng", price: 160000 },
+  { name: "Má đào nướng sa tế", price: 120000 },
+  { name: "Mướp đắng xào trứng", price: 60000 },
+  { name: "Mướp đắng ruốc", price: 100000 },
+  { name: "Cơm rang trứng chảy", price: 50000 },
+  { name: "Ca bia", price: 30000 },
+  { name: "Dưa chua", price: 10000 },
+  { name: "Thăng long", price: 16000 },
+  { name: "Sài gòn bạc", price: 20000 },
+  { name: "Thùng bia sài gòn", price: 280000 },
+  { name: "Mướp xào giá", price: 40000 },
+  { name: "Nem chua", price: 40000 },
+];
+
+async function seedMenuIfEmpty() {
+  try {
+    const existing = await storage.getMenuItems();
+    const activeCount = existing.filter(i => i.isActive).length;
+    if (activeCount === 0) {
+      log("[SEED] Menu trống — đang thêm dữ liệu mặc định...");
+      for (const item of SEED_MENU_ITEMS) {
+        await storage.createMenuItem({ name: item.name, price: item.price, isAvailable: true, isActive: true });
+      }
+      log(`[SEED] Đã thêm ${SEED_MENU_ITEMS.length} món ăn.`);
+    }
+  } catch (err) {
+    console.error("[SEED] Lỗi seed menu:", err);
+  }
+}
+
 (async () => {
   await registerRoutes(httpServer, app);
   initWebSocket(httpServer);
+  await seedMenuIfEmpty();
 
   function scheduleMidnightClear() {
     const now = new Date();

@@ -127,6 +127,66 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/admin/seed-menu", async (req, res) => {
+    try {
+      const seedItems = [
+        { name: "Đầu lợn", price: 145000 },
+        { name: "TIẾT LUỘC", price: 40000 },
+        { name: "Đậu tẩm hành", price: 40000 },
+        { name: "Đậu chiên giòn", price: 30000 },
+        { name: "Lòng xào dưa", price: 30000 },
+        { name: "Lòng khìa nước dừa", price: 100000 },
+        { name: "Nầm chiên", price: 150000 },
+        { name: "Nọng heo chiên", price: 150000 },
+        { name: "Sườn rán", price: 145000 },
+        { name: "Sườn sốt cay", price: 145000 },
+        { name: "Rau xào theo mùa", price: 30000 },
+        { name: "Nộm tai", price: 90000 },
+        { name: "Đuôi lợn luộc", price: 100000 },
+        { name: "Ba chỉ rang giềng", price: 130000 },
+        { name: "Cật trần", price: 100000 },
+        { name: "Gan xào cay", price: 90000 },
+        { name: "Gan cháy tỏi", price: 90000 },
+        { name: "Tóp mỡ dưa chua", price: 110000 },
+        { name: "Pate xúc phồng tôm", price: 100000 },
+        { name: "Má đào chiên hạt dổi", price: 120000 },
+        { name: "Cốc bia", price: 6000 },
+        { name: "Rượu men lá", price: 35000 },
+        { name: "Chai bia Hà Nội", price: 15000 },
+        { name: "Chai bia Sài Gòn", price: 19000 },
+        { name: "Chai bia Tiger Bạc", price: 200000 },
+        { name: "Lạc rang", price: 10000 },
+        { name: "Bánh đa", price: 5000 },
+        { name: "Mực nướng", price: 160000 },
+        { name: "Má đào nướng sa tế", price: 120000 },
+        { name: "Mướp đắng xào trứng", price: 60000 },
+        { name: "Mướp đắng ruốc", price: 100000 },
+        { name: "Cơm rang trứng chảy", price: 50000 },
+        { name: "Ca bia", price: 30000 },
+        { name: "Dưa chua", price: 10000 },
+        { name: "Thăng long", price: 16000 },
+        { name: "Sài gòn bạc", price: 20000 },
+        { name: "Thùng bia sài gòn", price: 280000 },
+        { name: "Mướp xào giá", price: 40000 },
+        { name: "Nem chua", price: 40000 },
+      ];
+      const created = [];
+      for (const item of seedItems) {
+        const created_item = await storage.createMenuItem({
+          name: item.name,
+          price: item.price,
+          isAvailable: true,
+          isActive: true,
+        });
+        created.push(created_item);
+      }
+      res.json({ success: true, count: created.length });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Seed failed" });
+    }
+  });
+
   app.post("/api/orders/:id/unpay", async (req, res) => {
     try {
       const id = Number(req.params.id);
