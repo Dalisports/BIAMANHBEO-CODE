@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 
 const TABLE_STATUS = {
-  empty:   { label: "Trống",           bg: "bg-green-50",  border: "border-green-300",  text: "text-green-700"  },
-  cooking: { label: "Đang nấu",        bg: "bg-red-50",    border: "border-red-400",    text: "text-red-700"    },
-  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-50",   border: "border-blue-400",   text: "text-blue-700"   },
+  empty:   { label: "Trống",           bg: "bg-card",      border: "border-border",     text: "text-green-600",  strip: "bg-green-400"  },
+  cooking: { label: "Đang phục vụ",    bg: "bg-orange-50", border: "border-orange-300", text: "text-orange-700", strip: "bg-orange-500" },
+  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-50",   border: "border-blue-300",   text: "text-blue-700",   strip: "bg-blue-500"   },
 };
 
 const QUICK_ITEMS = [
@@ -258,15 +258,40 @@ export default function Tables() {
     );
   }
 
+  const allTables = Array.from({ length: MAX_TABLES }, (_, i) => i + 1);
+  const emptyCount = allTables.filter(n => !getActiveOrder(n)).length;
+  const cookingCount = allTables.filter(n => { const o = getActiveOrder(n); return o && getActiveStatus(o) === "cooking"; }).length;
+  const readyCount = allTables.filter(n => { const o = getActiveOrder(n); return o && getActiveStatus(o) === "ready"; }).length;
+
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-foreground">Quản lý Bàn</h2>
-        <p className="text-sm text-muted-foreground">Chọn bàn để thêm / xem món</p>
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Quản lý Bàn</h2>
+          <p className="text-xs text-muted-foreground">Chọn bàn để đặt món / thanh toán</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 overflow-y-auto pr-1">
-        {Array.from({ length: MAX_TABLES }, (_, i) => i + 1).map(tableNum => {
+      {/* Status summary */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 text-center">
+          <p className="text-xl font-black text-green-600">{emptyCount}</p>
+          <p className="text-[10px] font-bold text-green-600 uppercase tracking-wide">Trống</p>
+        </div>
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5 text-center">
+          <p className="text-xl font-black text-orange-600">{cookingCount}</p>
+          <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">Đang phục vụ</p>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-center">
+          <p className="text-xl font-black text-blue-600">{readyCount}</p>
+          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Chờ thanh toán</p>
+        </div>
+      </div>
+
+      {/* Table grid */}
+      <div className="grid grid-cols-3 gap-3 overflow-y-auto">
+        {allTables.map(tableNum => {
           const activeOrder = getActiveOrder(tableNum);
           const paidOrder = getRecentPaidOrder(tableNum);
           const status: keyof typeof TABLE_STATUS = activeOrder ? getActiveStatus(activeOrder) : "empty";
@@ -275,69 +300,99 @@ export default function Tables() {
           const isRenaming = renamingTable === tableNum;
 
           return (
-            <div
+            <motion.div
               key={tableNum}
+              whileHover={{ scale: isRenaming ? 1 : 1.02 }}
+              whileTap={{ scale: isRenaming ? 1 : 0.97 }}
               data-testid={`table-card-${tableNum}`}
               role="button"
               tabIndex={0}
               onClick={() => !isRenaming && setSelectedTable(tableNum)}
               onKeyDown={e => { if (e.key === "Enter" && !isRenaming) setSelectedTable(tableNum); }}
               className={cn(
-                "aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-200 p-2 relative group cursor-pointer select-none",
-                isSelected ? "ring-2 ring-primary ring-offset-2 shadow-lg" : "hover:scale-105 hover:shadow-md",
+                "rounded-2xl border-2 overflow-hidden cursor-pointer select-none transition-all duration-200 group relative",
+                isSelected ? "ring-2 ring-amber-500 ring-offset-2 shadow-lg shadow-amber-500/20" : "hover:shadow-md",
                 sc.bg, sc.border
               )}
             >
-              {isRenaming ? (
-                <div className="flex flex-col items-center gap-1 w-full px-1" onClick={e => e.stopPropagation()}>
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={e => setRenameValue(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") commitRename(tableNum);
-                      if (e.key === "Escape") setRenamingTable(null);
-                    }}
-                    className="w-full text-center text-sm rounded border px-1 py-0.5 bg-white"
-                  />
-                  <button
-                    onClick={() => commitRename(tableNum)}
-                    className="p-1 rounded bg-primary text-white"
-                  >
-                    <Check className="w-3 h-3" />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <span className="text-base font-bold leading-tight text-center">{tableName(tableNum)}</span>
+              {/* Status color strip */}
+              <div className={cn("h-1.5 w-full", sc.strip)} />
 
-                  {activeOrder && (
-                    <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-white/70 mt-1">
-                      {activeOrder.items?.length || 0} món
-                    </span>
-                  )}
-
-                  {!activeOrder && paidOrder && (
+              <div className="p-3 flex flex-col min-h-[90px]">
+                {isRenaming ? (
+                  <div className="flex flex-col items-center gap-2 py-2" onClick={e => e.stopPropagation()}>
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") commitRename(tableNum);
+                        if (e.key === "Escape") setRenamingTable(null);
+                      }}
+                      className="w-full text-center text-sm rounded-lg border-2 border-amber-400 px-2 py-1 bg-white outline-none"
+                    />
                     <button
-                      data-testid={`unpay-card-${tableNum}`}
-                      onClick={e => handleUnpayFromCard(e, paidOrder.id)}
-                      disabled={unpayOrder.isPending}
-                      className="absolute bottom-1 left-1 right-1 flex items-center justify-center gap-1 px-1 py-0.5 rounded bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-medium hover:bg-orange-200 transition-colors disabled:opacity-50"
+                      onClick={() => commitRename(tableNum)}
+                      className="px-3 py-1 rounded-lg bg-amber-500 text-black text-xs font-bold"
                     >
-                      Hoàn tác TT
+                      <Check className="w-3 h-3" />
                     </button>
-                  )}
+                  </div>
+                ) : (
+                  <>
+                    {/* Table name row */}
+                    <div className="flex items-start justify-between mb-auto">
+                      <span className={cn(
+                        "font-black text-base leading-tight",
+                        activeOrder ? "text-foreground" : "text-foreground"
+                      )}>
+                        {tableName(tableNum)}
+                      </span>
+                      <button
+                        data-testid={`rename-table-${tableNum}`}
+                        onClick={e => startRename(tableNum, e)}
+                        className="p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-all ml-1 flex-shrink-0"
+                      >
+                        <Pencil className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    </div>
 
-                  <button
-                    data-testid={`rename-table-${tableNum}`}
-                    onClick={e => startRename(tableNum, e)}
-                    className="absolute top-1 right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-white/60 transition-opacity"
-                  >
-                    <Pencil className="w-3 h-3 text-gray-500" />
-                  </button>
-                </>
-              )}
-            </div>
+                    {/* Status + info */}
+                    <div className="mt-2">
+                      {activeOrder ? (
+                        <>
+                          <p className="text-xs font-bold text-muted-foreground">
+                            {activeOrder.items?.length || 0} món
+                          </p>
+                          <p className={cn("text-sm font-black mt-0.5", status === "ready" ? "text-blue-600" : "text-orange-600")}>
+                            {formatCurrency(activeOrder.totalAmount)}
+                          </p>
+                          <span className={cn("inline-block text-[9px] font-bold uppercase tracking-wide mt-1 px-1.5 py-0.5 rounded-full", sc.text,
+                            status === "cooking" ? "bg-orange-100" : "bg-blue-100"
+                          )}>
+                            {sc.label}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] font-bold text-green-600 uppercase tracking-wide">✓ Trống</span>
+                      )}
+                    </div>
+
+                    {/* Unpay button */}
+                    {!activeOrder && paidOrder && (
+                      <button
+                        data-testid={`unpay-card-${tableNum}`}
+                        onClick={e => handleUnpayFromCard(e, paidOrder.id)}
+                        disabled={unpayOrder.isPending}
+                        className="mt-2 w-full flex items-center justify-center gap-1 px-1.5 py-1 rounded-lg bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-bold hover:bg-orange-200 transition-colors disabled:opacity-50"
+                      >
+                        ↩ Hoàn tác TT
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
           );
         })}
       </div>

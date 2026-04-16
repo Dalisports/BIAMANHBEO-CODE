@@ -500,7 +500,7 @@ export default function Menu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowAddDialog(false)}
           >
             <motion.div
@@ -508,10 +508,12 @@ export default function Menu() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="bg-card w-full max-w-md rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl border-2 border-amber-200"
+              className="bg-card w-full max-w-md rounded-t-3xl md:rounded-3xl shadow-2xl border-2 border-amber-200 flex flex-col"
+              style={{ maxHeight: "90dvh" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5">
+              {/* Fixed header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
                 <h3 className="text-xl md:text-2xl font-black text-amber-500">THÊM MÓN MỚI</h3>
                 <button
                   onClick={() => setShowAddDialog(false)}
@@ -521,84 +523,89 @@ export default function Menu() {
                 </button>
               </div>
 
-              <form onSubmit={handleAddItem} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Tên món</label>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={newItem.name}
-                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                    placeholder="VD: Gà rán giòn"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
-                  <input
-                    type="number"
-                    value={newItem.price}
-                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                    placeholder="VD: 89000"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Mô tả</label>
-                  <textarea
-                    value={newItem.description}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none resize-none"
-                    rows={2}
-                    placeholder="Mô tả món ăn..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
-                  <div className="relative">
-                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              {/* Scrollable form content */}
+              <div className="overflow-y-auto flex-1 px-5">
+                <form id="add-item-form" onSubmit={handleAddItem} className="space-y-4 pb-2">
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Tên món</label>
                     <input
-                      type="url"
-                      value={newItem.image}
-                      onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
-                      className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                      placeholder="Link ảnh..."
+                      autoFocus
+                      type="text"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                      placeholder="VD: Gà rán giòn"
+                      required
                     />
                   </div>
-                  {newItem.image && (
-                    <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
-                      <img 
-                        src={newItem.image} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => e.currentTarget.style.display = 'none'} 
+                  
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
+                    <input
+                      type="number"
+                      value={newItem.price}
+                      onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                      placeholder="VD: 89000"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Mô tả</label>
+                    <textarea
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none resize-none"
+                      rows={2}
+                      placeholder="Mô tả món ăn..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
+                    <div className="relative">
+                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="url"
+                        value={newItem.image}
+                        onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                        placeholder="Link ảnh..."
                       />
                     </div>
-                  )}
-                </div>
+                    {newItem.image && (
+                      <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
+                        <img 
+                          src={newItem.image} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => e.currentTarget.style.display = 'none'} 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </form>
+              </div>
 
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddDialog(false)}
-                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={createMenuItem.isPending}
-                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-black disabled:opacity-50 transition-all"
-                  >
-                    {createMenuItem.isPending ? "Đang thêm..." : "Thêm món"}
-                  </button>
-                </div>
-              </form>
+              {/* Fixed action buttons */}
+              <div className="flex gap-3 px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setShowAddDialog(false)}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  form="add-item-form"
+                  disabled={createMenuItem.isPending}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-black disabled:opacity-50 transition-all"
+                >
+                  {createMenuItem.isPending ? "Đang thêm..." : "Thêm món"}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -610,7 +617,7 @@ export default function Menu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowEditDialog(false)}
           >
             <motion.div
@@ -618,10 +625,12 @@ export default function Menu() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="bg-card w-full max-w-md rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl border-2 border-blue-200"
+              className="bg-card w-full max-w-md rounded-t-3xl md:rounded-3xl shadow-2xl border-2 border-blue-200 flex flex-col"
+              style={{ maxHeight: "90dvh" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5">
+              {/* Fixed header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
                 <h3 className="text-xl md:text-2xl font-black text-blue-500">SỬA MÓN</h3>
                 <button
                   onClick={() => setShowEditDialog(false)}
@@ -631,118 +640,123 @@ export default function Menu() {
                 </button>
               </div>
 
-              <form onSubmit={handleEditItem} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Tên món</label>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
-                    placeholder="VD: Gà rán giòn"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
-                  <input
-                    type="number"
-                    value={editForm.price}
-                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
-                    placeholder="VD: 89000"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Mô tả</label>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none resize-none"
-                    rows={2}
-                    placeholder="Mô tả món ăn..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
-                  <div className="relative">
-                    <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              {/* Scrollable form content */}
+              <div className="overflow-y-auto flex-1 px-5">
+                <form id="edit-item-form" onSubmit={handleEditItem} className="space-y-4 pb-2">
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Tên món</label>
                     <input
-                      type="url"
-                      value={editForm.image}
-                      onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
-                      className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
-                      placeholder="Link ảnh..."
+                      autoFocus
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
+                      placeholder="VD: Gà rán giòn"
+                      required
                     />
                   </div>
-                  {editForm.image && (
-                    <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
-                      <img 
-                        src={editForm.image} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => e.currentTarget.style.display = 'none'} 
+                  
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
+                    <input
+                      type="number"
+                      value={editForm.price}
+                      onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
+                      placeholder="VD: 89000"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Mô tả</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none resize-none"
+                      rows={2}
+                      placeholder="Mô tả món ăn..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
+                    <div className="relative">
+                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        type="url"
+                        value={editForm.image}
+                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
+                        placeholder="Link ảnh..."
                       />
                     </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between p-3 md:p-4 bg-yellow-50 rounded-xl border-2 border-yellow-300">
-                  <div>
-                    <p className="font-bold text-yellow-800 text-sm">Sticky TV</p>
-                    <p className="text-xs text-yellow-600 hidden md:block">Hiển thị trên màn hình TV</p>
+                    {editForm.image && (
+                      <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
+                        <img 
+                          src={editForm.image} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => e.currentTarget.style.display = 'none'} 
+                        />
+                      </div>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newSticky = !editForm.isSticky;
-                      setEditForm({ ...editForm, isSticky: newSticky });
-                      if (editItem) {
-                        updateMenuItem.mutate({ id: editItem.id, isSticky: newSticky }, {
-                          onSuccess: () => {
-                            toast({
-                              title: newSticky ? "Đã bật Sticky TV" : "Đã tắt Sticky TV",
-                              description: `Món "${editItem.name}" đã ${newSticky ? 'hiển thị' : 'ẩn'} khỏi màn hình TV`,
-                            });
-                          },
-                          onError: () => {
-                            toast({
-                              title: "Lỗi",
-                              description: "Không thể cập nhật Sticky TV",
-                              variant: "destructive",
-                            });
-                          },
-                        });
-                      }
-                    }}
-                    className={`relative inline-flex h-7 w-12 md:h-8 md:w-14 items-center rounded-full transition-colors ${editForm.isSticky ? 'bg-yellow-500' : 'bg-gray-300'}`}
-                  >
-                    <span className={`inline-block h-5 w-5 md:h-6 md:w-6 transform rounded-full bg-white shadow transition-transform ${editForm.isSticky ? 'translate-x-6 md:translate-x-7' : 'translate-x-1'}`} />
-                  </button>
-                </div>
 
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditDialog(false)}
-                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={updateMenuItem.isPending}
-                    className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 text-white disabled:opacity-50 transition-all"
-                  >
-                    {updateMenuItem.isPending ? "Đang sửa..." : "Lưu"}
-                  </button>
-                </div>
-              </form>
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-xl border-2 border-yellow-300">
+                    <div>
+                      <p className="font-bold text-yellow-800 text-sm">Sticky TV</p>
+                      <p className="text-xs text-yellow-600">Hiển thị trên màn hình TV</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSticky = !editForm.isSticky;
+                        setEditForm({ ...editForm, isSticky: newSticky });
+                        if (editItem) {
+                          updateMenuItem.mutate({ id: editItem.id, isSticky: newSticky }, {
+                            onSuccess: () => {
+                              toast({
+                                title: newSticky ? "Đã bật Sticky TV" : "Đã tắt Sticky TV",
+                                description: `Món "${editItem.name}" đã ${newSticky ? 'hiển thị' : 'ẩn'} khỏi màn hình TV`,
+                              });
+                            },
+                            onError: () => {
+                              toast({
+                                title: "Lỗi",
+                                description: "Không thể cập nhật Sticky TV",
+                                variant: "destructive",
+                              });
+                            },
+                          });
+                        }
+                      }}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${editForm.isSticky ? 'bg-yellow-500' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${editForm.isSticky ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Fixed action buttons */}
+              <div className="flex gap-3 px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => setShowEditDialog(false)}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  form="edit-item-form"
+                  disabled={updateMenuItem.isPending}
+                  className="flex-1 px-4 py-3 rounded-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 text-white disabled:opacity-50 transition-all"
+                >
+                  {updateMenuItem.isPending ? "Đang sửa..." : "Lưu"}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
