@@ -10,7 +10,7 @@ export default defineConfig({
     runtimeErrorOverlay(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
+      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png", "offline.html"],
       manifest: {
         name: "Bia Mạnh Béo - Nhà hàng",
         short_name: "Bia Mạnh Béo",
@@ -65,7 +65,8 @@ export default defineConfig({
               }
             }
           }
-        ]
+        ],
+        navigateFallback: "/offline.html"
       }
     }),
     ...(process.env.NODE_ENV !== "production" &&
