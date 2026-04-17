@@ -1,0 +1,27 @@
+[build]
+  builder = "docker"
+  image = "node:20-alpine"
+
+[app]
+  name = "bia-manh-beo"
+
+[http]
+  port = 8080
+  force_https = true
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+
+[[services.ports]]
+  port = 80
+  handlers = ["http"]
+
+[[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"

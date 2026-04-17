@@ -10,6 +10,7 @@ const allowlist = [
   "connect-pg-simple",
   "cors",
   "date-fns",
+  "dotenv",
   "drizzle-orm",
   "drizzle-zod",
   "express",
@@ -47,7 +48,7 @@ async function buildAll() {
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
   await esbuild({
-    entryPoints: ["server/index.ts"],
+    entryPoints: ["index.ts"],
     platform: "node",
     bundle: true,
     format: "cjs",

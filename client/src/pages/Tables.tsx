@@ -267,10 +267,7 @@ export default function Tables() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Quản lý Bàn</h2>
-          <p className="text-xs text-muted-foreground">Chọn bàn để đặt món / thanh toán</p>
-        </div>
+
       </div>
 
       {/* Status summary */}
@@ -384,7 +381,7 @@ export default function Tables() {
                         data-testid={`unpay-card-${tableNum}`}
                         onClick={e => handleUnpayFromCard(e, paidOrder.id)}
                         disabled={unpayOrder.isPending}
-                        className="mt-2 w-full flex items-center justify-center gap-1 px-1.5 py-1 rounded-lg bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-bold hover:bg-orange-200 transition-colors disabled:opacity-50"
+                        className="absolute bottom-1 right-1 scale-50 origin-bottom-right flex items-center gap-0.5 px-1 py-0.5 rounded bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-bold hover:bg-orange-200 transition-colors disabled:opacity-50"
                       >
                         ↩ Hoàn tác TT
                       </button>

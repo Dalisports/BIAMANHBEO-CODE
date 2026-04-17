@@ -1,9 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import { registerRoutes } from "./server/routes";
+import { serveStatic } from "./server/static";
 import { createServer } from "http";
-import { initWebSocket } from "./websocket";
-import { storage } from "./storage";
+import { initWebSocket } from "./server/websocket";
+import { storage } from "./server/storage";
 import { startOfTomorrow } from "date-fns";
 
 const app = express();
@@ -167,7 +167,7 @@ async function seedMenuIfEmpty() {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
-    const { setupVite } = await import("./vite");
+    const { setupVite } = await import("./server/vite");
     await setupVite(httpServer, app);
   }
 
@@ -177,11 +177,8 @@ async function seedMenuIfEmpty() {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
+    port,
+    "0.0.0.0",
     () => {
       log(`serving on port ${port}`);
     },

@@ -10,7 +10,7 @@ export default defineConfig({
     runtimeErrorOverlay(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png", "offline.html"],
+      includeAssets: ["favicon.ico", "favicon.png", "robots.txt", "apple-touch-icon.png", "offline.html"],
       manifest: {
         name: "Bia Mạnh Béo - Nhà hàng",
         short_name: "Bia Mạnh Béo",

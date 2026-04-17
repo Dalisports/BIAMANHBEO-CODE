@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
@@ -42,6 +43,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        <PWAInstallPrompt />
         <PWAUpdatePrompt />
         <Router />
       </TooltipProvider>
