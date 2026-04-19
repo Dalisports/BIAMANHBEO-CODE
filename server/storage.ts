@@ -78,6 +78,7 @@ export interface IStorage {
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
   clearOldCompletedKitchenOrders(): Promise<number>;
   addIsStickyColumn(): Promise<void>;
+  addIsPriorityColumn(): Promise<void>;
   runMigrations(): Promise<void>;
 
   getPaymentSettings(): Promise<PaymentSetting[]>;
@@ -290,6 +291,14 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async addIsPriorityColumn() {
+    try {
+      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_priority boolean DEFAULT false`);
+    } catch (err) {
+      console.log("Column is_priority might already exist or error:", err);
+    }
+  }
+
   async createUsersTable() {
     try {
       await db.execute(sql`
@@ -363,6 +372,9 @@ export class DatabaseStorage implements IStorage {
   async runMigrations() {
     try {
       await this.addIsStickyColumn();
+    } catch (e) {}
+    try {
+      await this.addIsPriorityColumn();
     } catch (e) {}
     try {
       await this.createUsersTable();

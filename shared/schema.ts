@@ -26,6 +26,7 @@ export const menuItems = pgTable("menu_items", {
   isAvailable: boolean("is_available").default(true),
   isActive: boolean("is_active").default(true),
   isSticky: boolean("is_sticky").default(false),
+  isPriority: boolean("is_priority").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -279,8 +279,8 @@ export async function registerRoutes(
   app.patch("/api/products/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { name, price, categoryId, description, image, isAvailable, isSticky } = req.body;
-      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky });
+      const { name, price, categoryId, description, image, isAvailable, isSticky, isPriority } = req.body;
+      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky, isPriority });
       res.json(updated);
     } catch (err) {
       console.error("Update product error:", err);
@@ -292,6 +292,16 @@ export async function registerRoutes(
     try {
       await storage.addIsStickyColumn();
       res.json({ success: true, message: "Column added" });
+    } catch (err) {
+      console.error("Migration error:", err);
+      res.status(500).json({ message: "Migration failed" });
+    }
+  });
+
+  app.post("/api/migrate/add-priority-column", async (req, res) => {
+    try {
+      await storage.addIsPriorityColumn();
+      res.json({ success: true, message: "is_priority column added" });
     } catch (err) {
       console.error("Migration error:", err);
       res.status(500).json({ message: "Migration failed" });

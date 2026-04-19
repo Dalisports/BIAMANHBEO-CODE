@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
 
 declare global {
   interface Window {
@@ -23,12 +24,6 @@ const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=1600&h=1200&fit=crop",
 ];
 
-interface CookingDisplayItem {
-  name: string;
-  quantity: number;
-  tableNumber: string;
-  sentAt: Date | null;
-}
 
 export default function MenuTv() {
   const { data: menuItems } = useMenuItems();
@@ -118,27 +113,36 @@ export default function MenuTv() {
     return () => clearInterval(interval);
   }, [slideCount]);
 
-  // Cooking items đang nấu (chỉ "cooking", không phải "pending" hay "done")
-  const cookingItems: CookingDisplayItem[] = [];
-  (kitchenOrders || []).forEach((order) => {
-    if (order.status !== "Cooking" && order.status !== "Waiting") return;
-    order.items.forEach((item: any) => {
-      if (item.cookingStatus === "cooking") {
-        cookingItems.push({
+  // Build flat cooking items + run priority queue algorithm
+  const priorityNames = useMemo(
+    () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
+    [menuItems],
+  );
+
+  const allFlatItems = useMemo<CookingQueueItem[]>(() => {
+    const result: CookingQueueItem[] = [];
+    (kitchenOrders || []).forEach((order) => {
+      order.items.forEach((item: any) => {
+        result.push({
+          key: `${order.id}-${item.name}`,
+          kitchenOrderId: order.id,
+          orderId: order.orderId,
+          tableNumber: order.tableNumber,
           name: item.name,
           quantity: item.quantity,
-          tableNumber: order.tableNumber,
+          notes: item.notes,
           sentAt: order.sentAt ? new Date(order.sentAt) : null,
+          cookingStatus: item.cookingStatus ?? "pending",
         });
-      }
+      });
     });
-  });
+    return result;
+  }, [kitchenOrders]);
 
-  cookingItems.sort((a, b) => {
-    if (!a.sentAt) return 1;
-    if (!b.sentAt) return -1;
-    return a.sentAt.getTime() - b.sentAt.getTime();
-  });
+  const cookingItems = useMemo(
+    () => buildCookingQueue(allFlatItems, priorityNames),
+    [allFlatItems, priorityNames],
+  );
 
   const doneOrders = (kitchenOrders || []).filter((o) => o.status === "Done");
   const currentIdx = slideCount > 0 ? slideIndex % slideCount : 0;
@@ -214,48 +218,50 @@ export default function MenuTv() {
               </div>
             ) : (
               <AnimatePresence>
-                {cookingItems.map((item, idx) => (
-                  <motion.div
-                    key={`${item.tableNumber}-${item.name}-${idx}`}
-                    layout
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 30 }}
-                    transition={{ delay: idx * 0.04 }}
-                    className="flex items-center gap-[1vw] bg-slate-800/70 rounded-xl px-[1.2vw] py-[1.2vh] border border-orange-500/40"
-                  >
-                    {/* Table badge */}
+                {cookingItems.map((item, idx) => {
+                  const isPri = priorityNames.has(item.name);
+                  return (
                     <motion.div
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="flex-shrink-0 w-[5vw] h-[5vw] rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col items-center justify-center text-black shadow-lg"
+                      key={item.key}
+                      layout
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 30 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className={`flex items-center gap-[1vw] rounded-xl px-[1.2vw] py-[1.2vh] border ${isPri ? "bg-red-900/60 border-red-400/60" : "bg-slate-800/70 border-orange-500/40"}`}
                     >
-                      <span className="text-[0.7vw] font-bold leading-none opacity-80">
-                        BÀN
-                      </span>
-                      <span className="text-[2vw] font-black leading-none">
-                        {item.tableNumber}
-                      </span>
+                      {/* Priority flash */}
+                      {isPri && (
+                        <span className="text-[1.2vw] flex-shrink-0">⚡</span>
+                      )}
+
+                      {/* Table badge */}
+                      <motion.div
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className={`flex-shrink-0 w-[5vw] h-[5vw] rounded-xl flex flex-col items-center justify-center text-black shadow-lg ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}
+                      >
+                        <span className="text-[0.7vw] font-bold leading-none opacity-80">BÀN</span>
+                        <span className="text-[2vw] font-black leading-none">{item.tableNumber}</span>
+                      </motion.div>
+
+                      {/* Name + meta */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[1.6vw] font-black text-white leading-tight truncate">
+                          {item.name}
+                        </p>
+                        <p className="text-[0.95vw] text-orange-300 font-medium">
+                          Đã gọi {formatElapsed(item.sentAt)}
+                        </p>
+                      </div>
+
+                      {/* Quantity */}
+                      <div className={`flex-shrink-0 px-[1vw] py-[0.5vh] rounded-lg ${isPri ? "bg-red-500" : "bg-orange-500"}`}>
+                        <span className="text-[1.8vw] font-black text-white">x{item.quantity}</span>
+                      </div>
                     </motion.div>
-
-                    {/* Name + meta */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[1.6vw] font-black text-white leading-tight truncate">
-                        {item.name}
-                      </p>
-                      <p className="text-[0.95vw] text-orange-300 font-medium">
-                        Đã gọi {formatElapsed(item.sentAt)}
-                      </p>
-                    </div>
-
-                    {/* Quantity */}
-                    <div className="flex-shrink-0 px-[1vw] py-[0.5vh] bg-orange-500 rounded-lg">
-                      <span className="text-[1.8vw] font-black text-white">
-                        x{item.quantity}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
+                  );
+                })}
               </AnimatePresence>
             )}
           </div>

@@ -11,6 +11,7 @@ export type MenuItem = {
   isAvailable: boolean;
   isActive: boolean;
   isSticky: boolean;
+  isPriority: boolean;
   createdAt: Date | null;
 };
 
@@ -54,7 +55,7 @@ export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean; isPriority?: boolean }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },

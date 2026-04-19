@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link
+  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link, Zap
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGES = [
@@ -73,6 +73,7 @@ export default function Menu() {
     description: "",
     image: "",
     isSticky: false,
+    isPriority: false,
   });
 
   const filteredItems = menuItems?.filter(item => {
@@ -149,6 +150,7 @@ export default function Menu() {
       description: item.description || "",
       image: item.image || "",
       isSticky: item.isSticky || false,
+      isPriority: item.isPriority || false,
     });
     setShowEditDialog(true);
   };
@@ -165,6 +167,7 @@ export default function Menu() {
         description: editForm.description,
         image: editForm.image || null,
         isSticky: editItem.isSticky || false,
+        isPriority: editItem.isPriority || false,
       },
       {
         onSuccess: () => {
@@ -767,6 +770,44 @@ export default function Menu() {
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${editForm.isSticky ? 'bg-yellow-500' : 'bg-gray-300'}`}
                     >
                       <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${editForm.isSticky ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl border-2 border-red-200">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-red-500" />
+                      <div>
+                        <p className="font-bold text-red-800 text-sm">Ưu tiên ra nhanh</p>
+                        <p className="text-xs text-red-500">Lên đầu danh sách bếp khi được gọi</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPri = !editForm.isPriority;
+                        setEditForm({ ...editForm, isPriority: newPri });
+                        if (editItem) {
+                          updateMenuItem.mutate({ id: editItem.id, isPriority: newPri }, {
+                            onSuccess: () => {
+                              toast({
+                                title: newPri ? "Đã bật Ưu tiên" : "Đã tắt Ưu tiên",
+                                description: `Món "${editItem.name}" ${newPri ? 'sẽ lên đầu danh sách bếp' : 'không còn ưu tiên'}`,
+                              });
+                              if (editItem) editItem.isPriority = newPri;
+                            },
+                            onError: () => {
+                              toast({
+                                title: "Lỗi",
+                                description: "Không thể cập nhật ưu tiên",
+                                variant: "destructive",
+                              });
+                            },
+                          });
+                        }
+                      }}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${editForm.isPriority ? 'bg-red-500' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${editForm.isPriority ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </form>

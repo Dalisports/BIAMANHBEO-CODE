@@ -1,19 +1,23 @@
-import { useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   useKitchenOrders,
   useStartKitchenItem,
   useCompleteKitchenItem,
   type KitchenItem,
 } from "@/hooks/use-orders";
+import { useMenuItems } from "@/hooks/use-menu";
 import { cn } from "@/lib/utils";
+import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
 import {
   Clock,
   CheckCircle2,
   Flame,
   Loader2,
-  Pin,
   UtensilsCrossed,
+  ChevronUp,
+  ChevronDown,
+  Zap,
 } from "lucide-react";
 
 interface FlattenedItem {
@@ -27,7 +31,7 @@ interface FlattenedItem {
 
 function flattenKitchenOrders(
   orders: ReturnType<typeof useKitchenOrders>["data"],
-) {
+): FlattenedItem[] {
   const items: FlattenedItem[] = [];
   if (!orders) return items;
 
@@ -38,7 +42,7 @@ function flattenKitchenOrders(
         orderId: order.orderId,
         tableNumber: order.tableNumber,
         item,
-        sentAt: order.sentAt,
+        sentAt: order.sentAt ? new Date(order.sentAt) : null,
         orderStatus: order.status,
       });
     }
@@ -47,113 +51,38 @@ function flattenKitchenOrders(
   return items.sort((a, b) => {
     if (!a.sentAt) return 1;
     if (!b.sentAt) return -1;
-    return new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
+    return a.sentAt.getTime() - b.sentAt.getTime();
   });
 }
 
-interface MergedCookingItem {
-  name: string;
-  totalQuantity: number;
-  kitchenOrderId: number;
-  tableNumbers: string[];
-  notes?: string;
-  orderId: number;
-  sentAt: Date | null;
-}
-
-function mergeCookingItems(items: FlattenedItem[]): MergedCookingItem[] {
-  const itemGroups: Record<string, FlattenedItem[]> = {};
-
-  for (const item of items) {
-    const name = item.item.name;
-    if (!itemGroups[name]) {
-      itemGroups[name] = [];
-    }
-    itemGroups[name].push(item);
-  }
-
-  const scoredItems: { item: FlattenedItem; score: number }[] = [];
-  const PRIORITY_WINDOW = 12 * 60 * 1000;
-
-  const names = Object.keys(itemGroups);
-  for (const name of names) {
-    const groupItems = itemGroups[name];
-    if (groupItems.length === 1) {
-      scoredItems.push({
-        item: groupItems[0],
-        score: 0,
-      });
-    } else {
-      const times = groupItems
-        .map((i: FlattenedItem) =>
-          i.sentAt ? new Date(i.sentAt).getTime() : 0,
-        )
-        .filter((t: number) => t > 0)
-        .sort((a: number, b: number) => a - b);
-
-      if (times.length < 2) {
-        scoredItems.push({
-          item: groupItems[0],
-          score: 0,
-        });
-        continue;
-      }
-
-      const timeDiff = times[times.length - 1] - times[0];
-
-      if (timeDiff <= PRIORITY_WINDOW) {
-        const numTables = groupItems.length;
-        const baseScore = numTables * 1000000;
-
-        for (const item of groupItems) {
-          scoredItems.push({
-            item,
-            score:
-              baseScore - (item.sentAt ? new Date(item.sentAt).getTime() : 0),
-          });
-        }
-      } else {
-        for (const item of groupItems) {
-          scoredItems.push({
-            item,
-            score: 0,
-          });
-        }
-      }
-    }
-  }
-
-  scoredItems.sort((a, b) => b.score - a.score);
-
-  const mergedMap: Record<string, MergedCookingItem> = {};
-
-  for (const s of scoredItems) {
-    const key = s.item.item.name;
-    if (!mergedMap[key]) {
-      mergedMap[key] = {
-        name: s.item.item.name,
-        totalQuantity: 0,
-        kitchenOrderId: s.item.kitchenOrderId,
-        tableNumbers: [],
-        notes: s.item.item.notes,
-        orderId: s.item.orderId,
-        sentAt: s.item.sentAt,
-      };
-    }
-    mergedMap[key].totalQuantity += s.item.item.quantity;
-    if (!mergedMap[key].tableNumbers.includes(s.item.tableNumber)) {
-      mergedMap[key].tableNumbers.push(s.item.tableNumber);
-    }
-  }
-
-  return Object.values(mergedMap);
+function toCookingQueueItem(fi: FlattenedItem): CookingQueueItem {
+  return {
+    key: `${fi.kitchenOrderId}-${fi.item.name}`,
+    kitchenOrderId: fi.kitchenOrderId,
+    orderId: fi.orderId,
+    tableNumber: fi.tableNumber,
+    name: fi.item.name,
+    quantity: fi.item.quantity,
+    notes: fi.item.notes,
+    sentAt: fi.sentAt,
+    cookingStatus: fi.item.cookingStatus ?? "pending",
+  };
 }
 
 export default function Kitchen() {
   const { data: kitchenOrders, isLoading } = useKitchenOrders();
+  const { data: menuItems } = useMenuItems();
   const startItem = useStartKitchenItem();
   const completeItem = useCompleteKitchenItem();
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Manual reorder state (session only)
+  const [manualOrder, setManualOrder] = useState<string[] | null>(null);
+
+  const priorityNames = useMemo(
+    () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
+    [menuItems],
+  );
 
   const flattenedItems = useMemo(
     () => flattenKitchenOrders(kitchenOrders),
@@ -161,10 +90,7 @@ export default function Kitchen() {
   );
 
   const pendingItems = useMemo(
-    () =>
-      flattenedItems.filter(
-        (fi) => fi.item.cookingStatus === "pending" || !fi.item.cookingStatus,
-      ),
+    () => flattenedItems.filter((fi) => fi.item.cookingStatus === "pending" || !fi.item.cookingStatus),
     [flattenedItems],
   );
 
@@ -178,14 +104,54 @@ export default function Kitchen() {
     [flattenedItems],
   );
 
-  const mergedCookingItems = useMemo(
-    () => mergeCookingItems(cookingItems),
-    [cookingItems],
+  // Build sorted cooking queue
+  const autoQueue = useMemo<CookingQueueItem[]>(
+    () => buildCookingQueue(flattenedItems.map(toCookingQueueItem), priorityNames),
+    [flattenedItems, priorityNames],
   );
 
-  const isItemDone = (item: FlattenedItem) => {
-    return item.item.cookingStatus === "done" || item.orderStatus === "Complete";
+  // Apply manual reorder on top of auto queue (reset when queue keys change)
+  const queueKeys = autoQueue.map((i) => i.key).join(",");
+  const prevQueueKeys = useRef(queueKeys);
+
+  const cookingQueue = useMemo<CookingQueueItem[]>(() => {
+    const keySet = new Set(autoQueue.map((i) => i.key));
+    if (!manualOrder || prevQueueKeys.current !== queueKeys) {
+      prevQueueKeys.current = queueKeys;
+      return autoQueue;
+    }
+    // Restore manual order, filter out removed items, append new items at bottom
+    const ordered: CookingQueueItem[] = [];
+    for (const k of manualOrder) {
+      const found = autoQueue.find((i) => i.key === k);
+      if (found) ordered.push(found);
+    }
+    // Add any new items not in manual order
+    for (const item of autoQueue) {
+      if (!manualOrder.includes(item.key)) ordered.push(item);
+    }
+    return ordered;
+  }, [autoQueue, manualOrder, queueKeys]);
+
+  // Reset manual order when queue composition changes
+  useEffect(() => {
+    if (prevQueueKeys.current !== queueKeys) {
+      setManualOrder(null);
+      prevQueueKeys.current = queueKeys;
+    }
+  }, [queueKeys]);
+
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const next = idx + dir;
+    if (next < 0 || next >= cookingQueue.length) return;
+    const newOrder = cookingQueue.map((i) => i.key);
+    [newOrder[idx], newOrder[next]] = [newOrder[next], newOrder[idx]];
+    setManualOrder(newOrder);
   };
+
+  // Group by table for "THEO BÀN" panel
+  const isItemDone = (item: FlattenedItem) =>
+    item.item.cookingStatus === "done" || item.orderStatus === "Complete";
 
   const ordersByTable = useMemo(() => {
     const groups: Record<string, FlattenedItem[]> = {};
@@ -199,14 +165,14 @@ export default function Kitchen() {
       const bAllDone = groups[b].every(isItemDone);
       if (aAllDone && !bAllDone) return 1;
       if (!aAllDone && bAllDone) return -1;
-      const aTime = groups[a].reduce((min, i) => {
-        const t = i.sentAt ? new Date(i.sentAt).getTime() : Infinity;
-        return t < min ? t : min;
-      }, Infinity);
-      const bTime = groups[b].reduce((min, i) => {
-        const t = i.sentAt ? new Date(i.sentAt).getTime() : Infinity;
-        return t < min ? t : min;
-      }, Infinity);
+      const aTime = groups[a].reduce(
+        (min, i) => Math.min(min, i.sentAt?.getTime() ?? Infinity),
+        Infinity,
+      );
+      const bTime = groups[b].reduce(
+        (min, i) => Math.min(min, i.sentAt?.getTime() ?? Infinity),
+        Infinity,
+      );
       return aTime - bTime;
     });
     return tables.map((table) => ({
@@ -214,7 +180,7 @@ export default function Kitchen() {
       items: groups[table].sort((a, b) => {
         if (!a.sentAt) return 1;
         if (!b.sentAt) return -1;
-        return new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime();
+        return a.sentAt.getTime() - b.sentAt.getTime();
       }),
     }));
   }, [flattenedItems]);
@@ -222,9 +188,7 @@ export default function Kitchen() {
   const doneItemKeys = useMemo(() => {
     const keys = new Set<string>();
     for (const item of flattenedItems) {
-      if (isItemDone(item)) {
-        keys.add(`${item.kitchenOrderId}-${item.item.name}`);
-      }
+      if (isItemDone(item)) keys.add(`${item.kitchenOrderId}-${item.item.name}`);
     }
     return keys;
   }, [flattenedItems]);
@@ -235,39 +199,29 @@ export default function Kitchen() {
     }
   }, [pendingItems.length]);
 
-  const handleStartItem = (flatItem: FlattenedItem) => {
-    startItem.mutate({
-      kitchenOrderId: flatItem.kitchenOrderId,
-      itemName: flatItem.item.name,
-    });
+  const handleStartItem = (fi: FlattenedItem) => {
+    startItem.mutate({ kitchenOrderId: fi.kitchenOrderId, itemName: fi.item.name });
   };
 
-  const handleCompleteItem = (mergedItem: MergedCookingItem) => {
-    completeItem.mutate({
-      kitchenOrderId: mergedItem.kitchenOrderId,
-      itemName: mergedItem.name,
-    });
+  const handleCompleteItem = (item: CookingQueueItem) => {
+    completeItem.mutate({ kitchenOrderId: item.kitchenOrderId, itemName: item.name });
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full pb-4">
       <audio ref={audioRef} src="/notification.mp3" />
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-3xl font-sans font-bold text-foreground">BẾP</h2>
-          <p className="text-muted-foreground mt-1 text-sm"></p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-100 text-yellow-700 font-bold">
-            <Clock className="w-5 h-5" />
-            <span>{mergedCookingItems.length}</span>
-            <span className="text-sm font-normal">đang nấu</span>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+        <h2 className="text-2xl font-bold text-foreground">BẾP</h2>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-100 text-yellow-700 font-bold text-sm">
+            <Clock className="w-4 h-4" />
+            <span>{cookingItems.length} đang nấu</span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100 text-orange-700 font-bold">
-            <Flame className="w-5 h-5" />
-            <span>{doneItems.length}</span>
-            <span className="text-sm font-normal">xong</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-100 text-orange-700 font-bold text-sm">
+            <Flame className="w-4 h-4" />
+            <span>{doneItems.length} xong</span>
           </div>
         </div>
       </div>
@@ -277,7 +231,128 @@ export default function Kitchen() {
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-4">
+          {/* ĐANG NẤU — full width, 1 column, mobile-first */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <h3 className="text-sm font-bold text-orange-600">
+                ĐANG NẤU ({cookingItems.length})
+              </h3>
+              {manualOrder && (
+                <button
+                  onClick={() => setManualOrder(null)}
+                  className="ml-auto text-xs text-slate-400 underline"
+                >
+                  Reset thứ tự
+                </button>
+              )}
+            </div>
+            <div className="space-y-2">
+              {cookingQueue.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground bg-card rounded-2xl border border-dashed text-sm">
+                  Không có món nào đang nấu
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {cookingQueue.map((item, idx) => {
+                    const isPri = priorityNames.has(item.name);
+                    return (
+                      <motion.div
+                        key={item.key}
+                        layout
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className={cn(
+                          "rounded-xl border-2 p-3",
+                          isPri
+                            ? "bg-red-50 border-red-400"
+                            : "bg-orange-50 border-orange-300",
+                        )}
+                      >
+                        <div className="flex items-start gap-2">
+                          {/* Up/Down controls */}
+                          <div className="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
+                            <button
+                              onClick={() => moveItem(idx, -1)}
+                              disabled={idx === 0}
+                              className={cn(
+                                "w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors",
+                                idx === 0 && "opacity-20 cursor-not-allowed",
+                              )}
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => moveItem(idx, 1)}
+                              disabled={idx === cookingQueue.length - 1}
+                              className={cn(
+                                "w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors",
+                                idx === cookingQueue.length - 1 && "opacity-20 cursor-not-allowed",
+                              )}
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Table badge */}
+                          <div
+                            className={cn(
+                              "flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center font-black shadow-sm",
+                              isPri
+                                ? "bg-red-500 text-white"
+                                : "bg-orange-400 text-white",
+                            )}
+                          >
+                            <span className="text-[9px] leading-none opacity-80">BÀN</span>
+                            <span className="text-lg leading-tight">{item.tableNumber}</span>
+                          </div>
+
+                          {/* Name + notes */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-1 flex-wrap">
+                              {isPri && (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[10px] font-bold flex-shrink-0">
+                                  <Zap className="w-2.5 h-2.5" />
+                                  NHANH
+                                </span>
+                              )}
+                              <p className="font-bold text-base text-orange-900 leading-snug break-words">
+                                {item.name}
+                              </p>
+                            </div>
+                            {item.notes && (
+                              <p className="text-xs text-orange-600 mt-0.5">
+                                Ghi chú: {item.notes}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Qty + Done button */}
+                          <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
+                            <span className="text-xl font-black text-orange-700 leading-none">
+                              x{item.quantity}
+                            </span>
+                            <button
+                              onClick={() => handleCompleteItem(item)}
+                              disabled={completeItem.isPending}
+                              className="px-3 py-1 rounded-lg text-xs font-bold bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              XONG ✓
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
+            </div>
+          </div>
+
+          {/* THEO BÀN — collapsed list below */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <UtensilsCrossed className="w-4 h-4 text-blue-500" />
@@ -285,45 +360,50 @@ export default function Kitchen() {
                 THEO BÀN ({ordersByTable.length})
               </h3>
             </div>
-            <div className="space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
+            <div className="space-y-2">
               {ordersByTable.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-dashed">
+                <div className="text-center py-8 text-muted-foreground bg-card rounded-2xl border border-dashed text-sm">
                   Không có order nào
                 </div>
               ) : (
-                <>{ordersByTable.map((group) => {
+                ordersByTable.map((group) => {
                   const allDone = group.items.every(isItemDone);
                   return (
                     <motion.div
                       key={group.tableNumber}
-                      initial={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.97 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className={cn(
-                        "rounded-xl border-2 p-3 mb-3",
+                        "rounded-xl border-2 p-3",
                         allDone
-                          ? "bg-gray-100 border-gray-300 opacity-60"
-                          : "bg-blue-50 border-blue-300"
+                          ? "bg-gray-50 border-gray-200 opacity-60"
+                          : "bg-blue-50 border-blue-200",
                       )}
                     >
-                      <div className={cn(
-                        "flex items-center gap-2 mb-2 pb-2 border-b",
-                        allDone ? "border-gray-300" : "border-blue-200"
-                      )}>
-                        <span className={cn(
-                          "text-lg font-black",
-                          allDone ? "text-gray-500" : "text-blue-700"
-                        )}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-2 mb-2 pb-1.5 border-b",
+                          allDone ? "border-gray-200" : "border-blue-200",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "text-base font-black",
+                            allDone ? "text-gray-500" : "text-blue-700",
+                          )}
+                        >
                           BÀN {group.tableNumber}
                         </span>
-                        <span className={cn(
-                          "text-sm",
-                          allDone ? "text-gray-400" : "text-blue-500"
-                        )}>
-                          ({group.items.length} món)
-                          {allDone && " ✓"}
+                        <span
+                          className={cn(
+                            "text-xs",
+                            allDone ? "text-gray-400" : "text-blue-500",
+                          )}
+                        >
+                          {group.items.length} món{allDone && " ✓"}
                         </span>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {group.items.map((item, idx) => {
                           const isDone = doneItemKeys.has(
                             `${item.kitchenOrderId}-${item.item.name}`,
@@ -332,122 +412,56 @@ export default function Kitchen() {
                             <div
                               key={idx}
                               className={cn(
-                                "flex items-center justify-between py-1",
+                                "flex items-center gap-2",
                                 isDone && "opacity-40",
                               )}
                             >
-                              <div className="flex items-center gap-2">
-                                {isDone ? (
-                                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                ) : (
-                                  <span
-                                    className={cn(
-                                      "w-5 h-5 rounded flex items-center justify-center text-xs font-bold",
-                                      item.item.cookingStatus === "cooking"
-                                        ? "bg-orange-500 text-white"
-                                        : "bg-yellow-500 text-white",
-                                    )}
-                                  >
-                                    {item.item.cookingStatus === "cooking"
-                                      ? "🔥"
-                                      : "⏳"}
-                                  </span>
-                                )}
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
                                 <span
                                   className={cn(
-                                    "font-medium",
-                                    isDone && "line-through text-gray-500",
+                                    "w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0",
+                                    item.item.cookingStatus === "cooking"
+                                      ? "bg-orange-500 text-white"
+                                      : "bg-yellow-500 text-white",
                                   )}
                                 >
-                                  {item.item.name}
+                                  {item.item.cookingStatus === "cooking" ? "🔥" : "⏳"}
                                 </span>
-                              </div>
+                              )}
                               <span
                                 className={cn(
-                                  "font-bold",
+                                  "font-medium text-sm flex-1",
+                                  isDone && "line-through text-gray-500",
+                                )}
+                              >
+                                {item.item.name}
+                              </span>
+                              <span
+                                className={cn(
+                                  "font-bold text-sm flex-shrink-0",
                                   isDone ? "text-gray-400" : "text-gray-700",
                                 )}
                               >
                                 x{item.item.quantity}
                               </span>
+                              {(item.item.cookingStatus === "pending" || !item.item.cookingStatus) && !isDone && (
+                                <button
+                                  onClick={() => handleStartItem(item)}
+                                  disabled={startItem.isPending}
+                                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors flex-shrink-0"
+                                >
+                                  BẮT ĐẦU
+                                </button>
+                              )}
                             </div>
                           );
                         })}
                       </div>
                     </motion.div>
                   );
-                })}</>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <h3 className="text-sm font-bold text-orange-600">
-                ĐANG NẤU ({mergedCookingItems.length})
-              </h3>
-            </div>
-            <div className="space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2">
-              {mergedCookingItems.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground bg-card rounded-2xl border border-dashed">
-                  Không có món nào
-                </div>
-              ) : (
-                mergedCookingItems.map((item, idx) => (
-                  <motion.div
-                    key={`${item.kitchenOrderId}-${item.name}-${idx}`}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-orange-50 rounded-xl border-2 border-orange-400 p-3 relative overflow-hidden"
-                  >
-                    <span className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-lg font-bold shadow-lg border-2 border-white z-10">
-                      {item.totalQuantity}
-                    </span>
-                    <div className="flex items-center gap-3 pr-12">
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {item.tableNumbers.map((table, tIdx) => (
-                          <span
-                            key={tIdx}
-                            className={cn(
-                              "text-2xl font-black",
-                              tIdx % 2 === 0
-                                ? "text-red-600"
-                                : "text-green-600",
-                            )}
-                          >
-                            {table}
-                            {tIdx < item.tableNumbers.length - 1 && (
-                              <span className="text-gray-400 mx-0.5">,</span>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-gray-400">-</span>
-                      <span className="text-xl font-bold text-orange-900 truncate">
-                        {item.name}
-                      </span>
-                      <button
-                        onClick={() => handleCompleteItem(item)}
-                        disabled={completeItem.isPending}
-                        className={cn(
-                          "ml-auto px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-1 shrink-0",
-                          "bg-green-500 text-white hover:bg-green-600",
-                          completeItem.isPending &&
-                            "opacity-50 cursor-not-allowed",
-                        )}
-                      >
-                        <Pin className="w-4 h-4" />
-                        XONG
-                      </button>
-                    </div>
-                    {item.notes && (
-                      <div className="text-xs text-orange-700 mt-1">
-                        Ghi chú: {item.notes}
-                      </div>
-                    )}
-                  </motion.div>
-                ))
+                })
               )}
             </div>
           </div>
