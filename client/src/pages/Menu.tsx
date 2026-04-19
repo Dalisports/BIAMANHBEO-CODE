@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link, Zap
+  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link, Zap, Tv
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGES = [
@@ -333,10 +333,20 @@ export default function Menu() {
                       </div>
                     )}
                     
-                    {isOwner && item.isPriority && (
-                      <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex items-center gap-0.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg pointer-events-none">
-                        <Zap className="w-2.5 h-2.5" />
-                        <span>Ưu tiên</span>
+                    {isOwner && (item.isPriority || item.isSticky) && (
+                      <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex flex-col gap-1 pointer-events-none">
+                        {item.isPriority && (
+                          <div className="flex items-center gap-0.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                            <Zap className="w-2.5 h-2.5" />
+                            <span>Ưu tiên</span>
+                          </div>
+                        )}
+                        {item.isSticky && (
+                          <div className="flex items-center gap-0.5 bg-yellow-500 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                            <Tv className="w-2.5 h-2.5" />
+                            <span>Sticky TV</span>
+                          </div>
+                        )}
                       </div>
                     )}
 
