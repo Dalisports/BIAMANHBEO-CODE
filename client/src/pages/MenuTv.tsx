@@ -8,6 +8,7 @@ declare global {
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useKitchenOrders } from "@/hooks/use-orders";
+import { formatCurrency } from "@/lib/utils";
 import { Flame, CheckCircle2, ScanLine, ChefHat } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -76,27 +77,24 @@ export default function MenuTv() {
     window.updateTickerText = updateTicker;
   }, []);
 
-  // Slideshow: ưu tiên ảnh từ menu (sticky trước), fallback placeholders
-  const stickyImages = (menuItems || [])
-    .filter((m) => m.isSticky && m.image)
-    .map((m) => m.image as string);
-  const allMenuImages = (menuItems || [])
-    .filter((m) => m.image)
-    .map((m) => m.image as string);
+  // Slideshow: ưu tiên món sticky, fallback toàn bộ món có ảnh, fallback placeholders
+  const stickyMenu = (menuItems || []).filter((m) => m.isSticky && m.image);
+  const allMenu = (menuItems || []).filter((m) => m.image);
+  const slideMenuItems =
+    stickyMenu.length > 0 ? stickyMenu : allMenu.length > 0 ? allMenu : [];
   const slideImages =
-    stickyImages.length > 0
-      ? stickyImages
-      : allMenuImages.length > 0
-      ? allMenuImages
+    slideMenuItems.length > 0
+      ? slideMenuItems.map((m) => m.image as string)
       : PLACEHOLDER_IMAGES;
+  const slideCount = slideImages.length;
 
   useEffect(() => {
-    if (slideImages.length === 0) return;
+    if (slideCount === 0) return;
     const interval = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % slideImages.length);
+      setSlideIndex((prev) => (prev + 1) % slideCount);
     }, 6000);
     return () => clearInterval(interval);
-  }, [slideImages.length]);
+  }, [slideCount]);
 
   // Cooking items đang nấu (chỉ "cooking", không phải "pending" hay "done")
   const cookingItems: CookingDisplayItem[] = [];
@@ -121,7 +119,9 @@ export default function MenuTv() {
   });
 
   const doneOrders = (kitchenOrders || []).filter((o) => o.status === "Done");
-  const currentImage = slideImages[slideIndex % slideImages.length];
+  const currentIdx = slideCount > 0 ? slideIndex % slideCount : 0;
+  const currentImage = slideImages[currentIdx];
+  const currentItem = slideMenuItems[currentIdx];
 
   const formatElapsed = (sentAt: Date | null) => {
     if (!sentAt) return "";
@@ -239,31 +239,116 @@ export default function MenuTv() {
           </div>
         </div>
 
-        {/* RIGHT 50% — slideshow */}
-        <div className="w-1/2 h-full relative rounded-2xl overflow-hidden border-2 border-yellow-500/40 bg-black">
+        {/* RIGHT 50% — slideshow with rich effects */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="w-1/2 h-full relative rounded-2xl overflow-hidden border-2 border-yellow-500/50 bg-black"
+        >
+          {/* Image layer (cropped via object-cover) */}
           <AnimatePresence mode="wait">
-            <motion.img
+            <motion.div
               key={slideIndex}
-              src={currentImage}
-              alt="Quảng cáo"
-              initial={{ opacity: 0, scale: 1.05 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+              initial={{ opacity: 0, scale: 1.08, x: 30 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.98, x: -30 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="absolute inset-0"
+            >
+              <motion.img
+                src={currentImage}
+                alt={currentItem?.name || "Quảng cáo"}
+                animate={{ y: [0, -4, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="w-full h-full object-cover object-center"
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Shimmer sweep */}
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: "200%" }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none z-10"
+          />
+
+          {/* Scan line */}
+          <motion.div
+            animate={{ top: ["0%", "100%"] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-yellow-400/70 to-transparent pointer-events-none z-10"
+          />
+
+          {/* Glow border */}
+          <motion.div
+            animate={{
+              boxShadow: [
+                "inset 0 0 20px rgba(234,179,8,0)",
+                "inset 0 0 60px rgba(234,179,8,0.35)",
+                "inset 0 0 20px rgba(234,179,8,0)",
+              ],
+            }}
+            transition={{ duration: 1.8, repeat: Infinity }}
+            className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+          />
+
+          {/* Info card overlay */}
+          <AnimatePresence mode="wait">
+            {currentItem && (
+              <motion.div
+                key={`info-${slideIndex}`}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
+                transition={{ delay: 0.25, duration: 0.5 }}
+                className="absolute inset-x-0 bottom-0 p-[1.5vw] bg-gradient-to-t from-black/95 via-black/70 to-transparent z-20"
+              >
+                <div className="flex items-end justify-between gap-[1vw]">
+                  <motion.p
+                    animate={{
+                      textShadow: [
+                        "0px 0px 0px #fff",
+                        "0px 0px 14px #fbbf24",
+                        "0px 0px 0px #fff",
+                      ],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="font-black text-[2.4vw] leading-tight text-white truncate flex-1"
+                  >
+                    {currentItem.name}
+                  </motion.p>
+                  <motion.p
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-yellow-400 font-black text-[2vw] whitespace-nowrap"
+                  >
+                    {formatCurrency(currentItem.price)}
+                  </motion.p>
+                </div>
+                {currentItem.description && (
+                  <motion.p
+                    initial={{ y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-slate-200 text-[1.1vw] mt-[0.5vh] line-clamp-2"
+                  >
+                    {currentItem.description}
+                  </motion.p>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* Slide indicator dots */}
-          {slideImages.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {slideImages.slice(0, 8).map((_, i) => (
+          {slideCount > 1 && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+              {slideImages.slice(0, 10).map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all ${
-                    i === slideIndex % slideImages.length
-                      ? "bg-yellow-400 w-6"
-                      : "bg-white/40 w-1.5"
+                    i === currentIdx ? "bg-yellow-400 w-6" : "bg-white/40 w-1.5"
                   }`}
                 />
               ))}
@@ -271,11 +356,11 @@ export default function MenuTv() {
           )}
 
           {/* Corner accents */}
-          <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-yellow-500/60 rounded-tl pointer-events-none" />
-          <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-yellow-500/60 rounded-tr pointer-events-none" />
-          <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-yellow-500/60 rounded-bl pointer-events-none" />
-          <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-yellow-500/60 rounded-br pointer-events-none" />
-        </div>
+          <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-yellow-500/70 rounded-tl pointer-events-none z-20" />
+          <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-yellow-500/70 rounded-tr pointer-events-none z-20" />
+          <div className="absolute bottom-2 left-2 w-5 h-5 border-b-2 border-l-2 border-yellow-500/70 rounded-bl pointer-events-none z-20" />
+          <div className="absolute bottom-2 right-2 w-5 h-5 border-b-2 border-r-2 border-yellow-500/70 rounded-br pointer-events-none z-20" />
+        </motion.div>
       </div>
 
       {/* Attendance QR overlay */}
