@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAuthHeaders } from "./use-auth";
 
 export type MenuItem = {
   id: number;
@@ -17,7 +18,7 @@ export function useMenuItems() {
   return useQuery({
     queryKey: ["/api/products"],
     queryFn: async () => {
-      const res = await fetch("/api/products", { credentials: "include" });
+      const res = await fetch("/api/products", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch menu items");
       return res.json() as Promise<MenuItem[]>;
     },
@@ -31,7 +32,7 @@ export function useCreateMenuItem() {
     mutationFn: async (data: { name: string; price: number; description?: string; image?: string | null }) => {
       const res = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(data),
         credentials: "include",
       });
@@ -56,7 +57,7 @@ export function useUpdateMenuItem() {
     mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(data),
         credentials: "include",
       });
@@ -76,7 +77,7 @@ export function useDeleteMenuItem() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
+        method: "DELETE", headers: getAuthHeaders(),
         credentials: "include",
       });
       

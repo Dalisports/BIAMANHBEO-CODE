@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertMenuItemSchema, insertOrderSchema, menuItems, orders } from "./schema";
+import { insertMenuItemSchema, insertOrderSchema, menuItems, orders, loginSchema } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -15,6 +15,55 @@ export const errorSchemas = {
 };
 
 export const api = {
+  auth: {
+    login: {
+      method: 'POST' as const,
+      path: '/api/auth/login' as const,
+      input: loginSchema,
+      responses: {
+        200: z.object({
+          token: z.string(),
+          user: z.object({
+            userId: z.number(),
+            username: z.string(),
+            role: z.enum(["owner", "employee"]),
+          }),
+        }),
+        401: errorSchemas.validation,
+      },
+    },
+    register: {
+      method: 'POST' as const,
+      path: '/api/auth/register' as const,
+      input: loginSchema.extend({
+        role: z.enum(["owner", "employee"]).default("employee"),
+        fullName: z.string().optional(),
+      }),
+      responses: {
+        201: z.object({
+          token: z.string(),
+          user: z.object({
+            userId: z.number(),
+            username: z.string(),
+            role: z.enum(["owner", "employee"]),
+          }),
+        }),
+        400: errorSchemas.validation,
+      },
+    },
+    me: {
+      method: 'GET' as const,
+      path: '/api/auth/me' as const,
+      responses: {
+        200: z.object({
+          userId: z.number(),
+          username: z.string(),
+          role: z.enum(["owner", "employee"]),
+        }),
+        401: errorSchemas.validation,
+      },
+    },
+  },
   products: {
     list: {
       method: 'GET' as const,

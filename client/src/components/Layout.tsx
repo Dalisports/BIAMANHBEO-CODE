@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History, LayoutGrid } from "lucide-react";
+import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History, LayoutGrid, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { useAuth } from "@/hooks/use-auth";
 
 const NAV_ITEMS = [
   { href: "/", label: "Bàn", icon: LayoutGrid },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const playSound = useNotificationSound();
+  const { user, logout, isOwner } = useAuth();
   
   useWebSocket(() => {
     playSound();
@@ -74,6 +76,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <span className="text-muted-foreground italic leading-relaxed">"Thanh toán bàn 3"</span>
               </div>
             </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/50">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="w-4 h-4 text-amber-500" />
+              <span className="font-medium">{user?.username}</span>
+              {isOwner && <span className="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold">Chủ Quán</span>}
+            </div>
+            <button onClick={logout} className="p-2 hover:bg-secondary rounded-lg transition-colors" title="Đăng xuất">
+              <LogOut className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
         </div>
       </aside>

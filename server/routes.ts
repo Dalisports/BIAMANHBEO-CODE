@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
 import { broadcast } from "./websocket";
+import { login, register, verifyAuth, requireAuth, requireOwner } from "./auth";
 
 let _openai: OpenAI | null = null;
 function getOpenAI(): OpenAI {
@@ -21,6 +22,75 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  function getAuthUser(req: any) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) return null;
+    return verifyAuth(authHeader.slice(7));
+  }
+
+  function requireAuthMiddleware(req: any, res: any, next: any) {
+    const user = getAuthUser(req);
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    req.user = user;
+    next();
+  }
+
+  function requireOwnerMiddleware(req: any, res: any, next: any) {
+    const user = getAuthUser(req);
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    if (user.role !== "owner") return res.status(403).json({ message: "Forbidden: Owner only" });
+    req.user = user;
+    next();
+  }
+
+  app.post(api.auth.login.path, async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ message: "Missing username or password" });
+      }
+      const result = await login(username, password);
+      if (!result) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      res.json(result);
+    } catch (err) {
+      console.error("Login error:", err);
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.post(api.auth.register.path, async (req, res) => {
+    try {
+      const { username, password, fullName } = req.body;
+      console.log("[ROUTES] Register request:", username);
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Missing username or password" });
+      }
+      
+      const existingUsers = await storage.getUsers();
+      const role = existingUsers.length === 0 ? "owner" : "employee";
+      console.log("[ROUTES] Existing users:", existingUsers.length, "-> role:", role);
+      
+      const result = await register(username, password, role, fullName);
+      if (!result) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      res.status(201).json(result);
+    } catch (err) {
+      console.error("[ROUTES] Register error:", err);
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  app.get(api.auth.me.path, requireAuthMiddleware, async (req: any, res) => {
+    res.json(req.user);
+  });
 
   app.get(api.products.list.path, async (req, res) => {
     const prods = await storage.getMenuItems();
@@ -144,7 +214,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/seed-menu", async (req, res) => {
+  app.post("/api/admin/seed-menu", requireOwnerMiddleware, async (req, res) => {
     try {
       const seedItems = [
         { name: "Đầu lợn", price: 145000 },
@@ -356,7 +426,7 @@ export async function registerRoutes(
     res.json(cats);
   });
 
-  app.get("/api/settings/:key", async (req, res) => {
+  app.get("/api/settings/:key", requireOwnerMiddleware, async (req, res) => {
     try {
       const key = req.params.key;
       const setting = await storage.getSetting(key);
@@ -366,7 +436,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/settings", async (req, res) => {
+  app.post("/api/settings", requireOwnerMiddleware, async (req, res) => {
     try {
       const { key, value } = req.body;
       if (!key) {
@@ -423,7 +493,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/reports/daily", async (req, res) => {
+  app.get("/api/reports/daily", requireOwnerMiddleware, async (req, res) => {
     try {
       const report = await storage.getDailyReport();
       res.json(report);
@@ -432,7 +502,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/reports/best-sellers", async (req, res) => {
+  app.get("/api/reports/best-sellers", requireOwnerMiddleware, async (req, res) => {
     try {
       const report = await storage.getBestSellers();
       res.json(report);

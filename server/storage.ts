@@ -6,6 +6,7 @@ import {
   kitchenOrders,
   paymentSettings,
   settings,
+  users,
   type InsertMenuItem,
   type InsertOrder,
   type InsertCategory,
@@ -13,12 +14,15 @@ import {
   type InsertPaymentSetting,
   type Order,
   type KitchenOrder,
-  type PaymentSetting
+  type PaymentSetting,
+  type User
 } from "@shared/schema";
 import { eq, inArray, and, desc, lt, ne, sql } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
+  getUsers(): Promise<User[]>;
+  createUser(user: { username: string; password: string; role: string; fullName?: string }): Promise<User>;
   getCategories(): Promise<typeof categories.$inferSelect[]>;
   createCategory(category: InsertCategory): Promise<typeof categories.$inferSelect>;
   updateCategory(id: number, data: Partial<InsertCategory>): Promise<typeof categories.$inferSelect>;
@@ -63,6 +67,21 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getUsers() {
+    return await db.select().from(users).where(eq(users.isActive, true));
+  }
+
+  async createUser(user: { username: string; password: string; role: string; fullName?: string }) {
+    const [created] = await db.insert(users).values({
+      username: user.username,
+      password: user.password,
+      role: user.role,
+      fullName: user.fullName || null,
+      isActive: true,
+    }).returning();
+    return created;
+  }
+
   async getCategories() {
     return await db.select().from(categories).orderBy(categories.displayOrder);
   }
@@ -129,8 +148,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async createUsersTable() {
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'employee',
+          full_name TEXT,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      console.log("[STORAGE] Users table created or already exists");
+    } catch (err) {
+      console.log("[STORAGE] Users table error:", err);
+    }
+  }
+
   async runMigrations() {
-    await this.addIsStickyColumn();
+    try {
+      await this.addIsStickyColumn();
+    } catch (e) {}
+    try {
+      await this.createUsersTable();
+    } catch (e) {}
   }
 
   async deleteMenuItem(id: number) {

@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
-
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
 import Menu from "@/pages/Menu";
@@ -16,11 +16,38 @@ import Reports from "@/pages/Reports";
 import History from "@/pages/History";
 import Tables from "@/pages/Tables";
 import MenuTv from "@/pages/MenuTv";
+import Login from "@/pages/Login";
+
+function ProtectedRoute({ component: Component, requireOwner = false }: { component: any; requireOwner?: boolean }) {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return null;
+  }
+  
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
+  
+  if (requireOwner && user.role !== "owner") {
+    return <Redirect href="/" />;
+  }
+  
+  return <Component />;
+}
 
 function Router() {
+  const { user, isLoading } = useAuth();
+  
   return (
     <Switch>
       <Route path="/menu-tv" component={MenuTv} />
+      <Route path="/login" component={Login} />
+      {!user && !isLoading && (
+        <Route path="*">
+          <Redirect href="/login" />
+        </Route>
+      )}
       <Layout>
         <Switch>
           <Route path="/" component={Tables} />
@@ -45,7 +72,9 @@ function App() {
         <Toaster />
         <PWAInstallPrompt />
         <PWAUpdatePrompt />
-        <Router />
+        <AuthProvider>
+          <Router />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -85,6 +85,16 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  role: text("role").notNull().default("employee"),
+  fullName: text("full_name"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
@@ -128,3 +138,12 @@ export const insertConversationSchema = createInsertSchema(conversations).omit({
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
+
+export type User = typeof users.$inferSelect;
+export type UserRole = "owner" | "employee";
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});

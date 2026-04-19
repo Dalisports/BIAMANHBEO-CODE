@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
+import { getAuthHeaders } from "./use-auth";
 
 type HistoryMessage = { role: "user" | "assistant"; content: string };
 
@@ -10,7 +11,7 @@ export function useProcessChat() {
     mutationFn: async ({ message, history }: { message: string; history?: HistoryMessage[] }) => {
       const res = await fetch(api.chat.process.path, {
         method: api.chat.process.method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ message, history }),
         credentials: "include",
       });

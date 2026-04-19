@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAuthHeaders } from "./use-auth";
 
 export type OrderItem = {
   menuItemId?: number;
@@ -48,7 +49,7 @@ export function useOrders() {
   return useQuery({
     queryKey: ["/api/orders"],
     queryFn: async () => {
-      const res = await fetch("/api/orders", { credentials: "include" });
+      const res = await fetch("/api/orders", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch orders");
       return res.json() as Promise<Order[]>;
     },
@@ -59,7 +60,7 @@ export function useOrder(id: number) {
   return useQuery({
     queryKey: ["/api/orders", id],
     queryFn: async () => {
-      const res = await fetch(`/api/orders/${id}`, { credentials: "include" });
+      const res = await fetch(`/api/orders/${id}`, { credentials: "include", headers: getAuthHeaders() });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to fetch order");
       return res.json() as Promise<Order>;
@@ -75,14 +76,13 @@ export function useCreateOrder() {
     mutationFn: async (data: { tableNumber: string; items: OrderItem[]; totalAmount: number; customerName?: string; phone?: string; notes?: string }) => {
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           ...data,
           status: "Pending",
           paymentStatus: "Unpaid",
         }),
-        credentials: "include",
-      });
+        credentials: "include" });
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -104,7 +104,7 @@ export function useUpdateOrder() {
     mutationFn: async ({ id, ...updates }: { id: number } & Partial<Order>) => {
       const res = await fetch(`/api/orders/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(updates),
         credentials: "include",
       });
@@ -124,7 +124,7 @@ export function useDeleteOrder() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/orders/${id}`, {
-        method: "DELETE",
+        method: "DELETE", headers: getAuthHeaders(),
         credentials: "include",
       });
       
@@ -143,7 +143,7 @@ export function useSendToKitchen() {
   return useMutation({
     mutationFn: async (orderId: number) => {
       const res = await fetch(`/api/orders/${orderId}/send-to-kitchen`, {
-        method: "POST",
+        method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       
@@ -164,7 +164,7 @@ export function usePayOrder() {
     mutationFn: async ({ orderId, method }: { orderId: number; method: string }) => {
       const res = await fetch(`/api/orders/${orderId}/pay`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ method }),
         credentials: "include",
       });
@@ -182,7 +182,7 @@ export function useKitchenOrders() {
   return useQuery({
     queryKey: ["/api/kitchen"],
     queryFn: async () => {
-      const res = await fetch("/api/kitchen", { credentials: "include" });
+      const res = await fetch("/api/kitchen", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch kitchen orders");
       return res.json() as Promise<KitchenOrder[]>;
     },
@@ -195,7 +195,7 @@ export function useStartKitchenOrder() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/kitchen/${id}/start`, {
-        method: "POST",
+        method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       
@@ -215,7 +215,7 @@ export function useCompleteKitchenOrder() {
   return useMutation({
     mutationFn: async (id: number) => {
       const res = await fetch(`/api/kitchen/${id}/complete`, {
-        method: "POST",
+        method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       
@@ -236,7 +236,7 @@ export function useStartKitchenItem() {
     mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
       const res = await fetch(`/api/kitchen/${kitchenOrderId}/start-item`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ itemName }),
         credentials: "include",
       });
@@ -258,7 +258,7 @@ export function useCompleteKitchenItem() {
     mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
       const res = await fetch(`/api/kitchen/${kitchenOrderId}/complete-item`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ itemName }),
         credentials: "include",
       });
@@ -280,7 +280,7 @@ export function useClearCompletedKitchenOrders() {
     mutationFn: async () => {
       console.log("[CLEAR] Calling clear-completed API...");
       const res = await fetch("/api/kitchen/clear-completed", {
-        method: "POST",
+        method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       
@@ -307,7 +307,7 @@ export function useDailyReport() {
   return useQuery({
     queryKey: ["/api/reports/daily"],
     queryFn: async () => {
-      const res = await fetch("/api/reports/daily", { credentials: "include" });
+      const res = await fetch("/api/reports/daily", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch daily report");
       return res.json();
     },
@@ -318,7 +318,7 @@ export function useBestSellers() {
   return useQuery({
     queryKey: ["/api/reports/best-sellers"],
     queryFn: async () => {
-      const res = await fetch("/api/reports/best-sellers", { credentials: "include" });
+      const res = await fetch("/api/reports/best-sellers", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch best sellers");
       return res.json() as Promise<{ name: string; totalQuantity: number }[]>;
     },
@@ -342,7 +342,7 @@ export function usePaymentSettings() {
   return useQuery({
     queryKey: ["/api/payment-settings"],
     queryFn: async () => {
-      const res = await fetch("/api/payment-settings", { credentials: "include" });
+      const res = await fetch("/api/payment-settings", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch payment settings");
       return res.json() as Promise<PaymentSetting[]>;
     },
@@ -355,7 +355,7 @@ export function useUnpayOrder() {
   return useMutation({
     mutationFn: async (orderId: number) => {
       const res = await fetch(`/api/orders/${orderId}/unpay`, {
-        method: "POST",
+        method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to unpay order");
@@ -374,7 +374,7 @@ export function useUpdatePaymentSetting() {
     mutationFn: async ({ method, ...data }: { method: string } & Partial<PaymentSetting>) => {
       const res = await fetch(`/api/payment-settings/${method}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(data),
         credentials: "include",
       });
