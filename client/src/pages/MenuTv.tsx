@@ -49,6 +49,26 @@ export default function MenuTv() {
     return () => clearInterval(t);
   }, []);
 
+  const [kitchenOrder, setKitchenOrder] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    const fetchOrder = () => {
+      fetch("/api/kitchen/order", { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data?.order) && data.order.length > 0) {
+            setKitchenOrder(data.order);
+          } else {
+            setKitchenOrder(null);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchOrder();
+    const interval = setInterval(fetchOrder, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [slideIndex, setSlideIndex] = useState(0);
   const [tickerText, setTickerText] = useState(
     "🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺",
@@ -122,9 +142,9 @@ export default function MenuTv() {
   const allFlatItems = useMemo<CookingQueueItem[]>(() => {
     const result: CookingQueueItem[] = [];
     (kitchenOrders || []).forEach((order) => {
-      order.items.forEach((item: KitchenItem, idx: number) => {
+      order.items.forEach((item: KitchenItem) => {
         result.push({
-          key: `${order.id}-${idx}-${item.name}`,
+          key: `${order.orderId}-${order.id}-${item.name}`,
           kitchenOrderId: order.id,
           orderId: order.orderId,
           tableNumber: order.tableNumber,
@@ -139,10 +159,19 @@ export default function MenuTv() {
     return result;
   }, [kitchenOrders]);
 
-  const cookingItems = useMemo(
-    () => buildCookingQueue(allFlatItems, priorityNames),
-    [allFlatItems, priorityNames],
-  );
+  const cookingItems = useMemo(() => {
+    const autoQueue = buildCookingQueue(allFlatItems, priorityNames);
+    if (!kitchenOrder || kitchenOrder.length === 0) return autoQueue;
+    const ordered: CookingQueueItem[] = [];
+    for (const k of kitchenOrder) {
+      const found = autoQueue.find((i) => i.key === k);
+      if (found) ordered.push(found);
+    }
+    for (const item of autoQueue) {
+      if (!kitchenOrder.includes(item.key)) ordered.push(item);
+    }
+    return ordered;
+  }, [allFlatItems, priorityNames, kitchenOrder]);
 
   const doneOrders = (kitchenOrders || []).filter((o) => o.status === "Done");
   const currentIdx = slideCount > 0 ? slideIndex % slideCount : 0;

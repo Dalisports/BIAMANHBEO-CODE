@@ -69,6 +69,20 @@ function toCookingQueueItem(fi: FlattenedItem): CookingQueueItem {
   };
 }
 
+async function saveKitchenOrder(order: string[] | null) {
+  try {
+    const res = await fetch("/api/kitchen/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ order }),
+    });
+    if (!res.ok) console.warn("[kitchen/order] save failed:", res.status);
+  } catch (err) {
+    console.warn("[kitchen/order] save error:", err);
+  }
+}
+
 export default function Kitchen() {
   const { data: kitchenOrders, isLoading } = useKitchenOrders();
   const { data: menuItems } = useMenuItems();
@@ -76,8 +90,32 @@ export default function Kitchen() {
   const completeItem = useCompleteKitchenItem();
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Manual reorder state (session only)
+  // Manual reorder state — persisted to server
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
+  const manualOrderRef = useRef<string[] | null>(null);
+
+  const applyManualOrder = (order: string[] | null) => {
+    manualOrderRef.current = order;
+    setManualOrder(order);
+  };
+
+  // Fetch saved order on mount, then poll every 15s for multi-device sync
+  useEffect(() => {
+    const load = () => {
+      fetch("/api/kitchen/order", { credentials: "include" })
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then((data) => {
+          applyManualOrder(Array.isArray(data?.order) && data.order.length > 0 ? data.order : null);
+        })
+        .catch((err) => console.warn("[kitchen/order] load error:", err));
+    };
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const priorityNames = useMemo(
     () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
@@ -110,43 +148,46 @@ export default function Kitchen() {
     [flattenedItems, priorityNames],
   );
 
-  // Apply manual reorder on top of auto queue (reset when queue keys change)
+  // Apply manual reorder on top of auto queue — always reconcile, never hard-reset
   const queueKeys = autoQueue.map((i) => i.key).join(",");
   const prevQueueKeys = useRef(queueKeys);
 
+  // When queue composition changes, reconcile and persist (don't discard manual order)
+  useEffect(() => {
+    if (prevQueueKeys.current === queueKeys) return;
+    prevQueueKeys.current = queueKeys;
+    const currentOrder = manualOrderRef.current;
+    if (!currentOrder) return;
+    const autoKeySet = new Set(autoQueue.map((i) => i.key));
+    const filtered = currentOrder.filter((k) => autoKeySet.has(k));
+    const newKeys = autoQueue.map((i) => i.key).filter((k) => !currentOrder.includes(k));
+    const reconciled = [...filtered, ...newKeys];
+    applyManualOrder(reconciled.length > 0 ? reconciled : null);
+    saveKitchenOrder(reconciled.length > 0 ? reconciled : null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queueKeys]);
+
   const cookingQueue = useMemo<CookingQueueItem[]>(() => {
-    const keySet = new Set(autoQueue.map((i) => i.key));
-    if (!manualOrder || prevQueueKeys.current !== queueKeys) {
-      prevQueueKeys.current = queueKeys;
-      return autoQueue;
-    }
+    if (!manualOrder) return autoQueue;
     // Restore manual order, filter out removed items, append new items at bottom
     const ordered: CookingQueueItem[] = [];
     for (const k of manualOrder) {
       const found = autoQueue.find((i) => i.key === k);
       if (found) ordered.push(found);
     }
-    // Add any new items not in manual order
     for (const item of autoQueue) {
       if (!manualOrder.includes(item.key)) ordered.push(item);
     }
     return ordered;
-  }, [autoQueue, manualOrder, queueKeys]);
-
-  // Reset manual order when queue composition changes
-  useEffect(() => {
-    if (prevQueueKeys.current !== queueKeys) {
-      setManualOrder(null);
-      prevQueueKeys.current = queueKeys;
-    }
-  }, [queueKeys]);
+  }, [autoQueue, manualOrder]);
 
   const moveItem = (idx: number, dir: -1 | 1) => {
     const next = idx + dir;
     if (next < 0 || next >= cookingQueue.length) return;
     const newOrder = cookingQueue.map((i) => i.key);
     [newOrder[idx], newOrder[next]] = [newOrder[next], newOrder[idx]];
-    setManualOrder(newOrder);
+    applyManualOrder(newOrder);
+    saveKitchenOrder(newOrder);
   };
 
   // Group by table for "THEO BÀN" panel
@@ -241,7 +282,7 @@ export default function Kitchen() {
               </h3>
               {manualOrder && (
                 <button
-                  onClick={() => setManualOrder(null)}
+                  onClick={() => { applyManualOrder(null); saveKitchenOrder(null); }}
                   className="ml-auto text-xs text-slate-400 underline"
                 >
                   Reset thứ tự

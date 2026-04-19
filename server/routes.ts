@@ -594,6 +594,45 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/kitchen/order", async (req, res) => {
+    try {
+      const setting = await storage.getSetting("kitchen_item_order");
+      let order: string[] | null = null;
+      if (setting?.value) {
+        try {
+          const parsed = JSON.parse(setting.value);
+          order = Array.isArray(parsed) ? parsed : null;
+        } catch {
+          order = null;
+        }
+      }
+      res.json({ order });
+    } catch (err) {
+      res.status(500).json({ message: "Error getting kitchen order" });
+    }
+  });
+
+  app.post("/api/kitchen/order", async (req, res) => {
+    try {
+      const { order } = req.body;
+      if (order !== null && order !== undefined) {
+        if (!Array.isArray(order)) {
+          return res.status(400).json({ message: "order must be an array or null" });
+        }
+        if (order.length > 500) {
+          return res.status(400).json({ message: "order array too large" });
+        }
+        if (order.some((k: unknown) => typeof k !== "string")) {
+          return res.status(400).json({ message: "order items must be strings" });
+        }
+      }
+      await storage.setSetting("kitchen_item_order", order && order.length > 0 ? JSON.stringify(order) : "");
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Error saving kitchen order" });
+    }
+  });
+
   app.get("/api/categories", async (req, res) => {
     const cats = await storage.getCategories();
     res.json(cats);
