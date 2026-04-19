@@ -166,8 +166,8 @@ export default function Menu() {
         price: parseInt(editForm.price, 10),
         description: editForm.description,
         image: editForm.image || null,
-        isSticky: editItem.isSticky || false,
-        isPriority: editItem.isPriority || false,
+        isSticky: editForm.isSticky,
+        isPriority: editForm.isPriority,
       },
       {
         onSuccess: () => {

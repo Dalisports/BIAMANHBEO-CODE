@@ -10,7 +10,7 @@ declare global {
 }
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems } from "@/hooks/use-menu";
-import { useKitchenOrders } from "@/hooks/use-orders";
+import { useKitchenOrders, type KitchenItem } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/utils";
 import { Flame, CheckCircle2, ScanLine, ChefHat } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -122,7 +122,7 @@ export default function MenuTv() {
   const allFlatItems = useMemo<CookingQueueItem[]>(() => {
     const result: CookingQueueItem[] = [];
     (kitchenOrders || []).forEach((order) => {
-      order.items.forEach((item: any) => {
+      order.items.forEach((item: KitchenItem) => {
         result.push({
           key: `${order.id}-${item.name}`,
           kitchenOrderId: order.id,
