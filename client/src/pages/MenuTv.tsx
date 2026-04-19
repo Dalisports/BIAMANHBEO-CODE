@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 declare global {
   interface Window {
@@ -8,28 +8,30 @@ declare global {
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useKitchenOrders } from "@/hooks/use-orders";
-import { formatCurrency } from "@/lib/utils";
-import { Flame, CheckCircle2, ScanLine } from "lucide-react";
+import { Flame, CheckCircle2, ScanLine, ChefHat } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 const PLACEHOLDER_IMAGES = [
-  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=600&h=400&fit=crop",
-  "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=600&h=400&fit=crop",
+  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1600&h=1200&fit=crop",
+  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&h=1200&fit=crop",
+  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1600&h=1200&fit=crop",
+  "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=1600&h=1200&fit=crop",
+  "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=1600&h=1200&fit=crop",
+  "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=1600&h=1200&fit=crop",
 ];
 
-function getPlaceholderImage(index: number) {
-  return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+interface CookingDisplayItem {
+  name: string;
+  quantity: number;
+  tableNumber: string;
+  sentAt: Date | null;
 }
 
 export default function MenuTv() {
-  const { data: menuItems, isLoading } = useMenuItems();
+  const { data: menuItems } = useMenuItems();
   const { data: kitchenOrders } = useKitchenOrders();
 
-  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [slideIndex, setSlideIndex] = useState(0);
   const [tickerText, setTickerText] = useState(
     "🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺",
   );
@@ -74,330 +76,205 @@ export default function MenuTv() {
     window.updateTickerText = updateTicker;
   }, []);
 
-  const activeCookingOrders =
-    kitchenOrders?.filter(
-      (o) => o.status === "Cooking" || o.status === "Waiting",
-    ) || [];
-  const doneOrders = kitchenOrders?.filter((o) => o.status === "Done") || [];
-  const stickyItems = menuItems?.filter((item) => item.isSticky) || [];
-  const displayItems = stickyItems.slice(0, 12);
-
-  const getCookingItems = () => {
-    const items: { name: string; quantity: number; tableNumber: string }[] = [];
-    activeCookingOrders.forEach((order) => {
-      order.items.forEach((item: any) => {
-        if (item.cookingStatus !== "done") {
-          items.push({
-            name: item.name,
-            quantity: item.quantity,
-            tableNumber: order.tableNumber,
-          });
-        }
-      });
-    });
-    return items;
-  };
-
-  const cookingItems = getCookingItems();
-  const featuredItem = displayItems?.[featuredIndex];
+  // Slideshow: ưu tiên ảnh từ menu (sticky trước), fallback placeholders
+  const stickyImages = (menuItems || [])
+    .filter((m) => m.isSticky && m.image)
+    .map((m) => m.image as string);
+  const allMenuImages = (menuItems || [])
+    .filter((m) => m.image)
+    .map((m) => m.image as string);
+  const slideImages =
+    stickyImages.length > 0
+      ? stickyImages
+      : allMenuImages.length > 0
+      ? allMenuImages
+      : PLACEHOLDER_IMAGES;
 
   useEffect(() => {
-    if (!displayItems || displayItems.length === 0) return;
+    if (slideImages.length === 0) return;
     const interval = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % displayItems.length);
-    }, 5000);
+      setSlideIndex((prev) => (prev + 1) % slideImages.length);
+    }, 6000);
     return () => clearInterval(interval);
-  }, [displayItems]);
+  }, [slideImages.length]);
+
+  // Cooking items đang nấu (chỉ "cooking", không phải "pending" hay "done")
+  const cookingItems: CookingDisplayItem[] = [];
+  (kitchenOrders || []).forEach((order) => {
+    if (order.status !== "Cooking" && order.status !== "Waiting") return;
+    order.items.forEach((item: any) => {
+      if (item.cookingStatus === "cooking") {
+        cookingItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          tableNumber: order.tableNumber,
+          sentAt: order.sentAt ? new Date(order.sentAt) : null,
+        });
+      }
+    });
+  });
+
+  cookingItems.sort((a, b) => {
+    if (!a.sentAt) return 1;
+    if (!b.sentAt) return -1;
+    return a.sentAt.getTime() - b.sentAt.getTime();
+  });
+
+  const doneOrders = (kitchenOrders || []).filter((o) => o.status === "Done");
+  const currentImage = slideImages[slideIndex % slideImages.length];
+
+  const formatElapsed = (sentAt: Date | null) => {
+    if (!sentAt) return "";
+    const minutes = Math.floor((Date.now() - sentAt.getTime()) / 60000);
+    if (minutes < 1) return "vừa xong";
+    if (minutes < 60) return `${minutes} phút`;
+    return `${Math.floor(minutes / 60)}h ${minutes % 60}p`;
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{ opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(251,191,36,0.1),transparent_60%)]"
-        />
-      </div>
-
+    <div className="h-screen w-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="relative z-10 px-4 py-2 bg-gradient-to-b from-black/60 to-transparent">
+      <div className="relative z-10 px-4 py-2 bg-gradient-to-b from-black/60 to-transparent flex-shrink-0">
         <div className="flex items-center justify-between">
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
+          <motion.h1
+            animate={{
+              textShadow: [
+                "0px 0px 0px #fbbf24",
+                "0.2vw 0.2vw 0.6vw #fbbf24",
+                "0px 0px 0px #fbbf24",
+              ],
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-[2.2vw] font-black text-yellow-400 tracking-wider leading-none"
           >
-            <motion.h1
-              animate={{
-                textShadow: [
-                  "0px 0px 0px #fbbf24",
-                  "0.2vw 0.2vw 0.6vw #fbbf24",
-                  "0px 0px 0px #fbbf24",
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-[2.5vw] font-black text-yellow-400 tracking-wider leading-none"
-            >
-              BIA MẠNH BÉO
-            </motion.h1>
-            <motion.p
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-[1vw] text-orange-400 font-medium"
-            ></motion.p>
-          </motion.div>
+            BIA MẠNH BÉO
+          </motion.h1>
 
-          <div className="flex gap-[2vw]">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-[0.5vw] bg-orange-500/20 rounded-xl px-[1vw] py-[1vh] border border-orange-500/30"
-            >
+          <div className="flex gap-[1.5vw]">
+            <div className="flex items-center gap-[0.5vw] bg-orange-500/20 rounded-xl px-[1vw] py-[0.6vh] border border-orange-500/30">
               <motion.div
                 animate={{ rotate: [0, 15, -15, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                <Flame className="w-[2vw] h-[2vw] text-orange-400" />
+                <Flame className="w-[1.6vw] h-[1.6vw] text-orange-400" />
               </motion.div>
-              <div>
-                <motion.p
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: cookingItems.length > 0 ? Infinity : 0,
-                  }}
-                  className="text-[1vw] font-black text-orange-400"
-                >
-                  ĐANG CHẾ BIẾN: {cookingItems.length}
-                </motion.p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-[0.5vw] bg-green-500/20 rounded-xl px-[1vw] py-[1vh] border border-green-500/30"
-            >
-              <CheckCircle2 className="w-[2vw] h-[2vw] text-green-400" />
-              <div>
-                <motion.p
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{
-                    duration: 0.5,
-                    repeat: doneOrders.length > 0 ? Infinity : 0,
-                    delay: 0.25,
-                  }}
-                  className="text-[1vw] font-black text-green-400"
-                >
-                  ĐÃ PHỤC VỤ: {doneOrders.length}
-                </motion.p>
-              </div>
-            </motion.div>
+              <p className="text-[1vw] font-black text-orange-400">
+                ĐANG NẤU: {cookingItems.length}
+              </p>
+            </div>
+            <div className="flex items-center gap-[0.5vw] bg-green-500/20 rounded-xl px-[1vw] py-[0.6vh] border border-green-500/30">
+              <CheckCircle2 className="w-[1.6vw] h-[1.6vw] text-green-400" />
+              <p className="text-[1vw] font-black text-green-400">
+                ĐÃ XONG: {doneOrders.length}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 px-[3vw] py-2 flex gap-[3vw] items-start overflow-hidden">
-        {/* Menu grid - 12 sticky items in 3x4 grid */}
-        <div className="w-[40%] grid grid-cols-3 gap-3 content-start self-start">
-          {isLoading ? (
-            <div className="flex items-center justify-center col-span-full h-full">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="text-[4vw]"
-              >
-                🍺
-              </motion.div>
-            </div>
-          ) : displayItems.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-slate-400">
-              <p className="text-[2vw] font-bold">Chưa có món Sticky TV nào</p>
-              <p className="text-[1vw] mt-2">
-                Bật Sticky TV trong mục sửa món để hiển thị
-              </p>
-            </div>
-          ) : (
-            displayItems.slice(0, 12).map((item, idx) => (
-              <motion.div
-                key={item.id}
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.03, type: "spring" }}
-                whileHover={{ scale: 1.03 }}
-                className="relative rounded-xl overflow-hidden bg-slate-800/60 border border-slate-700"
-              >
-                <div className="aspect-[4/3] w-full">
-                  {item.image ? (
-                    <motion.img
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <motion.img
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
-                      src={getPlaceholderImage(idx)}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="p-[0.8vw] bg-gradient-to-t from-black/90 to-transparent absolute inset-x-0 bottom-0 flex items-center justify-between gap-[0.5vw]">
-                  <p className="font-semibold text-[1vw] truncate flex-1">
-                    {item.name}
-                  </p>
-                  <motion.p
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: idx * 0.2,
-                    }}
-                    className="text-yellow-400 font-bold text-[1.2vw] whitespace-nowrap"
+      {/* Main 2-column area */}
+      <div className="relative z-10 flex flex-1 min-h-0 gap-2 px-2 pb-12">
+        {/* LEFT 50% — cooking list */}
+        <div className="w-1/2 h-full flex flex-col bg-black/30 rounded-2xl border border-yellow-500/30 overflow-hidden">
+          <div className="flex items-center gap-[0.8vw] px-[1.5vw] py-[1.2vh] bg-gradient-to-r from-orange-600/40 to-red-600/40 border-b border-yellow-500/30 flex-shrink-0">
+            <ChefHat className="w-[2vw] h-[2vw] text-yellow-300" />
+            <h2 className="text-[1.8vw] font-black text-yellow-300 tracking-wide">
+              MÓN ĐANG NẤU
+            </h2>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-[1vw] py-[1vh] space-y-[0.8vh]">
+            {cookingItems.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <ChefHat className="w-[6vw] h-[6vw] mb-3 opacity-40" />
+                <p className="text-[1.6vw] font-bold">Bếp đang trống</p>
+                <p className="text-[1vw] mt-2 opacity-70">Chưa có món nào đang nấu</p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {cookingItems.map((item, idx) => (
+                  <motion.div
+                    key={`${item.tableNumber}-${item.name}-${idx}`}
+                    layout
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 30 }}
+                    transition={{ delay: idx * 0.04 }}
+                    className="flex items-center gap-[1vw] bg-slate-800/70 rounded-xl px-[1.2vw] py-[1.2vh] border border-orange-500/40"
                   >
-                    {formatCurrency(item.price)}
-                  </motion.p>
-                </div>
-              </motion.div>
-            ))
-          )}
+                    {/* Table badge */}
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="flex-shrink-0 w-[5vw] h-[5vw] rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col items-center justify-center text-black shadow-lg"
+                    >
+                      <span className="text-[0.7vw] font-bold leading-none opacity-80">
+                        BÀN
+                      </span>
+                      <span className="text-[2vw] font-black leading-none">
+                        {item.tableNumber}
+                      </span>
+                    </motion.div>
+
+                    {/* Name + meta */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[1.6vw] font-black text-white leading-tight truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-[0.95vw] text-orange-300 font-medium">
+                        Đã gọi {formatElapsed(item.sentAt)}
+                      </p>
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="flex-shrink-0 px-[1vw] py-[0.5vh] bg-orange-500 rounded-lg">
+                      <span className="text-[1.8vw] font-black text-white">
+                        x{item.quantity}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
         </div>
 
-        {/* Featured box - tự theo ảnh */}
-        <div className="w-[55vw] self-start">
-            <motion.div
-              key={featuredIndex}
-              initial={{ scale: 0.9, opacity: 0, x: 30 }}
-              animate={{ scale: 1, opacity: 1, x: 0 }}
-              exit={{ scale: 0.9, opacity: 0, x: -30 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="relative rounded-2xl overflow-hidden bg-slate-800/80 border-2 border-yellow-500/50 min-h-[50vh]"
-            >
-            <AnimatePresence mode="wait">
-              {featuredItem && (
-                <motion.div
-                  key={featuredItem.id}
-                  className="flex flex-col"
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  {/* Image - tự theo kích thước ảnh */}
-                  <div className="w-full relative aspect-[16/9]">
-                    <motion.div
-                      animate={{ y: [0, -3, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      className="w-full h-full"
-                    >
-                      {featuredItem.image ? (
-                        <img
-                          src={featuredItem.image}
-                          alt={featuredItem.name}
-                          className="w-full h-full object-cover object-center"
-                        />
-                      ) : (
-                        <img
-                          src={getPlaceholderImage(featuredIndex)}
-                          alt={featuredItem.name}
-                          className="w-full h-full object-cover object-center"
-                        />
-                      )}
-                    </motion.div>
-                    <motion.div
-                      initial={{ x: "-100%" }}
-                      animate={{ x: "200%" }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        repeatDelay: 3,
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
-                    />
-                    <motion.div
-                      animate={{ top: ["0%", "100%"] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="absolute inset-x-0 h-[0.2vh] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent pointer-events-none"
-                    />
-                  </div>
-
-                  {/* Info at bottom - larger text */}
-                  <motion.div
-                    className="mt-auto p-4 md:p-5 text-center bg-black/50 flex-shrink-0"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
-                      <motion.p
-                        animate={{
-                          textShadow: [
-                            "0px 0px 0px #fff",
-                            "2px 2px 8px #fbbf24",
-                            "0px 0px 0px #fff",
-                          ],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="font-black text-3xl md:text-4xl lg:text-5xl truncate max-w-full"
-                      >
-                        {featuredItem.name}
-                      </motion.p>
-                      <motion.p
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                        className="text-yellow-400 font-black text-2xl md:text-3xl lg:text-4xl"
-                      >
-                        {formatCurrency(featuredItem.price)}
-                      </motion.p>
-                    </div>
-                    {featuredItem.description && (
-                      <motion.p
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="text-slate-300 text-base md:text-lg mt-2 line-clamp-2"
-                      >
-                        {featuredItem.description}
-                      </motion.p>
-                    )}
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <motion.div
-              animate={{
-                boxShadow: [
-                  "0 0 20px rgba(234,179,8,0)",
-                  "0 0 40px rgba(234,179,8,0.4)",
-                  "0 0 20px rgba(234,179,8,0)",
-                ],
-              }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="absolute inset-0 rounded-2xl pointer-events-none"
+        {/* RIGHT 50% — slideshow */}
+        <div className="w-1/2 h-full relative rounded-2xl overflow-hidden border-2 border-yellow-500/40 bg-black">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={slideIndex}
+              src={currentImage}
+              alt="Quảng cáo"
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute top-[0.5vw] left-[0.5vw] w-[1vw] h-[1vw] border-t-2 border-l-2 border-yellow-500/50 rounded-tl" />
-            <div className="absolute top-[0.5vw] right-[0.5vw] w-[1vw] h-[1vw] border-t-2 border-r-2 border-yellow-500/50 rounded-tr" />
-            <div className="absolute bottom-[0.5vw] left-[0.5vw] w-[1vw] h-[1vw] border-b-2 border-l-2 border-yellow-500/50 rounded-bl" />
-            <div className="absolute bottom-[0.5vw] right-[0.5vw] w-[1vw] h-[1vw] border-b-2 border-r-2 border-yellow-500/50 rounded-br" />
-          </motion.div>
+          </AnimatePresence>
+
+          {/* Slide indicator dots */}
+          {slideImages.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {slideImages.slice(0, 8).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === slideIndex % slideImages.length
+                      ? "bg-yellow-400 w-6"
+                      : "bg-white/40 w-1.5"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Corner accents */}
+          <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-yellow-500/60 rounded-tl pointer-events-none" />
+          <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-yellow-500/60 rounded-tr pointer-events-none" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-yellow-500/60 rounded-bl pointer-events-none" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-yellow-500/60 rounded-br pointer-events-none" />
         </div>
       </div>
 
@@ -406,14 +283,14 @@ export default function MenuTv() {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="absolute bottom-[8vh] right-[2vw] z-30 bg-white rounded-2xl shadow-2xl p-3 border-4 border-yellow-500"
+          className="absolute bottom-[6vh] right-[1vw] z-30 bg-white rounded-2xl shadow-2xl p-3 border-4 border-yellow-500"
         >
           <div className="flex items-center gap-2 mb-2 text-black">
             <ScanLine className="w-5 h-5 text-yellow-600" />
             <p className="font-black text-sm uppercase">Quét để chấm công</p>
           </div>
-          <QRCodeSVG value={attendanceQr.qrCode} size={160} level="M" />
-          <p className="text-center text-[10px] font-mono text-slate-600 mt-2 break-all max-w-[160px]">
+          <QRCodeSVG value={attendanceQr.qrCode} size={140} level="M" />
+          <p className="text-center text-[10px] font-mono text-slate-600 mt-2 break-all max-w-[140px]">
             {attendanceQr.qrCode}
           </p>
         </motion.div>
@@ -430,25 +307,13 @@ export default function MenuTv() {
             ease: "linear",
             repeatDelay: 0,
           }}
-          className="whitespace-nowrap py-[1vh]"
+          className="whitespace-nowrap py-[0.5vh]"
         >
           <span className="inline-block px-[4vw] text-black text-xl font-bold">
             {tickerText} {tickerText} {tickerText}
           </span>
         </motion.div>
       </div>
-
-      {/* Decorations */}
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-        className="absolute top-[15vh] right-[15vw] w-[6vw] h-[6vw] border-2 border-yellow-500/10 rounded-full"
-      />
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-[20vh] right-[25vw] w-[8vw] h-[8vw] border-2 border-orange-500/10 rounded-full"
-      />
     </div>
   );
 }
