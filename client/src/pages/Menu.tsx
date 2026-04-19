@@ -333,6 +333,13 @@ export default function Menu() {
                       </div>
                     )}
                     
+                    {isOwner && item.isPriority && (
+                      <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 flex items-center gap-0.5 bg-red-500 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg pointer-events-none">
+                        <Zap className="w-2.5 h-2.5" />
+                        <span>Ưu tiên</span>
+                      </div>
+                    )}
+
                     {isOwner && (
                       <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button

@@ -288,7 +288,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/migrate/add-sticky-column", async (req, res) => {
+  app.post("/api/migrate/add-sticky-column", requireOwnerMiddleware, async (req, res) => {
     try {
       await storage.addIsStickyColumn();
       res.json({ success: true, message: "Column added" });
@@ -298,7 +298,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/migrate/add-priority-column", async (req, res) => {
+  app.post("/api/migrate/add-priority-column", requireOwnerMiddleware, async (req, res) => {
     try {
       await storage.addIsPriorityColumn();
       res.json({ success: true, message: "is_priority column added" });

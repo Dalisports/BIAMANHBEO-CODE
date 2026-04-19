@@ -74,13 +74,22 @@ export function buildCookingQueue(
     }
   }
 
-  // Cap bucket1 + bucket2 combined to max 5 slots (avoid visible jump on public display)
-  const prioritySlots = Math.min(bucket1.length + bucket2.length, 5);
-  const prioritySection = [...bucket1, ...bucket2].slice(0, prioritySlots);
+  // Cap bucket1 + bucket2 combined to max 5 visible slots at the top.
+  // Overflow items from these buckets are NOT dropped — they fall into the round-robin section.
+  const combined = [...bucket1, ...bucket2];
+  const prioritySection = combined.slice(0, 5);
+  const priorityOverflow = combined.slice(5); // items beyond top-5, still must show
 
-  // Round-robin 2-2 from remaining tables for bucket3
+  // Round-robin 2-2 from remaining tables for bucket3, plus priority overflow
+  // Insert overflow items at the front of the appropriate table queue
+  const bucket3MapWithOverflow: Map<string, CookingQueueItem[]> = new Map(bucket3Map);
+  for (const item of priorityOverflow) {
+    if (!bucket3MapWithOverflow.has(item.tableNumber)) bucket3MapWithOverflow.set(item.tableNumber, []);
+    bucket3MapWithOverflow.get(item.tableNumber)!.unshift(item);
+  }
+
   const tableQueues = sortedTables
-    .map((t) => bucket3Map.get(t) ?? [])
+    .map((t) => bucket3MapWithOverflow.get(t) ?? [])
     .filter((q) => q.length > 0);
 
   const roundRobin: CookingQueueItem[] = [];

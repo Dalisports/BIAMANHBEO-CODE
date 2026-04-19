@@ -57,7 +57,7 @@ function flattenKitchenOrders(
 
 function toCookingQueueItem(fi: FlattenedItem): CookingQueueItem {
   return {
-    key: `${fi.kitchenOrderId}-${fi.item.name}`,
+    key: `${fi.orderId}-${fi.kitchenOrderId}-${fi.item.name}`,
     kitchenOrderId: fi.kitchenOrderId,
     orderId: fi.orderId,
     tableNumber: fi.tableNumber,
@@ -188,7 +188,7 @@ export default function Kitchen() {
   const doneItemKeys = useMemo(() => {
     const keys = new Set<string>();
     for (const item of flattenedItems) {
-      if (isItemDone(item)) keys.add(`${item.kitchenOrderId}-${item.item.name}`);
+      if (isItemDone(item)) keys.add(`${item.orderId}-${item.kitchenOrderId}-${item.item.name}`);
     }
     return keys;
   }, [flattenedItems]);
@@ -406,7 +406,7 @@ export default function Kitchen() {
                       <div className="space-y-1.5">
                         {group.items.map((item, idx) => {
                           const isDone = doneItemKeys.has(
-                            `${item.kitchenOrderId}-${item.item.name}`,
+                            `${item.orderId}-${item.kitchenOrderId}-${item.item.name}`,
                           );
                           return (
                             <div
