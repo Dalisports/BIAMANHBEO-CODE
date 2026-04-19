@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useKitchenOrders } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/utils";
-import { Flame, CheckCircle2 } from "lucide-react";
+import { Flame, CheckCircle2, ScanLine } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=400&fit=crop",
@@ -32,6 +33,7 @@ export default function MenuTv() {
   const [tickerText, setTickerText] = useState(
     "🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺",
   );
+  const [attendanceQr, setAttendanceQr] = useState<{ qrCode: string; enabled: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/settings/tickerText", { credentials: "include" })
@@ -40,6 +42,18 @@ export default function MenuTv() {
         if (data?.value) setTickerText(data.value);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const fetchQr = () => {
+      fetch("/api/attendance/qr")
+        .then((r) => r.json())
+        .then((d) => setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }))
+        .catch(() => {});
+    };
+    fetchQr();
+    const interval = setInterval(fetchQr, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const updateTicker = async (text: string) => {
@@ -386,6 +400,24 @@ export default function MenuTv() {
           </motion.div>
         </div>
       </div>
+
+      {/* Attendance QR overlay */}
+      {attendanceQr?.enabled && attendanceQr.qrCode && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="absolute bottom-[8vh] right-[2vw] z-30 bg-white rounded-2xl shadow-2xl p-3 border-4 border-yellow-500"
+        >
+          <div className="flex items-center gap-2 mb-2 text-black">
+            <ScanLine className="w-5 h-5 text-yellow-600" />
+            <p className="font-black text-sm uppercase">Quét để chấm công</p>
+          </div>
+          <QRCodeSVG value={attendanceQr.qrCode} size={160} level="M" />
+          <p className="text-center text-[10px] font-mono text-slate-600 mt-2 break-all max-w-[160px]">
+            {attendanceQr.qrCode}
+          </p>
+        </motion.div>
+      )}
 
       {/* Footer ticker */}
       <div className="absolute bottom-0 left-0 right-0 bg-yellow-500 z-20 overflow-hidden py-1 flex items-center justify-center">

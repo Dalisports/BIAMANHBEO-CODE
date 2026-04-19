@@ -160,9 +160,30 @@ export async function registerRoutes(
   app.get("/api/attendance/qr", async (req, res) => {
     try {
       const qr = await storage.getTodayQRCode();
-      res.json(qr);
+      const enabled = await storage.getQrEnabled();
+      res.json({ ...qr, enabled });
     } catch (err) {
       res.status(500).json({ message: "Error getting QR code" });
+    }
+  });
+
+  app.post("/api/attendance/qr/regenerate", requireOwnerMiddleware, async (req, res) => {
+    try {
+      const qr = await storage.regenerateDailyQRCode();
+      const enabled = await storage.getQrEnabled();
+      res.json({ ...qr, enabled });
+    } catch (err) {
+      res.status(500).json({ message: "Error regenerating QR code" });
+    }
+  });
+
+  app.post("/api/attendance/qr/enabled", requireOwnerMiddleware, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      await storage.setQrEnabled(!!enabled);
+      res.json({ enabled: !!enabled });
+    } catch (err) {
+      res.status(500).json({ message: "Error toggling QR" });
     }
   });
 

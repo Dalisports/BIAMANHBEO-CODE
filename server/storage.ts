@@ -146,6 +146,30 @@ export class DatabaseStorage implements IStorage {
     return code;
   }
 
+  async regenerateDailyQRCode() {
+    const today = new Date().toISOString().split("T")[0];
+    const qrCode = `ATT-${today}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const existing = await db.select().from(dailyQRCodes).where(eq(dailyQRCodes.date, today));
+    if (existing.length > 0) {
+      const [updated] = await db.update(dailyQRCodes)
+        .set({ qrCode, createdAt: new Date() })
+        .where(eq(dailyQRCodes.date, today))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(dailyQRCodes).values({ date: today, qrCode }).returning();
+    return created;
+  }
+
+  async getQrEnabled() {
+    const setting = await this.getSetting("attendance_qr_enabled");
+    return setting?.value === "true";
+  }
+
+  async setQrEnabled(enabled: boolean) {
+    await this.setSetting("attendance_qr_enabled", enabled ? "true" : "false");
+  }
+
   async checkIn(userId: number, qrCode: string) {
     const today = new Date().toISOString().split("T")[0];
     const existing = await db.select().from(attendanceRecords).where(

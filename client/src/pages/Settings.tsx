@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePaymentSettings, useUpdatePaymentSetting, useDailyReport, useBestSellers, useOrders } from "@/hooks/use-orders";
-import { X, DollarSign, TrendingUp, ShoppingBag, Users, Trophy } from "lucide-react";
+import { X, DollarSign, TrendingUp, ShoppingBag, Users, Trophy, QrCode, RefreshCw, Tv } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { QRCodeSVG } from "qrcode.react";
+import { Switch } from "@/components/ui/switch";
 
 interface PaymentMethod {
   id: number;
@@ -30,6 +32,8 @@ export default function Settings() {
   const [hourlyRate, setHourlyRate] = useState(50000);
   const [salaryData, setSalaryData] = useState<any[]>([]);
   const [savingRate, setSavingRate] = useState(false);
+  const [qrData, setQrData] = useState<{ qrCode: string; date: string; enabled: boolean } | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileForm, setProfileForm] = useState({
@@ -114,10 +118,64 @@ export default function Settings() {
   useEffect(() => {
     if (isOwner) {
       fetchSalaryData();
+      fetchQrData();
     } else {
       fetchProfile();
     }
   }, [isOwner]);
+
+  const fetchQrData = async () => {
+    try {
+      const res = await fetch("/api/attendance/qr");
+      if (res.ok) {
+        const data = await res.json();
+        setQrData({ qrCode: data.qrCode, date: data.date, enabled: !!data.enabled });
+      }
+    } catch (err) {
+      console.error("Error fetching QR:", err);
+    }
+  };
+
+  const handleRegenerateQr = async () => {
+    setQrLoading(true);
+    try {
+      const res = await fetch("/api/attendance/qr/regenerate", {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setQrData({ qrCode: data.qrCode, date: data.date, enabled: !!data.enabled });
+        toast({ title: "Đã tạo mã QR mới", description: "Nhân viên có thể quét mã mới ngay." });
+      } else {
+        toast({ title: "Lỗi", description: "Không tạo được mã QR", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Lỗi", variant: "destructive" });
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const handleToggleQrEnabled = async (enabled: boolean) => {
+    if (!qrData) return;
+    setQrData({ ...qrData, enabled });
+    try {
+      const res = await fetch("/api/attendance/qr/enabled", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ enabled }),
+      });
+      if (!res.ok) throw new Error();
+      toast({
+        title: enabled ? "Đã BẬT hiển thị mã QR" : "Đã TẮT hiển thị mã QR",
+        description: enabled ? "Mã QR sẽ hiển thị trên màn hình /menu-tv" : "Mã QR đã ẩn khỏi /menu-tv",
+      });
+    } catch {
+      setQrData({ ...qrData, enabled: !enabled });
+      toast({ title: "Lỗi", description: "Không cập nhật được", variant: "destructive" });
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -398,6 +456,62 @@ export default function Settings() {
         {isOwner && (
           <>
             <TabsContent value="salary" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <QrCode className="w-5 h-5" />
+                    Mã QR Chấm Công
+                  </CardTitle>
+                  <CardDescription>
+                    Tạo mã QR mới hàng ngày, bật/tắt hiển thị trên màn hình <strong>/menu-tv</strong> để nhân viên quét
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+                    <div className="flex-1 p-4 bg-muted rounded-xl flex items-center gap-4">
+                      {qrData?.qrCode ? (
+                        <div className="bg-white p-2 rounded-lg flex-shrink-0">
+                          <QRCodeSVG value={qrData.qrCode} size={120} level="M" />
+                        </div>
+                      ) : (
+                        <div className="w-32 h-32 bg-muted-foreground/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <QrCode className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">Mã hôm nay</p>
+                        <p className="font-mono font-bold break-all text-sm">{qrData?.qrCode || "—"}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Ngày: {qrData?.date || new Date().toISOString().split("T")[0]}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 sm:w-56">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Tv className="w-4 h-4 text-amber-500" />
+                          <div>
+                            <p className="text-sm font-medium">Hiển thị /menu-tv</p>
+                            <p className="text-xs text-muted-foreground">
+                              {qrData?.enabled ? "Đang BẬT" : "Đang TẮT"}
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={!!qrData?.enabled}
+                          onCheckedChange={handleToggleQrEnabled}
+                        />
+                      </div>
+                      <Button onClick={handleRegenerateQr} disabled={qrLoading} variant="outline">
+                        <RefreshCw className={cn("w-4 h-4 mr-2", qrLoading && "animate-spin")} />
+                        TẠO QR MỚI
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>Cấu hình lương</CardTitle>
