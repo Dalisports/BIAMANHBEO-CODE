@@ -41,7 +41,7 @@ export default function Attendance() {
     try {
       const res = await fetch("/api/attendance/my", { headers: getAuthHeaders() });
       const data = await res.json();
-      setRecords(data);
+      setRecords(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching attendance:", err);
     }
