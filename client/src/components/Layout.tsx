@@ -96,7 +96,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-6 flex items-center justify-between z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-6 flex items-center justify-between z-30 pb-safe">
         {NAV_ITEMS.map((item) => {
           const isActive = location === item.href;
           return (

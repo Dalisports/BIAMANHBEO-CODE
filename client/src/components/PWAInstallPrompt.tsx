@@ -61,7 +61,7 @@ export function PWAInstallPrompt() {
       {deferredPrompt && showInstallButton && (
         <Button
           onClick={handleInstall}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 z-50 animate-bounce"
+          className="fixed bottom-24 md:bottom-4 left-1/2 -translate-x-1/2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 z-40 animate-bounce"
         >
           <Download className="w-5 h-5" />
           <span className="font-bold">Cài đặt App</span>
@@ -70,7 +70,7 @@ export function PWAInstallPrompt() {
       
       {/* Fallback hint for devices that don't show prompt */}
       {!deferredPrompt && showInstallButton && (
-        <div className="fixed bottom-4 left-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 z-50 text-sm">
+        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 z-40 text-sm">
           <Smartphone className="w-4 h-4" />
           <span>Để cài app: Menu trình duyệt → <strong>Cài đặt App</strong> hoặc <strong>Thêm vào màn hình chính</strong></span>
         </div>

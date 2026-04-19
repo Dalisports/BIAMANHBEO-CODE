@@ -59,7 +59,7 @@ export function PWAUpdatePrompt() {
 
   if (!isOnline) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between z-50">
+      <div className="fixed bottom-24 md:bottom-4 left-4 right-4 bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between z-40">
         <div className="flex items-center gap-2">
           <svg
             className="w-5 h-5"
