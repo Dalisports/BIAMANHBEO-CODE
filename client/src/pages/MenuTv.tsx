@@ -173,7 +173,8 @@ export default function MenuTv() {
     return ordered;
   }, [allFlatItems, priorityNames, kitchenOrder]);
 
-  const doneOrders = (kitchenOrders || []).filter((o) => o.status === "Done");
+  const doneOrders = (kitchenOrders || []).filter((o) => o.status === "done" || o.status === "Complete");
+  const doneCount = doneOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + Number(i.quantity || 0), 0), 0);
   const currentIdx = slideCount > 0 ? slideIndex % slideCount : 0;
   const currentImage = slideImages[currentIdx];
   const currentItem = slideMenuItems[currentIdx];
@@ -193,9 +194,9 @@ export default function MenuTv() {
         {/* LEFT 50% — cooking list */}
         <div className="w-1/2 h-full flex flex-col bg-black/30 rounded-2xl border border-yellow-500/30 overflow-hidden">
           <div className="flex items-center gap-[0.8vw] px-[1.5vw] py-[1.2vh] bg-gradient-to-r from-orange-600/40 to-red-600/40 border-b border-yellow-500/30 flex-shrink-0">
-            <ChefHat className="w-[2vw] h-[2vw] text-yellow-300" />
+            <img src="/favicon.png" className="w-[2vw] h-[2vw]" />
             <h2 className="text-[1.8vw] font-black text-yellow-300 tracking-wide flex-1">
-              MÓN ĐANG NẤU
+              BIA MẠNH BÉO
             </h2>
             {/* Counters aligned right */}
             <div className="flex gap-[1vw]">
@@ -207,7 +208,7 @@ export default function MenuTv() {
               </div>
               <div className="flex items-center gap-[0.4vw] bg-green-500/20 rounded-lg px-[0.8vw] py-[0.4vh] border border-green-500/30">
                 <CheckCircle2 className="w-[1.4vw] h-[1.4vw] text-green-400" />
-                <span className="text-[0.9vw] font-black text-green-400">ĐÃ XONG: {doneOrders.length}</span>
+                <span className="text-[0.9vw] font-black text-green-400">ĐÃ XONG: {doneCount}</span>
               </div>
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function MenuTv() {
                       {/* Name + meta */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-[0.6vw] flex-wrap">
-                          <p className="text-[1.6vw] font-black text-white leading-tight truncate">
+                          <p className="text-[2.2vw] font-black text-white leading-tight truncate">
                             {item.name}
                           </p>
                           {idx === 0 && (

@@ -10,7 +10,6 @@ import { useMenuItems } from "@/hooks/use-menu";
 import { cn } from "@/lib/utils";
 import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
 import {
-  Clock,
   CheckCircle2,
   Flame,
   Loader2,
@@ -69,6 +68,14 @@ function toCookingQueueItem(fi: FlattenedItem): CookingQueueItem {
   };
 }
 
+function formatElapsed(sentAt: Date | null): string {
+  if (!sentAt) return "";
+  const minutes = Math.floor((Date.now() - sentAt.getTime()) / 60000);
+  if (minutes < 1) return "vừa xong";
+  if (minutes < 60) return `${minutes} phút`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}p`;
+}
+
 async function saveKitchenOrder(order: string[] | null) {
   try {
     const res = await fetch("/api/kitchen/order", {
@@ -98,6 +105,13 @@ export default function Kitchen() {
     manualOrderRef.current = order;
     setManualOrder(order);
   };
+
+  // Tick mỗi 30s để cập nhật "Đã gọi X phút"
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((x) => x + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   // Fetch saved order on mount, then poll every 15s for multi-device sync
   useEffect(() => {
@@ -256,13 +270,15 @@ export default function Kitchen() {
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-2xl font-bold text-foreground">BẾP</h2>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-100 text-yellow-700 font-bold text-sm">
-            <Clock className="w-4 h-4" />
-            <span>{cookingItems.length} đang nấu</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-600 font-bold text-sm border border-orange-500/30">
+            <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 1, repeat: Infinity }}>
+              <Flame className="w-4 h-4 text-orange-500" />
+            </motion.div>
+            <span>ĐANG NẤU: {cookingItems.length}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-100 text-orange-700 font-bold text-sm">
-            <Flame className="w-4 h-4" />
-            <span>{doneItems.length} xong</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 text-green-600 font-bold text-sm border border-green-500/30">
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+            <span>ĐÃ XONG: {doneItems.length}</span>
           </div>
         </div>
       </div>
@@ -364,6 +380,11 @@ export default function Kitchen() {
                                 {item.name}
                               </p>
                             </div>
+                            {item.sentAt && (
+                              <p className="text-xs text-orange-500 mt-0.5">
+                                Đã gọi {formatElapsed(item.sentAt)}
+                              </p>
+                            )}
                             {item.notes && (
                               <p className="text-xs text-orange-600 mt-0.5">
                                 Ghi chú: {item.notes}
