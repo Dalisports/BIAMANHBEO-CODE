@@ -6,10 +6,16 @@ import { z } from "zod";
 import OpenAI from "openai";
 import { broadcast } from "./websocket";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    });
+  }
+  return _openai;
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -524,7 +530,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         content: h.content,
       }));
 
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: "gpt-5.2",
         messages: [
           { role: "system", content: systemPrompt },
