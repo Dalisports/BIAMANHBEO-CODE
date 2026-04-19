@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWebSocket } from "@/hooks/use-websocket";
 
 declare global {
   interface Window {
@@ -31,6 +33,26 @@ interface CookingDisplayItem {
 export default function MenuTv() {
   const { data: menuItems } = useMenuItems();
   const { data: kitchenOrders } = useKitchenOrders();
+  const queryClient = useQueryClient();
+
+  // Real-time: WebSocket sẽ tự invalidate /api/kitchen + /api/orders khi có thay đổi
+  useWebSocket();
+
+  // Polling fallback + refresh menu/QR/ticker (WS không cover các key này)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/menu"] });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [queryClient]);
+
+  // Update lại "đã gọi X phút" mỗi 30s mà không cần fetch
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((x) => x + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const [slideIndex, setSlideIndex] = useState(0);
   const [tickerText, setTickerText] = useState(
