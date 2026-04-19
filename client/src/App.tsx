@@ -17,6 +17,9 @@ import History from "@/pages/History";
 import Tables from "@/pages/Tables";
 import MenuTv from "@/pages/MenuTv";
 import Login from "@/pages/Login";
+import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
+import Attendance from "@/pages/Attendance";
 
 function ProtectedRoute({ component: Component, requireOwner = false }: { component: any; requireOwner?: boolean }) {
   const { user, isLoading } = useAuth();
@@ -58,6 +61,9 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/tables" component={Tables} />
           <Route path="/home" component={Home} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/profile" component={Profile} />
+          <Route path="/attendance" component={Attendance} />
         </Switch>
       </Layout>
       <Route component={NotFound} />

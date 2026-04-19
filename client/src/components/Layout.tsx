@@ -1,17 +1,31 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, UtensilsCrossed, Receipt, ChefHat, BarChart3, Beer, History, LayoutGrid, LogOut, User } from "lucide-react";
+import { MessageSquare, UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGrid, LogOut, User, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const NAV_ITEMS = [
+import { Settings, Clock } from "lucide-react";
+
+const BASE_NAV_ITEMS = [
   { href: "/", label: "Bàn", icon: LayoutGrid },
+  { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
+  { href: "/attendance", label: "Chấm Công", icon: Clock },
+  { href: "/profile", label: "Cá Nhân", icon: User },
+];
+
+const OWNER_NAV_ITEMS = [
   { href: "/home", label: "Trợ Lý AI", icon: MessageSquare },
   { href: "/kitchen", label: "Bếp", icon: ChefHat },
-  { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
   { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
   { href: "/history", label: "Lịch Sử", icon: History },
+  { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -39,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 flex flex-col gap-2">
-          {NAV_ITEMS.map((item) => {
+          {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : [])].map((item) => {
             const isActive = location === item.href;
             return (
               <Link 
@@ -80,52 +94,66 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-sm">
               <User className="w-4 h-4 text-amber-500" />
-              <span className="font-medium">{user?.username}</span>
-              {isOwner && <span className="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold">Chủ Quán</span>}
+              <span className="font-medium">{user?.username || "Guest"}</span>
+              {user && isOwner && <span className="text-xs bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold">Chủ Quán</span>}
             </div>
-            <button onClick={logout} className="p-2 hover:bg-secondary rounded-lg transition-colors" title="Đăng xuất">
+            {user && <button onClick={logout} className="p-2 hover:bg-secondary rounded-lg transition-colors" title="Đăng xuất">
               <LogOut className="w-4 h-4 text-muted-foreground" />
-            </button>
+            </button>}
           </div>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-0 relative">
-        <header className="md:hidden flex items-center gap-3 p-4 bg-background/80 backdrop-blur-md sticky top-0 z-40 border-b border-border/50">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-md shadow-amber-500/30">
-            <Beer className="w-6 h-6 text-black" />
+      <main className="flex-1 flex flex-col relative">
+        <header className="flex items-center justify-between p-4 bg-background/80 backdrop-blur-md sticky top-0 z-40 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-md shadow-amber-500/30">
+              <Beer className="w-6 h-6 text-black" />
+            </div>
+            <div>
+              <h1 className="text-xl leading-none font-extrabold">
+                <span className="text-amber-500">BIA MẠNH BÉO</span>
+              </h1>
+              <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-widest">Restaurant</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl leading-none font-extrabold">
-              <span className="text-amber-500">BIA MẠNH BÉO</span>
-            </h1>
-            <p className="text-[8px] text-muted-foreground font-bold uppercase tracking-widest">Restaurant</p>
-          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
+                <Menu className="w-6 h-6" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : [])].map((item) => {
+                const isActive = location === item.href;
+                return (
+                  <DropdownMenuItem asChild key={item.href}>
+                    <Link 
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        isActive && "text-amber-500 font-bold"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })}
+              {user && <DropdownMenuItem onClick={logout} className="text-red-500 cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" />
+                Đăng xuất
+              </DropdownMenuItem>}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
           {children}
         </div>
       </main>
-
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-2 px-6 flex items-center justify-between z-30 pb-safe">
-        {NAV_ITEMS.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link 
-              key={item.href} 
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200",
-                isActive ? "text-amber-500" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <item.icon className={cn("w-6 h-6", isActive && "fill-amber-500/20")} />
-              <span className="text-[10px] font-bold">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 }

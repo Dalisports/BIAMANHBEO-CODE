@@ -95,6 +95,40 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const dailyQRCodes = pgTable("daily_qr_codes", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  qrCode: text("qr_code").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const attendanceRecords = pgTable("attendance_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  date: text("date").notNull(),
+  qrCode: text("qr_code").notNull(),
+  checkIn: timestamp("check_in"),
+  checkOut: timestamp("check_out"),
+  totalHours: integer("total_hours"),
+  status: text("status").notNull().default("checked_in"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  fullName: text("full_name"),
+  dateOfBirth: text("date_of_birth"),
+  hometown: text("hometown"),
+  idCardNumber: text("id_card_number"),
+  phoneNumber: text("phone_number"),
+  isLocked: boolean("is_locked").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
@@ -147,3 +181,9 @@ export const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
 });
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+
+export type DailyQRCode = typeof dailyQRCodes.$inferSelect;
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;

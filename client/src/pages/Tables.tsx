@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
+import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { 
@@ -74,6 +75,7 @@ export default function Tables() {
   const payOrder = usePayOrder();
   const unpayOrder = useUnpayOrder();
   const { tableNames, saveTableNames } = useTableNames();
+  const { isOwner } = useAuth();
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [activeTableTab, setActiveTableTab] = useState<"order" | "history">("order");
@@ -345,13 +347,15 @@ export default function Tables() {
                       )}>
                         {tableName(tableNum)}
                       </span>
-                      <button
-                        data-testid={`rename-table-${tableNum}`}
-                        onClick={e => startRename(tableNum, e)}
-                        className="p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-all ml-1 flex-shrink-0"
-                      >
-                        <Pencil className="w-3 h-3 text-muted-foreground" />
-                      </button>
+                      {isOwner && (
+                        <button
+                          data-testid={`rename-table-${tableNum}`}
+                          onClick={e => startRename(tableNum, e)}
+                          className="p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-all ml-1 flex-shrink-0"
+                        >
+                          <Pencil className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Status + info */}
@@ -375,8 +379,8 @@ export default function Tables() {
                       )}
                     </div>
 
-                    {/* Unpay button */}
-                    {!activeOrder && paidOrder && (
+                    {/* Unpay button - only for owner */}
+                    {isOwner && !activeOrder && paidOrder && (
                       <button
                         data-testid={`unpay-card-${tableNum}`}
                         onClick={e => handleUnpayFromCard(e, paidOrder.id)}
@@ -461,13 +465,15 @@ export default function Tables() {
                           <h4 className="text-sm font-bold text-muted-foreground">
                             Đã đặt ({selectedOrder.items.length} món)
                           </h4>
-                          <button
-                            onClick={() => setShowClearTableModal(true)}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Xóa tất cả
-                          </button>
+                          {isOwner && (
+                            <button
+                              onClick={() => setShowClearTableModal(true)}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Xóa tất cả
+                            </button>
+                          )}
                         </div>
                         <div className="space-y-2">
                           {selectedOrder.items.map((item, idx) => (
@@ -563,58 +569,93 @@ export default function Tables() {
                           <p className="text-sm text-muted-foreground mt-1">Các đơn đã thanh toán sẽ hiển thị ở đây</p>
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lịch sử thanh toán</h4>
-                          {historyOrders.map((order) => {
-                            const isExpanded = expandedHistoryOrders.has(order.id);
-                            return (
-                              <div key={order.id} className="bg-card rounded-xl border border-border overflow-hidden">
-                                <button
-                                  className="w-full flex items-center justify-between p-3 hover:bg-secondary/50 transition-colors"
-                                  onClick={() => toggleHistoryOrder(order.id)}
-                                >
-                                  <div className="flex items-center gap-3 text-left">
-                                    <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                                      <CreditCard className="w-5 h-5 text-green-600" />
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-sm text-green-600">{formatCurrency(order.totalAmount)}</p>
-                                      <p className="text-xs text-muted-foreground">
-                                        {order.createdAt ? format(new Date(order.createdAt), "dd/MM/yyyy HH:mm") : "—"}
-                                        {order.paymentMethod && ` · ${order.paymentMethod === "cash" ? "Tiền mặt" : order.paymentMethod === "transfer" ? "Chuyển khoản" : order.paymentMethod}`}
-                                      </p>
-                                    </div>
+                        <div className="space-y-4">
+                          {(() => {
+                            const groupedOrders = historyOrders.reduce((groups, order) => {
+                              const date = order.createdAt ? format(new Date(order.createdAt), "yyyy-MM-dd") : "unknown";
+                              if (!groups[date]) {
+                                groups[date] = [];
+                              }
+                              groups[date].push(order);
+                              return groups;
+                            }, {} as Record<string, typeof historyOrders>);
+                            
+                            return Object.entries(groupedOrders).sort(([a], [b]) => b.localeCompare(a)).map(([date, orders]) => {
+                              const orderDate = date === "unknown" ? null : new Date(date);
+                              const dayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+                              const dayName = orderDate ? dayNames[orderDate.getDay()] : "Không rõ ngày";
+                              const displayDate = orderDate 
+                                ? `${dayName} | Ngày ${format(orderDate, "dd/MM/yyyy")}`
+                                : "Không rõ ngày";
+                              const isToday = date === format(new Date(), "yyyy-MM-dd");
+                              const yesterday = format(new Date(Date.now() - 86400000), "yyyy-MM-dd");
+                              const dateLabel = isToday ? "Hôm nay" : date === yesterday ? "Hôm qua" : displayDate;
+                              
+                              return (
+                                <div key={date}>
+                                  <div className="sticky top-0 bg-background py-2 flex items-center gap-2 z-10">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dateLabel}</span>
+                                    <div className="h-px flex-1 bg-border" />
+                                    <span className="text-xs font-bold text-amber-600">
+                                      {formatCurrency(orders.reduce((s, o) => s + o.totalAmount, 0))}
+                                    </span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground">{(order.items as any[]).length} món</span>
-                                    {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                                  <div className="space-y-2">
+                                    {(orders as typeof historyOrders).map((order) => {
+                                      const isExpanded = expandedHistoryOrders.has(order.id);
+                                      return (
+                                        <div key={order.id} className="bg-card rounded-xl border border-border overflow-hidden">
+                                          <button
+                                            className="w-full flex items-center justify-between p-3 hover:bg-secondary/50 transition-colors"
+                                            onClick={() => toggleHistoryOrder(order.id)}
+                                          >
+                                            <div className="flex items-center gap-3 text-left">
+                                              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                                <CreditCard className="w-5 h-5 text-green-600" />
+                                              </div>
+                                              <div>
+                                                <p className="font-bold text-sm text-green-600">{formatCurrency(order.totalAmount)}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {order.createdAt ? format(new Date(order.createdAt), "HH:mm") : "—"}
+                                                  {order.paymentMethod && ` · ${order.paymentMethod === "cash" ? "Tiền mặt" : order.paymentMethod === "transfer" ? "Chuyển khoản" : order.paymentMethod}`}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs text-muted-foreground">{(order.items as any[]).length} món</span>
+                                              {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                                            </div>
+                                          </button>
+                                          <AnimatePresence>
+                                            {isExpanded && (
+                                              <motion.div
+                                                initial={{ height: 0 }}
+                                                animate={{ height: "auto" }}
+                                                exit={{ height: 0 }}
+                                                className="overflow-hidden border-t border-border"
+                                              >
+                                                <div className="p-3 bg-secondary/20 space-y-1.5">
+                                                  {(order.items as any[]).map((item: any, idx: number) => (
+                                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                                      <span className="flex items-center gap-2">
+                                                        <span className="w-5 h-5 rounded bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{item.quantity}</span>
+                                                        <span>{item.name}</span>
+                                                      </span>
+                                                      <span className="text-muted-foreground text-xs">{formatCurrency(item.price * item.quantity)}</span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                </button>
-                                <AnimatePresence>
-                                  {isExpanded && (
-                                    <motion.div
-                                      initial={{ height: 0 }}
-                                      animate={{ height: "auto" }}
-                                      exit={{ height: 0 }}
-                                      className="overflow-hidden border-t border-border"
-                                    >
-                                      <div className="p-3 bg-secondary/20 space-y-1.5">
-                                        {(order.items as any[]).map((item: any, idx: number) => (
-                                          <div key={idx} className="flex justify-between items-center text-sm">
-                                            <span className="flex items-center gap-2">
-                                              <span className="w-5 h-5 rounded bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">{item.quantity}</span>
-                                              <span>{item.name}</span>
-                                            </span>
-                                            <span className="text-muted-foreground text-xs">{formatCurrency(item.price * item.quantity)}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            );
-                          })}
+                                </div>
+                              );
+                            });
+                          })()}
                         </div>
                       )}
                     </div>

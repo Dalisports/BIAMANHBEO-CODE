@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/use-menu";
 import { useCreateOrder } from "@/hooks/use-orders";
+import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link
 } from "lucide-react";
@@ -36,8 +38,15 @@ export default function Menu() {
   const deleteMenuItem = useDeleteMenuItem();
   const createOrder = useCreateOrder();
   const { toast } = useToast();
+  const { isOwner } = useAuth();
   
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("cart");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [showCart, setShowCart] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +55,10 @@ export default function Menu() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [selectedTable, setSelectedTable] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
   
   const [newItem, setNewItem] = useState({
     name: "",
@@ -200,6 +213,9 @@ export default function Menu() {
 
     createOrder.mutate(orderData, {
       onSuccess: () => {
+        setCart([]);
+        localStorage.removeItem("cart");
+        setSelectedTable("");
         toast({
           title: "Đặt hàng thành công!",
           description: `Đơn hàng bàn ${selectedTable} đã được tạo`,
@@ -248,12 +264,14 @@ export default function Menu() {
                 </motion.span>
               )}
             </button>
-            <button
-              onClick={() => setShowAddDialog(true)}
-              className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-all flex-shrink-0 active:scale-95"
-            >
-              <Plus className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => setShowAddDialog(true)}
+                className="p-2.5 md:p-3 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-all flex-shrink-0 active:scale-95"
+              >
+                <Plus className="w-5 h-5 md:w-6 md:h-6" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -312,22 +330,24 @@ export default function Menu() {
                       </div>
                     )}
                     
-                    <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleOpenEdit(item)}
-                        className="p-1.5 md:p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-colors active:scale-90"
-                        title="Sửa"
-                      >
-                        <Edit2 className="w-3 h-3 md:w-4 md:h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleOpenDelete(item.id)}
-                        className="p-1.5 md:p-2 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors active:scale-90"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
-                      </button>
-                    </div>
+                    {isOwner && (
+                      <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="p-1.5 md:p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-colors active:scale-90"
+                          title="Sửa"
+                        >
+                          <Edit2 className="w-3 h-3 md:w-4 md:h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenDelete(item.id)}
+                          className="p-1.5 md:p-2 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg transition-colors active:scale-90"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-2.5 md:p-4">
@@ -422,13 +442,26 @@ export default function Menu() {
                         <UtensilsCrossed className="w-4 h-4" />
                         Chọn bàn
                       </label>
-                      <input
-                        type="text"
-                        value={selectedTable}
-                        onChange={(e) => setSelectedTable(e.target.value)}
-                        placeholder="VD: Bàn 1, Quầy bar..."
-                        className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl bg-white border-2 border-amber-300 focus:border-amber-500 transition-all outline-none font-medium text-sm md:text-base"
-                      />
+                      <Select value={selectedTable} onValueChange={setSelectedTable}>
+                        <SelectTrigger className="bg-white border-2 border-amber-300 focus:border-amber-500">
+                          <SelectValue placeholder="Chọn bàn..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Bàn 1</SelectItem>
+                          <SelectItem value="2">Bàn 2</SelectItem>
+                          <SelectItem value="3">Bàn 3</SelectItem>
+                          <SelectItem value="4">Bàn 4</SelectItem>
+                          <SelectItem value="5">Bàn 5</SelectItem>
+                          <SelectItem value="6">Bàn 6</SelectItem>
+                          <SelectItem value="7">Bàn 7</SelectItem>
+                          <SelectItem value="8">Bàn 8</SelectItem>
+                          <SelectItem value="9">Bàn 9</SelectItem>
+                          <SelectItem value="10">Bàn 10</SelectItem>
+                          <SelectItem value="11">Bàn 11</SelectItem>
+                          <SelectItem value="12">Bàn 12</SelectItem>
+                          <SelectItem value="Quầy bar">Quầy bar</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     
                     {cart.map((item) => (

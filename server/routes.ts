@@ -92,6 +92,148 @@ export async function registerRoutes(
     res.json(req.user);
   });
 
+  app.get("/api/auth/profile", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const profile = await storage.getUserProfile(req.user.userId);
+      res.json(profile);
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching profile" });
+    }
+  });
+
+  app.post("/api/auth/profile", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const { fullName, dateOfBirth, hometown, idCardNumber, phoneNumber, lock } = req.body;
+      const userId = req.user.userId;
+      
+      const existing = await storage.getUserProfile(userId);
+      if (existing?.isLocked) {
+        return res.status(403).json({ message: "Profile is locked. Contact owner to edit." });
+      }
+      
+      const profile = await storage.createOrUpdateUserProfile({
+        userId,
+        fullName: fullName || null,
+        dateOfBirth: dateOfBirth || null,
+        hometown: hometown || null,
+        idCardNumber: idCardNumber || null,
+        phoneNumber: phoneNumber || null,
+      });
+      
+      if (lock) {
+        await storage.lockUserProfile(userId);
+        profile.isLocked = true;
+      }
+      
+      res.json(profile);
+    } catch (err) {
+      console.error("Profile error:", err);
+      res.status(500).json({ message: "Error saving profile" });
+    }
+  });
+
+  app.post("/api/auth/profile/lock/:userId", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const targetUserId = Number(req.params.userId);
+      await storage.lockUserProfile(targetUserId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Error locking profile" });
+    }
+  });
+
+  app.get("/api/auth/profiles", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const allUsers = await storage.getUsers();
+      const profiles = await Promise.all(
+        allUsers.map(async (user) => {
+          const profile = await storage.getUserProfile(user.id);
+          return { user, profile };
+        })
+      );
+      res.json(profiles);
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching profiles" });
+    }
+  });
+
+  app.get("/api/attendance/qr", async (req, res) => {
+    try {
+      const qr = await storage.getTodayQRCode();
+      res.json(qr);
+    } catch (err) {
+      res.status(500).json({ message: "Error getting QR code" });
+    }
+  });
+
+  app.post("/api/attendance/checkin", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const { qrCode } = req.body;
+      const result = await storage.checkIn(req.user.userId, qrCode);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ message: "Error checking in" });
+    }
+  });
+
+  app.post("/api/attendance/checkout", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const { qrCode } = req.body;
+      const result = await storage.checkOut(req.user.userId, qrCode);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ message: "Error checking out" });
+    }
+  });
+
+  app.get("/api/attendance/my", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const records = await storage.getAttendanceByUser(req.user.userId);
+      res.json(records);
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching attendance" });
+    }
+  });
+
+  app.get("/api/attendance/all", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const records = await storage.getAllAttendance();
+      const users = await storage.getUsers();
+      const hourlyRate = await storage.getHourlyRate();
+      
+      const userMap = Object.fromEntries(users.map(u => [u.id, u]));
+      
+      const result = records.map(r => ({
+        ...r,
+        username: userMap[r.userId]?.username,
+        fullName: userMap[r.userId]?.fullName,
+      }));
+      
+      res.json({ records: result, hourlyRate, users });
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching attendance" });
+    }
+  });
+
+  app.get("/api/attendance/rate", requireAuthMiddleware, async (req: any, res) => {
+    try {
+      const rate = await storage.getHourlyRate();
+      res.json({ hourlyRate: rate });
+    } catch (err) {
+      res.status(500).json({ message: "Error getting hourly rate" });
+    }
+  });
+
+  app.post("/api/attendance/rate", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const { hourlyRate } = req.body;
+      await storage.setHourlyRate(hourlyRate);
+      res.json({ success: true, hourlyRate });
+    } catch (err) {
+      res.status(500).json({ message: "Error setting hourly rate" });
+    }
+  });
+
   app.get(api.products.list.path, async (req, res) => {
     const prods = await storage.getMenuItems();
     res.json(prods);
