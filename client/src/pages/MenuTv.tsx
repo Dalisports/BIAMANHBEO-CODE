@@ -24,7 +24,6 @@ const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=1600&h=1200&fit=crop",
 ];
 
-
 export default function MenuTv() {
   const { data: menuItems } = useMenuItems();
   const { data: kitchenOrders } = useKitchenOrders();
@@ -73,7 +72,10 @@ export default function MenuTv() {
   const [tickerText, setTickerText] = useState(
     "🍺 BIA MẠNH BÉO - Đặc sản Đầu Lợn Tiết Luộc 🌟 Chỉ có tại BIA MẠNH BÉO 🌟 Miễn phí đỗ xe 🍺",
   );
-  const [attendanceQr, setAttendanceQr] = useState<{ qrCode: string; enabled: boolean } | null>(null);
+  const [attendanceQr, setAttendanceQr] = useState<{
+    qrCode: string;
+    enabled: boolean;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/settings/tickerText", { credentials: "include" })
@@ -88,7 +90,9 @@ export default function MenuTv() {
     const fetchQr = () => {
       fetch("/api/attendance/qr")
         .then((r) => r.json())
-        .then((d) => setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }))
+        .then((d) =>
+          setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }),
+        )
         .catch(() => {});
     };
     fetchQr();
@@ -135,7 +139,8 @@ export default function MenuTv() {
 
   // Build flat cooking items + run priority queue algorithm
   const priorityNames = useMemo(
-    () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
+    () =>
+      new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
     [menuItems],
   );
 
@@ -173,8 +178,13 @@ export default function MenuTv() {
     return ordered;
   }, [allFlatItems, priorityNames, kitchenOrder]);
 
-  const doneOrders = (kitchenOrders || []).filter((o) => o.status === "done" || o.status === "Complete");
-  const doneCount = doneOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + Number(i.quantity || 0), 0), 0);
+  const doneOrders = (kitchenOrders || []).filter(
+    (o) => o.status === "done" || o.status === "Complete",
+  );
+  const doneCount = doneOrders.reduce(
+    (sum, o) => sum + o.items.reduce((s, i) => s + Number(i.quantity || 0), 0),
+    0,
+  );
   const currentIdx = slideCount > 0 ? slideIndex % slideCount : 0;
   const currentImage = slideImages[currentIdx];
   const currentItem = slideMenuItems[currentIdx];
@@ -201,14 +211,21 @@ export default function MenuTv() {
             {/* Counters aligned right */}
             <div className="flex gap-[1vw]">
               <div className="flex items-center gap-[0.4vw] bg-orange-500/20 rounded-lg px-[0.8vw] py-[0.4vh] border border-orange-500/30">
-                <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 1, repeat: Infinity }}>
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
                   <Flame className="w-[1.4vw] h-[1.4vw] text-orange-400" />
                 </motion.div>
-                <span className="text-[0.9vw] font-black text-orange-400">ĐANG NẤU: {cookingItems.length}</span>
+                <span className="text-[0.9vw] font-black text-orange-400">
+                  ĐANG NẤU: {cookingItems.length}
+                </span>
               </div>
               <div className="flex items-center gap-[0.4vw] bg-green-500/20 rounded-lg px-[0.8vw] py-[0.4vh] border border-green-500/30">
                 <CheckCircle2 className="w-[1.4vw] h-[1.4vw] text-green-400" />
-                <span className="text-[0.9vw] font-black text-green-400">ĐÃ XONG: {doneCount}</span>
+                <span className="text-[0.9vw] font-black text-green-400">
+                  ĐÃ XONG: {doneCount}
+                </span>
               </div>
             </div>
           </div>
@@ -218,7 +235,9 @@ export default function MenuTv() {
               <div className="h-full flex flex-col items-center justify-center text-slate-400">
                 <ChefHat className="w-[6vw] h-[6vw] mb-3 opacity-40" />
                 <p className="text-[1.6vw] font-bold">Bếp đang trống</p>
-                <p className="text-[1vw] mt-2 opacity-70">Chưa có món nào đang nấu</p>
+                <p className="text-[1vw] mt-2 opacity-70">
+                  Chưa có món nào đang nấu
+                </p>
               </div>
             ) : (
               <AnimatePresence>
@@ -245,8 +264,12 @@ export default function MenuTv() {
                         transition={{ duration: 1.5, repeat: Infinity }}
                         className={`flex-shrink-0 w-[5vw] h-[5vw] rounded-xl flex flex-col items-center justify-center text-black shadow-lg ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}
                       >
-                        <span className="text-[0.7vw] font-bold leading-none opacity-80">BÀN</span>
-                        <span className="text-[2vw] font-black leading-none">{item.tableNumber}</span>
+                        <span className="text-[0.7vw] font-bold leading-none opacity-80">
+                          BÀN
+                        </span>
+                        <span className="text-[2vw] font-black leading-none">
+                          {item.tableNumber}
+                        </span>
                       </motion.div>
 
                       {/* Name + meta */}
@@ -271,7 +294,11 @@ export default function MenuTv() {
                             >
                               <motion.span
                                 animate={{ rotate: [0, 360] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
                                 className="inline-block"
                               >
                                 🔥
@@ -286,8 +313,12 @@ export default function MenuTv() {
                       </div>
 
                       {/* Quantity */}
-                      <div className={`flex-shrink-0 px-[1vw] py-[0.5vh] rounded-lg ${isPri ? "bg-red-500" : "bg-orange-500"}`}>
-                        <span className="text-[1.8vw] font-black text-white">x{item.quantity}</span>
+                      <div
+                        className={`flex-shrink-0 px-[1vw] py-[0.5vh] rounded-lg ${isPri ? "bg-red-500" : "bg-orange-500"}`}
+                      >
+                        <span className="text-[1.8vw] font-black text-white">
+                          x{item.quantity}
+                        </span>
                       </div>
                     </motion.div>
                   );
@@ -318,7 +349,11 @@ export default function MenuTv() {
                 src={currentImage}
                 alt={currentItem?.name || "Quảng cáo"}
                 animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="w-full h-full object-cover object-center"
               />
             </motion.div>
@@ -432,13 +467,14 @@ export default function MenuTv() {
             <ScanLine className="w-5 h-5 text-yellow-600" />
             <p className="font-black text-sm uppercase">Quét để chấm công</p>
           </div>
-          <QRCodeSVG value={attendanceQr.qrCode} size={140} level="M" />
+          <center>
+            <QRCodeSVG value={attendanceQr.qrCode} size={140} level="M" />
+          </center>
           <p className="text-center text-[10px] font-mono text-slate-600 mt-2 break-all max-w-[140px]">
             {attendanceQr.qrCode}
           </p>
         </motion.div>
       )}
-
     </div>
   );
 }

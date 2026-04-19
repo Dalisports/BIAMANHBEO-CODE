@@ -586,12 +586,16 @@ export default function Settings() {
                             "p-4 rounded-xl border-2 transition-all text-left relative",
                             editingPayment === method.id 
                               ? "border-primary bg-primary/5" 
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
+                            !config.isEnabled && "opacity-50"
                           )}
                         >
                           <span className="text-2xl">{config.icon}</span>
                           <span className="block font-semibold mt-1">{config.label}</span>
-                          {(config.qrImageUrl || config.accountNumber) && (
+                          {!config.isEnabled && (
+                            <span className="absolute top-2 right-2 text-[10px] font-bold text-muted-foreground bg-muted rounded px-1">TẮT</span>
+                          )}
+                          {config.isEnabled && (config.qrImageUrl || config.accountNumber) && (
                             <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
                           )}
                         </button>
@@ -684,15 +688,15 @@ export default function Settings() {
                         </>
                       )}
 
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="isEnabled"
+                      <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/40">
+                        <div>
+                          <p className="text-sm font-medium">Bật phương thức này</p>
+                          <p className="text-xs text-muted-foreground">{paymentForm.isEnabled ? "Đang hiển thị cho khách" : "Đang ẩn khỏi danh sách"}</p>
+                        </div>
+                        <Switch
                           checked={paymentForm.isEnabled}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, isEnabled: e.target.checked })}
-                          className="w-4 h-4"
+                          onCheckedChange={(v) => setPaymentForm({ ...paymentForm, isEnabled: v })}
                         />
-                        <label htmlFor="isEnabled" className="text-sm font-medium">Bật phương thức này</label>
                       </div>
 
                       <Button onClick={handleSavePayment} disabled={updatePaymentSetting.isPending} className="w-full">

@@ -392,7 +392,7 @@ export default function Orders() {
               <h3 className="text-2xl font-bold mb-6">Chọn phương thức thanh toán</h3>
               
               <div className="grid grid-cols-2 gap-3 mb-6">
-                {getDefaultMethods().map((defaultMethod) => {
+                {getDefaultMethods().filter((m) => getMethodConfig(m.id).isEnabled).map((defaultMethod) => {
                   const config = getMethodConfig(defaultMethod.id);
                   return (
                     <button
@@ -440,10 +440,10 @@ export default function Orders() {
                       </div>
                     )}
                     {config.accountName && (
-                      <div className="mt-3 text-sm space-y-1">
+                      <div className="mt-3 text-sm space-y-1 text-center">
                         <p className="font-semibold">{config.accountName}</p>
-                        {config.accountNumber && <p>Số tài khoản: {config.accountNumber}</p>}
-                        {config.bankName && <p>Ngân hàng: {config.bankName}</p>}
+                        {config.accountNumber && <p>Số TK: <span className="font-mono font-bold">{config.accountNumber}</span></p>}
+                        {config.bankName && <p className="text-muted-foreground">{config.bankName}</p>}
                         {config.additionalInfo && <p className="text-muted-foreground">{config.additionalInfo}</p>}
                       </div>
                     )}

@@ -730,22 +730,25 @@ export default function Tables() {
 
               <h4 className="text-sm font-bold mb-3">Chọn phương thức:</h4>
               <div className="grid grid-cols-2 gap-2 mb-4">
-                {getDefaultMethods().map(method => (
-                  <button
-                    key={method.id}
-                    data-testid={`pay-method-${method.id}`}
-                    onClick={() => setPayMethod(method.id)}
-                    className={cn(
-                      "p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-colors",
-                      payMethod === method.id
-                        ? "border-green-500 bg-green-50 text-green-700"
-                        : "border-border hover:border-green-300"
-                    )}
-                  >
-                    <span className="text-xl">{method.icon}</span>
-                    <span className="text-sm font-bold">{method.label}</span>
-                  </button>
-                ))}
+                {getDefaultMethods().filter(m => getMethodConfig(m.id).isEnabled).map(method => {
+                  const config = getMethodConfig(method.id);
+                  return (
+                    <button
+                      key={method.id}
+                      data-testid={`pay-method-${method.id}`}
+                      onClick={() => setPayMethod(method.id)}
+                      className={cn(
+                        "p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-colors",
+                        payMethod === method.id
+                          ? "border-green-500 bg-green-50 text-green-700"
+                          : "border-border hover:border-green-300"
+                      )}
+                    >
+                      <span className="text-xl">{config.icon}</span>
+                      <span className="text-sm font-bold">{config.label}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {payMethod !== "cash" && (() => {
@@ -763,10 +766,10 @@ export default function Tables() {
                       </div>
                     )}
                     {config.accountName && (
-                      <div className="mt-3 text-sm space-y-1">
+                      <div className="mt-3 text-sm space-y-1 text-center">
                         <p className="font-semibold">{config.accountName}</p>
-                        {config.accountNumber && <p>Số tài khoản: {config.accountNumber}</p>}
-                        {config.bankName && <p>Ngân hàng: {config.bankName}</p>}
+                        {config.accountNumber && <p>Số TK: <span className="font-mono font-bold">{config.accountNumber}</span></p>}
+                        {config.bankName && <p className="text-muted-foreground">{config.bankName}</p>}
                         {config.additionalInfo && <p className="text-muted-foreground">{config.additionalInfo}</p>}
                       </div>
                     )}
