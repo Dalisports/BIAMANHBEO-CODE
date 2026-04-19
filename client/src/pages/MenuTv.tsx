@@ -188,54 +188,28 @@ export default function MenuTv() {
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="relative z-10 px-4 py-2 bg-gradient-to-b from-black/60 to-transparent flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <motion.h1
-            animate={{
-              textShadow: [
-                "0px 0px 0px #fbbf24",
-                "0.2vw 0.2vw 0.6vw #fbbf24",
-                "0px 0px 0px #fbbf24",
-              ],
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-[2.2vw] font-black text-yellow-400 tracking-wider leading-none"
-          >
-            BIA MẠNH BÉO
-          </motion.h1>
-
-          <div className="flex gap-[1.5vw]">
-            <div className="flex items-center gap-[0.5vw] bg-orange-500/20 rounded-xl px-[1vw] py-[0.6vh] border border-orange-500/30">
-              <motion.div
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                <Flame className="w-[1.6vw] h-[1.6vw] text-orange-400" />
-              </motion.div>
-              <p className="text-[1vw] font-black text-orange-400">
-                ĐANG NẤU: {cookingItems.length}
-              </p>
-            </div>
-            <div className="flex items-center gap-[0.5vw] bg-green-500/20 rounded-xl px-[1vw] py-[0.6vh] border border-green-500/30">
-              <CheckCircle2 className="w-[1.6vw] h-[1.6vw] text-green-400" />
-              <p className="text-[1vw] font-black text-green-400">
-                ĐÃ XONG: {doneOrders.length}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main 2-column area */}
-      <div className="relative z-10 flex flex-1 min-h-0 gap-2 px-2 pb-12">
+      <div className="relative z-10 flex flex-1 min-h-0 gap-2 px-2 py-2">
         {/* LEFT 50% — cooking list */}
         <div className="w-1/2 h-full flex flex-col bg-black/30 rounded-2xl border border-yellow-500/30 overflow-hidden">
           <div className="flex items-center gap-[0.8vw] px-[1.5vw] py-[1.2vh] bg-gradient-to-r from-orange-600/40 to-red-600/40 border-b border-yellow-500/30 flex-shrink-0">
             <ChefHat className="w-[2vw] h-[2vw] text-yellow-300" />
-            <h2 className="text-[1.8vw] font-black text-yellow-300 tracking-wide">
+            <h2 className="text-[1.8vw] font-black text-yellow-300 tracking-wide flex-1">
               MÓN ĐANG NẤU
             </h2>
+            {/* Counters aligned right */}
+            <div className="flex gap-[1vw]">
+              <div className="flex items-center gap-[0.4vw] bg-orange-500/20 rounded-lg px-[0.8vw] py-[0.4vh] border border-orange-500/30">
+                <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 1, repeat: Infinity }}>
+                  <Flame className="w-[1.4vw] h-[1.4vw] text-orange-400" />
+                </motion.div>
+                <span className="text-[0.9vw] font-black text-orange-400">ĐANG NẤU: {cookingItems.length}</span>
+              </div>
+              <div className="flex items-center gap-[0.4vw] bg-green-500/20 rounded-lg px-[0.8vw] py-[0.4vh] border border-green-500/30">
+                <CheckCircle2 className="w-[1.4vw] h-[1.4vw] text-green-400" />
+                <span className="text-[0.9vw] font-black text-green-400">ĐÃ XONG: {doneOrders.length}</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-[1vw] py-[1vh] space-y-[0.8vh]">
@@ -276,9 +250,35 @@ export default function MenuTv() {
 
                       {/* Name + meta */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[1.6vw] font-black text-white leading-tight truncate">
-                          {item.name}
-                        </p>
+                        <div className="flex items-center gap-[0.6vw] flex-wrap">
+                          <p className="text-[1.6vw] font-black text-white leading-tight truncate">
+                            {item.name}
+                          </p>
+                          {idx === 0 && (
+                            <motion.span
+                              animate={{
+                                opacity: [1, 0.5, 1],
+                                scale: [1, 1.06, 1],
+                                boxShadow: [
+                                  "0 0 0px rgba(239,68,68,0)",
+                                  "0 0 10px rgba(239,68,68,0.8)",
+                                  "0 0 0px rgba(239,68,68,0)",
+                                ],
+                              }}
+                              transition={{ duration: 1.2, repeat: Infinity }}
+                              className="inline-flex items-center gap-[0.3vw] bg-red-600 text-white text-[0.75vw] font-black px-[0.6vw] py-[0.2vh] rounded-full uppercase tracking-wider flex-shrink-0"
+                            >
+                              <motion.span
+                                animate={{ rotate: [0, 360] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                className="inline-block"
+                              >
+                                🔥
+                              </motion.span>
+                              ĐANG CHẾ BIẾN
+                            </motion.span>
+                          )}
+                        </div>
                         <p className="text-[0.95vw] text-orange-300 font-medium">
                           Đã gọi {formatElapsed(item.sentAt)}
                         </p>
@@ -438,24 +438,6 @@ export default function MenuTv() {
         </motion.div>
       )}
 
-      {/* Footer ticker */}
-      <div className="absolute bottom-0 left-0 right-0 bg-yellow-500 z-20 overflow-hidden py-1 flex items-center justify-center">
-        <motion.div
-          initial={{ x: "100vw" }}
-          animate={{ x: ["100vw", "-100vw"] }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-            repeatDelay: 0,
-          }}
-          className="whitespace-nowrap py-[0.5vh]"
-        >
-          <span className="inline-block px-[4vw] text-black text-xl font-bold">
-            {tickerText} {tickerText} {tickerText}
-          </span>
-        </motion.div>
-      </div>
     </div>
   );
 }
