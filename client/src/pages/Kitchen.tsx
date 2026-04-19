@@ -156,6 +156,12 @@ export default function Kitchen() {
     [flattenedItems],
   );
 
+  // Đếm đơn bếp hoàn thành (đồng bộ với menu-tv)
+  const doneOrdersCount = useMemo(
+    () => (kitchenOrders || []).filter((o) => o.status === "Done").length,
+    [kitchenOrders],
+  );
+
   // Build sorted cooking queue
   const autoQueue = useMemo<CookingQueueItem[]>(
     () => buildCookingQueue(flattenedItems.map(toCookingQueueItem), priorityNames),
@@ -278,7 +284,7 @@ export default function Kitchen() {
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 text-green-600 font-bold text-sm border border-green-500/30">
             <CheckCircle2 className="w-4 h-4 text-green-500" />
-            <span>ĐÃ XONG: {doneItems.length}</span>
+            <span>ĐÃ XONG: {doneOrdersCount}</span>
           </div>
         </div>
       </div>
