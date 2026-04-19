@@ -136,6 +136,7 @@ export default function Tables() {
       accountNumber: custom?.accountNumber || null,
       bankName: custom?.bankName || null,
       additionalInfo: custom?.additionalInfo || null,
+      isEnabled: custom?.isEnabled ?? true,
     };
   };
 

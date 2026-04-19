@@ -85,6 +85,7 @@ export default function Orders() {
       accountNumber: custom?.accountNumber || null,
       bankName: custom?.bankName || null,
       additionalInfo: custom?.additionalInfo || null,
+      isEnabled: custom?.isEnabled ?? true,
     };
   };
 
