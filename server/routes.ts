@@ -276,7 +276,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/products/:id", async (req, res) => {
+  app.patch("/api/products/:id", requireOwnerMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { name, price, categoryId, description, image, isAvailable, isSticky, isPriority } = req.body;
@@ -308,7 +308,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/products/:id", async (req, res) => {
+  app.delete("/api/products/:id", requireOwnerMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.deleteMenuItem(id);

@@ -45,7 +45,7 @@ export function buildCookingQueue(
   }
 
   const multiTableNames = new Set<string>();
-  for (const [name, { tables, times }] of nameToTables) {
+  for (const [name, { tables, times }] of Array.from(nameToTables.entries())) {
     if (tables.length >= 2) {
       const minT = Math.min(...times);
       const maxT = Math.max(...times);

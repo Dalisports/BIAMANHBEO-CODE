@@ -122,9 +122,9 @@ export default function MenuTv() {
   const allFlatItems = useMemo<CookingQueueItem[]>(() => {
     const result: CookingQueueItem[] = [];
     (kitchenOrders || []).forEach((order) => {
-      order.items.forEach((item: KitchenItem) => {
+      order.items.forEach((item: KitchenItem, idx: number) => {
         result.push({
-          key: `${order.id}-${item.name}`,
+          key: `${order.id}-${idx}-${item.name}`,
           kitchenOrderId: order.id,
           orderId: order.orderId,
           tableNumber: order.tableNumber,
