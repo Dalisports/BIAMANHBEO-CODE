@@ -312,7 +312,7 @@ export default function Home() {
       .reduce((acc, o) => acc + o.totalAmount, 0) || 0;
 
   return (
-    <div className="h-full flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
+    <div className="h-full flex flex-col min-h-0">
       <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="text-3xl font-sans font-bold text-foreground">

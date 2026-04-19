@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Smartphone } from "lucide-react";
+import { Download, Smartphone, X } from "lucide-react";
+
+const PWA_HINT_DISMISSED_KEY = "pwa-install-hint-dismissed";
 
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
@@ -25,7 +27,8 @@ export function PWAInstallPrompt() {
 
     // Also check after a delay in case the event already fired
     const timer = setTimeout(() => {
-      if (!deferredPrompt && !isStandalone) {
+      const dismissed = localStorage.getItem(PWA_HINT_DISMISSED_KEY) === "1";
+      if (!deferredPrompt && !isStandalone && !dismissed) {
         setShowInstallButton(true);
       }
     }, 3000);
@@ -70,9 +73,19 @@ export function PWAInstallPrompt() {
       
       {/* Fallback hint for devices that don't show prompt */}
       {!deferredPrompt && showInstallButton && (
-        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-center gap-2 z-40 text-sm">
-          <Smartphone className="w-4 h-4" />
+        <div className="fixed bottom-24 md:bottom-4 left-4 right-4 bg-slate-800 text-white px-4 py-3 pr-12 rounded-lg shadow-lg flex items-center justify-center gap-2 z-40 text-sm">
+          <Smartphone className="w-4 h-4 flex-shrink-0" />
           <span>Để cài app: Menu trình duyệt → <strong>Cài đặt App</strong> hoặc <strong>Thêm vào màn hình chính</strong></span>
+          <button
+            onClick={() => {
+              localStorage.setItem(PWA_HINT_DISMISSED_KEY, "1");
+              setShowInstallButton(false);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Đóng"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
     </>
