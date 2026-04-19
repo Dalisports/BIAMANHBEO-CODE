@@ -19,17 +19,17 @@ function generateToken(userId: number, username: string, role: string): string {
 function verifyToken(token: string): { userId: number; username: string; role: string } | null {
   try {
     const parts = token.split(":");
-    if (parts.length !== 4) return null;
-    
-    const [, username, role, timestamp] = parts;
+    if (parts.length !== 5) return null;
+
+    const [userId, username, role, timestamp, signature] = parts;
     const expectedEncrypted = crypto.createHmac("sha256", TOKEN_SECRET)
-      .update(`${parts[0]}:${username}:${role}:${timestamp}`)
+      .update(`${userId}:${username}:${role}:${timestamp}`)
       .digest("hex");
-    
-    if (parts[3] !== expectedEncrypted) return null;
+
+    if (signature !== expectedEncrypted) return null;
     if (Date.now() - parseInt(timestamp) > 7 * 24 * 60 * 60 * 1000) return null;
-    
-    return { userId: parseInt(parts[0]), username, role };
+
+    return { userId: parseInt(userId), username, role };
   } catch {
     return null;
   }
