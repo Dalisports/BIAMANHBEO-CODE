@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 
 const TABLE_STATUS = {
-  empty:   { label: "Trống",           bg: "bg-card",      border: "border-border",     text: "text-green-600",  strip: "bg-green-400"  },
-  cooking: { label: "Đang phục vụ",    bg: "bg-orange-50", border: "border-orange-300", text: "text-orange-700", strip: "bg-orange-500" },
-  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-50",   border: "border-blue-300",   text: "text-blue-700",   strip: "bg-blue-500"   },
+  empty:   { label: "Trống",           bg: "bg-amber-400",      border: "border-amber-400",     text: "text-white",  strip: "bg-amber-500"  },
+  cooking: { label: "Đang phục vụ",    bg: "bg-orange-500", border: "border-orange-500", text: "text-white", strip: "bg-orange-600" },
+  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-500",   border: "border-blue-500",   text: "text-white",   strip: "bg-blue-600"   },
 };
 
 const QUICK_ITEMS = [
@@ -342,10 +342,7 @@ export default function Tables() {
                   <>
                     {/* Table name row */}
                     <div className="flex items-start justify-between mb-auto">
-                      <span className={cn(
-                        "font-black text-base leading-tight",
-                        activeOrder ? "text-foreground" : "text-foreground"
-                      )}>
+                      <span className="font-black text-base leading-tight text-white">
                         {tableName(tableNum)}
                       </span>
                       {isOwner && (
@@ -363,20 +360,18 @@ export default function Tables() {
                     <div className="mt-2">
                       {activeOrder ? (
                         <>
-                          <p className="text-xs font-bold text-muted-foreground">
+                          <p className="text-xs font-bold text-white/80">
                             {activeOrder.items?.length || 0} món
                           </p>
-                          <p className={cn("text-sm font-black mt-0.5", status === "ready" ? "text-blue-600" : "text-orange-600")}>
+                          <p className="text-sm font-black mt-0.5 text-white">
                             {formatCurrency(activeOrder.totalAmount)}
                           </p>
-                          <span className={cn("inline-block text-[9px] font-bold uppercase tracking-wide mt-1 px-1.5 py-0.5 rounded-full", sc.text,
-                            status === "cooking" ? "bg-orange-100" : "bg-blue-100"
-                          )}>
+                          <span className={cn("inline-block text-[9px] font-bold uppercase tracking-wide mt-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white")}>
                             {sc.label}
                           </span>
                         </>
                       ) : (
-                        <span className="text-[10px] font-bold text-green-600 uppercase tracking-wide">✓ Trống</span>
+                        <span className="text-[10px] font-bold text-white uppercase tracking-wide">✓ Trống</span>
                       )}
                     </div>
 
