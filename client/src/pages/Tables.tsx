@@ -275,16 +275,16 @@ export default function Tables() {
 
       {/* Status summary */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-amber-400 rounded-2xl p-2 text-white shadow-lg flex items-center justify-center gap-2">
-          <p className="text-xl font-bold">{emptyCount}</p>
+        <div className="bg-amber-400 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{emptyCount}</p>
           <p className="text-xs font-bold opacity-80">Trống</p>
         </div>
-        <div className="bg-orange-500 rounded-2xl p-2 text-white shadow-lg flex items-center justify-center gap-2">
-          <p className="text-xl font-bold">{cookingCount}</p>
+        <div className="bg-orange-500 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{cookingCount}</p>
           <p className="text-xs font-bold opacity-80">Đang phục vụ</p>
         </div>
-        <div className="bg-blue-500 rounded-2xl p-2 text-white shadow-lg flex items-center justify-center gap-2">
-          <p className="text-xl font-bold">{readyCount}</p>
+        <div className="bg-blue-500 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{readyCount}</p>
           <p className="text-xs font-bold opacity-80">Chờ thanh toán</p>
         </div>
       </div>
@@ -339,8 +339,8 @@ export default function Tables() {
                   <>
                     {/* Table name row */}
                     <div className="flex items-start justify-between mb-auto">
-                      <span className="font-black text-base leading-tight text-black">
-                        {tableName(tableNum)}{activeOrder && ` | ${formatCurrency(activeOrder.totalAmount)}`}
+                      <span className="font-black text-base leading-tight text-white">
+                        {tableName(tableNum)}
                       </span>
                       {isOwner && (
                         <button
@@ -353,19 +353,22 @@ export default function Tables() {
                       )}
                     </div>
 
-                    {/* Status + info - hidden since amount shown above */}
-                    <div className="mt-2 hidden">
+                    {/* Status + info */}
+                    <div className="mt-2">
                       {activeOrder ? (
                         <>
                           <p className="text-xs font-bold text-white/80">
                             {activeOrder.items?.length || 0} món
+                          </p>
+                          <p className="text-sm font-black mt-0.5 text-white">
+                            {formatCurrency(activeOrder.totalAmount)}
                           </p>
                           <span className={cn("inline-block text-[9px] font-bold uppercase tracking-wide mt-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white")}>
                             {sc.label}
                           </span>
                         </>
                       ) : (
-                        <span className="text-[10px] font-bold text-black uppercase tracking-wide">✓ Trống</span>
+                        <span className="text-[10px] font-bold text-white uppercase tracking-wide">✓ Trống</span>
                       )}
                     </div>
 
