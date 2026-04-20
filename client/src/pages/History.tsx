@@ -23,7 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
   Complete: "Hoàn thành",
 };
 
-const MAX_TABLES = 12;
+const MAX_TABLES = 15;
 
 export default function History() {
   const { data: orders, isLoading } = useOrders();

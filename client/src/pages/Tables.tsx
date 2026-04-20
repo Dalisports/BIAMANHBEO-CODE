@@ -21,7 +21,7 @@ const QUICK_ITEMS = [
   { id: 102, name: "Lạc rang",     price: 10000 },
 ];
 
-const MAX_TABLES = 12;
+const MAX_TABLES = 15;
 const TABLE_NAMES_KEY = "tableNames";
 
 function useTableNames() {
