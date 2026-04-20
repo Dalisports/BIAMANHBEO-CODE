@@ -315,9 +315,6 @@ export default function Tables() {
                 sc.bg, sc.border
               )}
             >
-              {/* Status color strip */}
-              <div className={cn("h-1.5 w-full", sc.strip)} />
-
               <div className="p-3 flex flex-col min-h-[90px]">
                 {isRenaming ? (
                   <div className="flex flex-col items-center gap-2 py-2" onClick={e => e.stopPropagation()}>
