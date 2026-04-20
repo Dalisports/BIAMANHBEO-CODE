@@ -73,7 +73,7 @@ export default function Tables() {
   const createOrder = useCreateOrder();
   const updateOrder = useUpdateOrder();
   const payOrder = usePayOrder();
-  const unpayOrder = useUnpayOrder();
+
   const { tableNames, saveTableNames } = useTableNames();
   const { isOwner } = useAuth();
 
@@ -239,11 +239,6 @@ export default function Tables() {
     updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
   };
 
-  const handleUnpayFromCard = (e: React.MouseEvent, orderId: number) => {
-    e.stopPropagation();
-    unpayOrder.mutate(orderId);
-  };
-
   const toggleHistoryOrder = (id: number) => {
     setExpandedHistoryOrders(prev => {
       const next = new Set(prev);
@@ -372,17 +367,7 @@ export default function Tables() {
                       )}
                     </div>
 
-                    {/* Unpay button - only for owner */}
-                    {isOwner && !activeOrder && paidOrder && (
-                      <button
-                        data-testid={`unpay-card-${tableNum}`}
-                        onClick={e => handleUnpayFromCard(e, paidOrder.id)}
-                        disabled={unpayOrder.isPending}
-                        className="absolute bottom-1 right-1 scale-50 origin-bottom-right flex items-center gap-0.5 px-1 py-0.5 rounded bg-orange-100 border border-orange-300 text-orange-700 text-[9px] font-bold hover:bg-orange-200 transition-colors disabled:opacity-50"
-                      >
-                        ↩ Hoàn tác TT
-                      </button>
-                    )}
+
                   </>
                 )}
               </div>
