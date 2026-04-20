@@ -16,8 +16,11 @@ import { Settings, Clock } from "lucide-react";
 const BASE_NAV_ITEMS = [
   { href: "/", label: "Bàn", icon: LayoutGrid },
   { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
-  { href: "/attendance", label: "Chấm Công", icon: Clock },
   { href: "/profile", label: "Cá Nhân", icon: User },
+];
+
+const EMPLOYEE_NAV_ITEMS = [
+  { href: "/attendance", label: "Chấm Công", icon: Clock },
 ];
 
 const OWNER_NAV_ITEMS = [
@@ -53,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 flex flex-col gap-2">
-          {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : [])].map((item) => {
+          {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : EMPLOYEE_NAV_ITEMS)].map((item) => {
             const isActive = location === item.href;
             return (
               <Link 
@@ -125,7 +128,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : [])].map((item) => {
+              {[...BASE_NAV_ITEMS, ...(isOwner ? OWNER_NAV_ITEMS : EMPLOYEE_NAV_ITEMS)].map((item) => {
                 const isActive = location === item.href;
                 return (
                   <DropdownMenuItem asChild key={item.href}>
