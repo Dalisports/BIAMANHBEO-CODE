@@ -275,17 +275,17 @@ export default function Tables() {
 
       {/* Status summary */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-black text-green-600">{emptyCount}</p>
-          <p className="text-[10px] font-bold text-green-600 uppercase tracking-wide">Trống</p>
+        <div className="bg-amber-400 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{emptyCount}</p>
+          <p className="text-xs font-bold opacity-80">Trống</p>
         </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-black text-orange-600">{cookingCount}</p>
-          <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wide">Đang phục vụ</p>
+        <div className="bg-orange-500 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{cookingCount}</p>
+          <p className="text-xs font-bold opacity-80">Đang phục vụ</p>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-black text-blue-600">{readyCount}</p>
-          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Chờ thanh toán</p>
+        <div className="bg-blue-500 rounded-2xl p-4 text-white shadow-lg">
+          <p className="text-2xl font-bold">{readyCount}</p>
+          <p className="text-xs font-bold opacity-80">Chờ thanh toán</p>
         </div>
       </div>
 
