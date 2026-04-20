@@ -220,17 +220,27 @@ export async function registerRoutes(
     try {
       const records = await storage.getAllAttendance();
       const users = await storage.getUsers();
+      const profiles = await storage.getAllUserProfiles();
       const hourlyRate = await storage.getHourlyRate();
       
       const userMap = Object.fromEntries(users.map(u => [u.id, u]));
+      const profileMap = Object.fromEntries(profiles.map(p => [p.userId, p]));
       
       const result = records.map(r => ({
         ...r,
         username: userMap[r.userId]?.username,
-        fullName: userMap[r.userId]?.fullName,
+        fullName: profileMap[r.userId]?.fullName || userMap[r.userId]?.fullName,
+      }));
+
+      const usersWithProfile = users.map(u => ({
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        fullName: profileMap[u.id]?.fullName || u.fullName || u.username,
+        phoneNumber: profileMap[u.id]?.phoneNumber || null,
       }));
       
-      res.json({ records: result, hourlyRate, users });
+      res.json({ records: result, hourlyRate, users: usersWithProfile });
     } catch (err) {
       res.status(500).json({ message: "Error fetching attendance" });
     }

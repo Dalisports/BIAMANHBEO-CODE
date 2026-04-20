@@ -206,30 +206,31 @@ export default function Settings() {
       const data = await res.json();
       
       setHourlyRate(data.hourlyRate || 50000);
-      
-      const userSalaries: Record<number, { username: string; fullName: string; totalHours: number; totalSalary: number }> = {};
-      
+
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      const todayStr = now.toISOString().split("T")[0];
+
+      const hoursMap: Record<number, number> = {};
       for (const record of data.records || []) {
-        const uid = record.userId;
-        if (!userSalaries[uid]) {
-          userSalaries[uid] = {
-            username: record.username,
-            fullName: record.fullName,
-            totalHours: 0,
-            totalSalary: 0
-          };
+        if (record.date >= monthStart && record.date <= todayStr) {
+          if (!hoursMap[record.userId]) hoursMap[record.userId] = 0;
+          hoursMap[record.userId] += record.totalHours || 0;
         }
-        userSalaries[uid].totalHours += record.totalHours || 0;
       }
-      
-      const salaryList = Object.entries(userSalaries).map(([uid, info]) => ({
-        userId: Number(uid),
-        username: info.username,
-        fullName: info.fullName || info.username,
-        totalHours: info.totalHours,
-        totalSalary: Math.round(info.totalHours * (data.hourlyRate || 50000))
+
+      const allUsers: Array<{ id: number; username: string; fullName: string; phoneNumber: string | null }> =
+        (data.users || []).filter((u: any) => u.role !== "owner");
+
+      const salaryList = allUsers.map((u) => ({
+        userId: u.id,
+        username: u.username,
+        fullName: u.fullName || u.username,
+        phoneNumber: u.phoneNumber || null,
+        totalHours: hoursMap[u.id] || 0,
+        totalSalary: Math.round((hoursMap[u.id] || 0) * (data.hourlyRate || 50000)),
       }));
-      
+
       setSalaryData(salaryList);
     } catch (err) {
       console.error("Error fetching salary data:", err);
@@ -536,33 +537,55 @@ export default function Settings() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Danh sách lương nhân viên</CardTitle>
+                  <CardTitle>Danh sách nhân viên tháng {new Date().getMonth() + 1}/{new Date().getFullYear()}</CardTitle>
+                  <CardDescription>Giờ làm tính từ ngày 01 đến hôm nay</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-4 p-4 bg-amber-50 rounded-xl flex justify-between items-center">
+                  <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-muted-foreground">Tổng giờ làm</p>
+                      <p className="text-sm text-muted-foreground">Tổng giờ làm tháng này</p>
                       <p className="text-xl font-black">{totalHoursAll.toFixed(1)}h</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Tổng lương</p>
+                      <p className="text-sm text-muted-foreground">Tổng lương ước tính</p>
                       <p className="text-xl font-black text-green-600">{totalSalaryAll.toLocaleString()}đ</p>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    {salaryData.map(emp => (
-                      <div key={emp.userId} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <p className="font-medium">{emp.fullName}</p>
-                          <p className="text-sm text-muted-foreground">{emp.totalHours.toFixed(1)}h</p>
-                        </div>
-                        <p className="font-bold text-green-600">{emp.totalSalary.toLocaleString()}đ</p>
-                      </div>
-                    ))}
-                    {salaryData.length === 0 && (
-                      <p className="text-center text-muted-foreground py-4">Chưa có dữ liệu</p>
-                    )}
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-muted-foreground">
+                          <th className="text-left py-2 px-3 w-10">STT</th>
+                          <th className="text-left py-2 px-3">Họ Tên</th>
+                          <th className="text-left py-2 px-3">Số điện thoại</th>
+                          <th className="text-right py-2 px-3">Giờ làm</th>
+                          <th className="text-right py-2 px-3">Lương ước tính</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {salaryData.map((emp, idx) => (
+                          <tr key={emp.userId} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                            <td className="py-3 px-3 text-muted-foreground font-medium">{idx + 1}</td>
+                            <td className="py-3 px-3 font-semibold">{emp.fullName}</td>
+                            <td className="py-3 px-3 text-muted-foreground font-mono">{emp.phoneNumber || "—"}</td>
+                            <td className="py-3 px-3 text-right">
+                              <span className={emp.totalHours > 0 ? "font-bold text-blue-600" : "text-muted-foreground"}>
+                                {emp.totalHours.toFixed(1)}h
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 text-right font-bold text-green-600">
+                              {emp.totalHours > 0 ? `${emp.totalSalary.toLocaleString()}đ` : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                        {salaryData.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="text-center text-muted-foreground py-6">Chưa có dữ liệu nhân viên</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </CardContent>
               </Card>

@@ -31,6 +31,7 @@ export interface IStorage {
   getUsers(): Promise<User[]>;
   createUser(user: { username: string; password: string; role: string; fullName?: string }): Promise<User>;
   getUserProfile(userId: number): Promise<UserProfile | null>;
+  getAllUserProfiles(): Promise<UserProfile[]>;
   createOrUpdateUserProfile(data: InsertUserProfile): Promise<UserProfile>;
   lockUserProfile(userId: number): Promise<void>;
   generateDailyQRCode(): Promise<DailyQRCode>;
@@ -99,6 +100,10 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return created;
+  }
+
+  async getAllUserProfiles() {
+    return await db.select().from(userProfiles);
   }
 
   async getUserProfile(userId: number) {
