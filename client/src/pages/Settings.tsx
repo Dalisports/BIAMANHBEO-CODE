@@ -215,7 +215,7 @@ export default function Settings() {
       for (const record of data.records || []) {
         if (record.date >= monthStart && record.date <= todayStr) {
           if (!hoursMap[record.userId]) hoursMap[record.userId] = 0;
-          hoursMap[record.userId] += record.totalHours || 0;
+          hoursMap[record.userId] += (record.totalHours || 0) / 100;
         }
       }
 
