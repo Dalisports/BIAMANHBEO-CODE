@@ -72,20 +72,6 @@ export const paymentSettings = pgTable("payment_settings", {
   isEnabled: boolean("is_enabled").default(true),
 });
 
-export const conversations = pgTable("conversations", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
-  role: text("role").notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -94,6 +80,19 @@ export const users = pgTable("users", {
   fullName: text("full_name"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  fullName: text("full_name"),
+  dateOfBirth: text("date_of_birth"),
+  hometown: text("hometown"),
+  idCardNumber: text("id_card_number"),
+  phoneNumber: text("phone_number"),
+  isLocked: boolean("is_locked").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const dailyQRCodes = pgTable("daily_qr_codes", {
@@ -115,76 +114,27 @@ export const attendanceRecords = pgTable("attendance_records", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const userProfiles = pgTable("user_profiles", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().unique(),
-  fullName: text("full_name"),
-  dateOfBirth: text("date_of_birth"),
-  hometown: text("hometown"),
-  idCardNumber: text("id_card_number"),
-  phoneNumber: text("phone_number"),
-  isLocked: boolean("is_locked").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+export type MenuItem = typeof menuItems.$inferSelect;
+export type InsertMenuItem = typeof menuItems.$inferInsert;
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+export type KitchenOrder = typeof kitchenOrders.$inferSelect;
+export type InsertKitchenOrder = typeof kitchenOrders.$inferInsert;
+export type PaymentSetting = typeof paymentSettings.$inferSelect;
+export type InsertPaymentSetting = typeof paymentSettings.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
+export type DailyQRCode = typeof dailyQRCodes.$inferSelect;
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
 
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
-export const insertKitchenOrderSchema = createInsertSchema(kitchenOrders).omit({ id: true, sentAt: true, startedAt: true, completedAt: true });
-export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({ id: true });
 
-export type Category = typeof categories.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
-
-export type MenuItem = typeof menuItems.$inferSelect;
-export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
-
-export type OrderItem = {
-  menuItemId: number;
-  name: string;
-  quantity: number;
-  price: number;
-  notes?: string;
-};
-
-export type KitchenItem = {
-  name: string;
-  quantity: number;
-  notes?: string;
-  cookingStatus?: "pending" | "cooking" | "done";
-};
-
-export type Order = typeof orders.$inferSelect;
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
-
-export type KitchenOrder = typeof kitchenOrders.$inferSelect;
-export type InsertKitchenOrder = z.infer<typeof insertKitchenOrderSchema>;
-
-export type PaymentSetting = typeof paymentSettings.$inferSelect;
-export type InsertPaymentSetting = z.infer<typeof insertPaymentSettingSchema>;
-
-export type Conversation = typeof conversations.$inferSelect;
-export type InsertConversation = z.infer<typeof insertConversationSchema>;
-export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
-
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
-export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
-
-export type User = typeof users.$inferSelect;
-export type UserRole = "owner" | "employee";
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),
 });
-
-export type UserProfile = typeof userProfiles.$inferSelect;
-export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
-
-export type DailyQRCode = typeof dailyQRCodes.$inferSelect;
-export type AttendanceRecord = typeof attendanceRecords.$inferSelect;

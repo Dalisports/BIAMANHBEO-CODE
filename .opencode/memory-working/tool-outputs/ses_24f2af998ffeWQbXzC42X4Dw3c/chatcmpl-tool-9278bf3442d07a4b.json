@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-9278bf3442d07a4b",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "bash",
+  "fullOutput": "docker-compose : The term 'docker-compose' is not recognized as the name of a cmdlet, function, script file, or \r\noperable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try \r\nagain.\r\nAt line:1 char:1\r\n+ docker-compose ps\r\n+ ~~~~~~~~~~~~~~\r\n    + CategoryInfo          : ObjectNotFound: (docker-compose:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776788591584
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-854e46952f0ea56b",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead\nnpm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions\nnpm warn deprecated glob@11.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\n\nadded 742 packages, and audited 743 packages in 11s\n\n154 packages are looking for funding\n  run `npm fund` for details\n\n4 high severity vulnerabilities\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n",
+  "timestamp": 1776643777830
+}

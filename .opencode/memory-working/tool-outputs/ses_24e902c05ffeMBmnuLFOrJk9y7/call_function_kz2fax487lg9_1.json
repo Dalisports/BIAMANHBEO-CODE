@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_kz2fax487lg9_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n290: \n291:    async addIsStickyColumn() {\n292:      try {\n293:        await sqliteClient.execute(`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_sticky boolean DEFAULT false`);\n294:      } catch (err) {\n295:        console.log(\"Column is_sticky might already exist or error:\", err);\n296:      }\n297:    }\n298: \n299:    async addIsPriorityColumn() {\n300:      try {\n301:        await sqliteClient.execute(`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_priority boolean DEFAULT false`);\n302:      } catch (err) {\n303:        console.log(\"Column is_priority might already exist or error:\", err);\n304:      }\n305:    }\n306: \n307:    async createUsersTable() {\n308:      try {\n309:        await sqliteClient.execute(`\n310:          CREATE TABLE IF NOT EXISTS users (\n311:            id INTEGER PRIMARY KEY AUTOINCREMENT,\n312:            username TEXT UNIQUE NOT NULL,\n313:            password TEXT NOT NULL,\n314:            role TEXT NOT NULL DEFAULT 'employee',\n315:            full_name TEXT,\n316:            is_active BOOLEAN DEFAULT true,\n317:            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n318:          )\n319:        `);\n\n(Showing lines 290-319 of 736. Use offset=320 to continue.)\n</content>",
+  "timestamp": 1776799138986
+}

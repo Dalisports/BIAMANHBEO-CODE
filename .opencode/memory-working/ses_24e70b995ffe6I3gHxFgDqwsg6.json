@@ -1,0 +1,223 @@
+{
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "slots": {
+    "error": [],
+    "decision": [],
+    "todo": [],
+    "dependency": []
+  },
+  "pool": [
+    {
+      "id": "wm_1776800463510_2lsxquj",
+      "type": "file-path",
+      "content": "res.js",
+      "source": "tool:read",
+      "timestamp": 1776801205270,
+      "relevanceScore": 49.322383993752,
+      "mentions": 16,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800487822_zc2twel",
+      "type": "file-path",
+      "content": "routes.ts",
+      "source": "tool:read",
+      "timestamp": 1776801205270,
+      "relevanceScore": 21.63261582153822,
+      "mentions": 7,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800596518_7q8j9q1",
+      "type": "file-path",
+      "content": "use-orders.ts",
+      "source": "tool:read",
+      "timestamp": 1776800942147,
+      "relevanceScore": 9.331062817381683,
+      "mentions": 3,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800460845_pgv506o",
+      "type": "file-path",
+      "content": "App.ts",
+      "source": "tool:glob",
+      "timestamp": 1776800469049,
+      "relevanceScore": 6.662093444491694,
+      "mentions": 2,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800504749_hfeq36l",
+      "type": "file-path",
+      "content": "use-menu.ts",
+      "source": "tool:read",
+      "timestamp": 1776800753781,
+      "relevanceScore": 6.4995341656879235,
+      "mentions": 2,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800460847_u4667yp",
+      "type": "file-path",
+      "content": "Tables.ts",
+      "source": "tool:glob",
+      "timestamp": 1776800930012,
+      "relevanceScore": 6.374163887888815,
+      "mentions": 2,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800463509_alfexei",
+      "type": "file-path",
+      "content": "r.js",
+      "source": "tool:read",
+      "timestamp": 1776801178120,
+      "relevanceScore": 5.407348879488124,
+      "mentions": 2,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800460845_us0qyil",
+      "type": "file-path",
+      "content": "Layout.ts",
+      "source": "tool:glob",
+      "timestamp": 1776800460844,
+      "relevanceScore": 3.332521430334906,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800460846_jxbz8ma",
+      "type": "file-path",
+      "content": "GauAssistant.ts",
+      "source": "tool:glob",
+      "timestamp": 1776800460844,
+      "relevanceScore": 3.33220959215904,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800460848_vcku4pc",
+      "type": "file-path",
+      "content": "Settings.ts",
+      "source": "tool:glob",
+      "timestamp": 1776800460844,
+      "relevanceScore": 3.331777982227045,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800463508_3fb90wr",
+      "type": "file-path",
+      "content": "MenuTv.ts",
+      "source": "tool:read",
+      "timestamp": 1776800463508,
+      "relevanceScore": 3.3315035085024056,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800477077_jv4slk5",
+      "type": "file-path",
+      "content": "index.ts",
+      "source": "tool:read",
+      "timestamp": 1776800477077,
+      "relevanceScore": 3.329827963750253,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800477078_1db5woa",
+      "type": "file-path",
+      "content": "express.js",
+      "source": "tool:read",
+      "timestamp": 1776800477077,
+      "relevanceScore": 3.3292093691179447,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800490825_7gudjcf",
+      "type": "file-path",
+      "content": "static.ts",
+      "source": "tool:read",
+      "timestamp": 1776800490824,
+      "relevanceScore": 3.3254331133352233,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800495222_fng91sb",
+      "type": "file-path",
+      "content": "vite.config.ts",
+      "source": "tool:read",
+      "timestamp": 1776800495222,
+      "relevanceScore": 3.3240389568649684,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800748725_y5d54xs",
+      "type": "file-path",
+      "content": "use-auth.ts",
+      "source": "tool:read",
+      "timestamp": 1776800748725,
+      "relevanceScore": 3.2269346205523135,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776801213977_985oxzb",
+      "type": "file-path",
+      "content": "storage.ts",
+      "source": "tool:read",
+      "timestamp": 1776801249911,
+      "relevanceScore": 3.0725,
+      "mentions": 3,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800952297_wqa6q3c",
+      "type": "file-path",
+      "content": "queryClient.ts",
+      "source": "tool:read",
+      "timestamp": 1776800952296,
+      "relevanceScore": 2.8739597232049805,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800958952_mamkmh5",
+      "type": "file-path",
+      "content": "use-websocket.ts",
+      "source": "tool:read",
+      "timestamp": 1776800958951,
+      "relevanceScore": 2.6975221082421874,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776800978945_xz70xdj",
+      "type": "file-path",
+      "content": "websocket.ts",
+      "source": "tool:read",
+      "timestamp": 1776800978945,
+      "relevanceScore": 2.58532012734375,
+      "mentions": 1,
+      "lastEventCounter": 50
+    },
+    {
+      "id": "wm_1776801178120_jpsrlrl",
+      "type": "file-path",
+      "content": "Kitchen.ts",
+      "source": "tool:read",
+      "timestamp": 1776801178120,
+      "relevanceScore": 2.453317796875,
+      "mentions": 1,
+      "lastEventCounter": 50
+    }
+  ],
+  "eventCounter": 50,
+  "updatedAt": "2026-04-21T19:54:09.912Z"
+}

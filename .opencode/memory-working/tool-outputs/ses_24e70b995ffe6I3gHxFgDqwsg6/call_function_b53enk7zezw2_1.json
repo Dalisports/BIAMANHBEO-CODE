@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_b53enk7zezw2_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\hooks\\use-orders.ts</path>\n<type>file</type>\n<content>\n180: \n181: export function useKitchenOrders() {\n182:   return useQuery({\n183:     queryKey: [\"/api/kitchen\"],\n184:     queryFn: async () => {\n185:       const res = await fetch(\"/api/kitchen\", { credentials: \"include\" });\n186:       if (!res.ok) throw new Error(\"Failed to fetch kitchen orders\");\n187:       return res.json() as Promise<KitchenOrder[]>;\n188:     },\n189:   });\n190: }\n191: \n192: export function useStartKitchenOrder() {\n193:   const queryClient = useQueryClient();\n194:   \n\n(Showing lines 180-194 of 389. Use offset=195 to continue.)\n</content>",
+  "timestamp": 1776800758504
+}

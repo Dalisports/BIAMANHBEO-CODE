@@ -19,7 +19,7 @@ export function useMenuItems() {
   return useQuery({
     queryKey: ["/api/products"],
     queryFn: async () => {
-      const res = await fetch("/api/products", { credentials: "include", headers: getAuthHeaders() });
+      const res = await fetch("/api/products", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch menu items");
       return res.json() as Promise<MenuItem[]>;
     },

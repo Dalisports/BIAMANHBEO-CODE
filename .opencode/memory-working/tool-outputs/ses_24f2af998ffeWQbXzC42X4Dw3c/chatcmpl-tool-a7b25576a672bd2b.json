@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-a7b25576a672bd2b",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "bash",
+  "fullOutput": "\r\n\r\n    Directory: C:\\\r\n\r\n\r\nMode                 LastWriteTime         Length Name                                                                 \r\n----                 -------------         ------ ----                                                                 \r\nd-----         4/21/2026  11:27 PM                postgresql                                                           \r\n\r\n\r\n",
+  "timestamp": 1776788872337
+}

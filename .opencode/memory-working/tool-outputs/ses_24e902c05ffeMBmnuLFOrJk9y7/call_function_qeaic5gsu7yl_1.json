@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_qeaic5gsu7yl_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\nWebSocket server initialized on /ws\n[SEED] Lỗi seed menu: TypeError: SQLite3 can only bind numbers, strings, bigints, buffers, and null\n    at PreparedQuery.values (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\src\\better-sqlite3\\session.ts:175:26)\n    at PreparedQuery.all (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\src\\better-sqlite3\\session.ts:143:21)\n    at SQLiteSelectBase.all (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\src\\sqlite-core\\query-builders\\select.ts:950:26)\n    at SQLiteSelectBase.execute (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\src\\sqlite-core\\query-builders\\select.ts:962:15)\n    at SQLiteSelectBase.then (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\src\\query-promise.ts:31:15)\n[STORAGE] Main tables created or already exist\n[STORAGE] Users table created or already exists\n[STORAGE] User profiles table created or already exists\n[STORAGE] Attendance tables created or already exists\n2:21:24 AM [express] [SCHEDULER] Đã lên lịch tự động xóa đơn bếp hoàn thành lúc 00:00 hàng ngày\n2:21:24 AM [express] serving on port 5000\n\n\n<bash_metadata>\nbash tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.\n</bash_metadata>",
+  "timestamp": 1776799312439
+}

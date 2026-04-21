@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_rvaux3xof3mk_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "grep",
+  "fullOutput": "Found 2 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts:\n  Line 289:   app.patch(\"/api/products/:id\", requireOwnerMiddleware, async (req, res) => {\r\n\n  Line 321:   app.delete(\"/api/products/:id\", requireOwnerMiddleware, async (req, res) => {\r\n",
+  "timestamp": 1776800508878
+}

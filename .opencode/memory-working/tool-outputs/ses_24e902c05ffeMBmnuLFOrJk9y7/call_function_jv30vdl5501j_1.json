@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_jv30vdl5501j_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n375:    }\n376: \n377:   async runMigrations() {\n378:     try {\n379:       await this.addIsStickyColumn();\n380:     } catch (e) {}\n381:     try {\n382:       await this.addIsPriorityColumn();\n383:     } catch (e) {}\n384:     try {\n385:       await this.createUsersTable();\n386:     } catch (e) {}\n387:     try {\n388:       await this.createUserProfilesTable();\n389:     } catch (e) {}\n390:     try {\n391:       await this.createAttendanceTables();\n392:     } catch (e) {}\n393:   }\n394: \n395:   async deleteMenuItem(id: number) {\n396:     await db.update(menuItems)\n397:       .set({ isActive: false })\n398:       .where(eq(menuItems.id, id));\n399:   }\n\n(Showing lines 375-399 of 736. Use offset=400 to continue.)\n</content>",
+  "timestamp": 1776799227443
+}

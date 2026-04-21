@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_u204bufhjrdy_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n1: import { db, sqliteClient } from \"./db\";\n2: import { \n3:   menuItems, \n4:   orders, \n5:   categories,\n6:   kitchenOrders,\n7:   paymentSettings,\n8:   settings,\n9:   users,\n10:   userProfiles,\n11:   dailyQRCodes,\n12:   attendanceRecords,\n13:   type InsertMenuItem,\n14:   type InsertOrder,\n15:   type InsertCategory,\n16:   type InsertKitchenOrder,\n17:   type InsertPaymentSetting,\n18:   type Order,\n19:   type KitchenOrder,\n20:   type PaymentSetting,\n21:   type User,\n22:   type UserProfile,\n23:   type InsertUserProfile,\n24:   type DailyQRCode,\n25:   type AttendanceRecord\n26: } from \"@shared/schema\";\n27: import { eq, inArray, and, desc, lt, ne } from \"drizzle-orm\";\n28: import { startOfDay, endOfDay, startOfToday } from \"date-fns\";\n29: \n30: export interface IStorage {\n\n(Showing lines 1-30 of 813. Use offset=31 to continue.)\n</content>",
+  "timestamp": 1776799357795
+}

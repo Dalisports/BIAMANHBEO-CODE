@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_360r93dkyuot_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\nWebSocket server initialized on /ws\n[STORAGE] Using Neon PostgreSQL - tables managed via Drizzle\n2:27:58 AM [express] [SCHEDULER] Đã lên lịch tự động xóa đơn bếp hoàn thành lúc 00:00 hàng ngày\n\u001b[2m02:27:58\u001b[22m \u001b[36m\u001b[1m[vite]\u001b[22m\u001b[39m \u001b[90m\u001b[2m(client)\u001b[22m\u001b[39m Re-optimizing dependencies because lockfile has changed\nnode:events:486\r\n      throw er; // Unhandled 'error' event\r\n      ^\r\n\r\nError: listen EADDRINUSE: address already in use 0.0.0.0:5000\r\n    at Server.setupListenHandle [as _listen2] (node:net:1948:16)\r\n    at listenInCluster (node:net:2005:12)\r\n    at node:net:2214:7\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)\r\nEmitted 'error' event on WebSocketServer instance at:\r\n    at Server.emit (node:events:508:28)\r\n    at emitErrorNT (node:net:1984:8)\r\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {\r\n  code: 'EADDRINUSE',\r\n  errno: -4091,\r\n  syscall: 'listen',\r\n  address: '0.0.0.0',\r\n  port: 5000\r\n}\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776799678930
+}

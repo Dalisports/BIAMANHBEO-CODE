@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-961183380c43cb61",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "Get-ChildItem : A parameter cannot be found that matches parameter name 'la'.\r\nAt line:1 char:4\r\n+ ls -la \"C:\\Users\\DELL\\BIAMANHBEO\"\r\n+    ~~~\r\n    + CategoryInfo          : InvalidArgument: (:) [Get-ChildItem], ParameterBindingException\r\n    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand\r\n \r\n",
+  "timestamp": 1776798595310
+}

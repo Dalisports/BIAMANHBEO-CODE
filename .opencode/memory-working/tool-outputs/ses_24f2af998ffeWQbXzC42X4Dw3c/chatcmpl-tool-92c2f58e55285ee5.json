@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-92c2f58e55285ee5",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "glob",
+  "fullOutput": "C:\\Users\\DELL\\BIAMANHBEO\\shared\\schema.ts\nC:\\Users\\DELL\\BIAMANHBEO\\shared\\routes.ts\nC:\\Users\\DELL\\BIAMANHBEO\\shared\\models\\chat.ts",
+  "timestamp": 1776788292103
+}

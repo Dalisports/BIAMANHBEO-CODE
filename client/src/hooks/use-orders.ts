@@ -182,7 +182,7 @@ export function useKitchenOrders() {
   return useQuery({
     queryKey: ["/api/kitchen"],
     queryFn: async () => {
-      const res = await fetch("/api/kitchen", { credentials: "include", headers: getAuthHeaders() });
+      const res = await fetch("/api/kitchen", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch kitchen orders");
       return res.json() as Promise<KitchenOrder[]>;
     },
@@ -233,11 +233,11 @@ export function useStartKitchenItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
+    mutationFn: async ({ kitchenOrderId, itemName, notes }: { kitchenOrderId: number; itemName: string; notes?: string }) => {
       const res = await fetch(`/api/kitchen/${kitchenOrderId}/start-item`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ itemName }),
+        body: JSON.stringify({ itemName, notes }),
         credentials: "include",
       });
       
@@ -255,11 +255,11 @@ export function useCompleteKitchenItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ kitchenOrderId, itemName }: { kitchenOrderId: number; itemName: string }) => {
+    mutationFn: async ({ kitchenOrderId, itemName, notes }: { kitchenOrderId: number; itemName: string; notes?: string }) => {
       const res = await fetch(`/api/kitchen/${kitchenOrderId}/complete-item`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ itemName }),
+        body: JSON.stringify({ itemName, notes }),
         credentials: "include",
       });
       

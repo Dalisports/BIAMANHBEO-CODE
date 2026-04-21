@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_1rq61zlcqxuh_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\nWebSocket server initialized on /ws\n[STORAGE] Main tables created or already exist\n[STORAGE] Users table created or already exists\n[STORAGE] User profiles table created or already exists\n[STORAGE] Attendance tables created or already exists\n2:22:50 AM [express] [SEED] Menu trống — đang thêm dữ liệu mặc định...\n2:22:50 AM [express] [SEED] Đã thêm 39 món ăn.\n2:22:50 AM [express] [SCHEDULER] Đã lên lịch tự động xóa đơn bếp hoàn thành lúc 00:00 hàng ngày\n2:22:51 AM [express] serving on port 5000\n\n\n<bash_metadata>\nbash tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.\n</bash_metadata>",
+  "timestamp": 1776799398842
+}

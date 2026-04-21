@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_v5dt2btduzyt_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\hooks\\use-menu.ts</path>\n<type>file</type>\n<content>\n1: import { useQuery, useMutation, useQueryClient } from \"@tanstack/react-query\";\n2: import { getAuthHeaders } from \"./use-auth\";\n3: \n4: export type MenuItem = {\n5:   id: number;\n6:   name: string;\n7:   price: number;\n8:   categoryId: number | null;\n9:   description: string | null;\n10:   image: string | null;\n11:   isAvailable: boolean;\n12:   isActive: boolean;\n13:   isSticky: boolean;\n14:   isPriority: boolean;\n15:   createdAt: Date | null;\n16: };\n17: \n18: export function useMenuItems() {\n19:   return useQuery({\n20:     queryKey: [\"/api/products\"],\n21:     queryFn: async () => {\n22:       const res = await fetch(\"/api/products\", { credentials: \"include\" });\n23:       if (!res.ok) throw new Error(\"Failed to fetch menu items\");\n24:       return res.json() as Promise<MenuItem[]>;\n25:     },\n26:   });\n27: }\n28: \n29: export function useCreateMenuItem() {\n30:   const queryClient = useQueryClient();\n\n(Showing lines 1-30 of 92. Use offset=31 to continue.)\n</content>",
+  "timestamp": 1776800753781
+}

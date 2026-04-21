@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-b89048516e1f2500",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "question",
+  "fullOutput": "User has answered your questions: \"Bạn muốn kiểm tra user nào? (User hệ thống, user PostgreSQL, hoặc user nào khác?)\"=\"user của app C:\\Users\\DELL\\BIAMANHBEO\". You can now continue with the user's answers in mind.",
+  "timestamp": 1776654429344
+}

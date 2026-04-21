@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_fuhb7dxdn67r_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n80:   clearOldCompletedKitchenOrders(): Promise<number>;\n81:   addIsStickyColumn(): Promise<void>;\n82:   addIsPriorityColumn(): Promise<void>;\n83:   runMigrations(): Promise<void>;\n84: \n85:   getPaymentSettings(): Promise<PaymentSetting[]>;\n86:   updatePaymentSetting(method: string, data: Partial<InsertPaymentSetting>): Promise<PaymentSetting>;\n87: }\n88: \n89: export class DatabaseStorage implements IStorage {\n90:   async getUsers() {\n91:     return await db.select().from(users).where(eq(users.isActive, true));\n92:   }\n93: \n94:   async createUser(user: { username: string; password: string; role: string; fullName?: string }) {\n95:     const [created] = await db.insert(users).values({\n96:       username: user.username,\n97:       password: user.password,\n98:       role: user.role,\n99:       fullName: user.fullName || null,\n\n(Showing lines 80-99 of 632. Use offset=100 to continue.)\n</content>",
+  "timestamp": 1776799659355
+}

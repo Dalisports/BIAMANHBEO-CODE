@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-bbec0e473f5b356f",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "At line:1 char:3\r\n+ if [ -f .env ]; then echo \".env exists\"; else echo \".env does not exi ...\r\n+   ~\r\nMissing '(' after 'if' in if statement.\r\nAt line:1 char:5\r\n+ if [ -f .env ]; then echo \".env exists\"; else echo \".env does not exi ...\r\n+     ~\r\nMissing type name after '['.\r\n    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException\r\n    + FullyQualifiedErrorId : MissingOpenParenthesisInIfStatement\r\n \r\n",
+  "timestamp": 1776643736616
+}

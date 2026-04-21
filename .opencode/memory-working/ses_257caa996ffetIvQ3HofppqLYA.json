@@ -1,0 +1,171 @@
+{
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "slots": {
+    "error": [
+      {
+        "id": "wm_1776656110157_lu0i3up",
+        "type": "error",
+        "content": "Error: the config for your app is missing an app name, add an app field to the fly.toml file or specify with the -a flag",
+        "source": "tool:bash",
+        "timestamp": 1776656110156,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776654884589_jkjlj5j",
+        "type": "error",
+        "content": "Column is_sticky might already exist or error: DrizzleQueryError: Failed query: ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_sticky boolean DEFAULT false",
+        "source": "tool:bash",
+        "timestamp": 1776654884586,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776654884590_kqnt6gi",
+        "type": "error",
+        "content": "  cause: error: password authentication failed for user \"postgres\"",
+        "source": "tool:bash",
+        "timestamp": 1776654884586,
+        "relevanceScore": 0,
+        "mentions": 1
+      }
+    ],
+    "decision": [],
+    "todo": [],
+    "dependency": []
+  },
+  "pool": [
+    {
+      "id": "wm_1776643675629_n2ewiq2",
+      "type": "file-path",
+      "content": "index.ts",
+      "source": "tool:read",
+      "timestamp": 1776654549716,
+      "relevanceScore": 5.459125702334873,
+      "mentions": 2,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654432729_bqu01jf",
+      "type": "file-path",
+      "content": "schema.ts",
+      "source": "tool:glob",
+      "timestamp": 1776654558416,
+      "relevanceScore": 5.265744238746102,
+      "mentions": 3,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776643675628_cfouxii",
+      "type": "file-path",
+      "content": "package.js",
+      "source": "tool:read",
+      "timestamp": 1776643675628,
+      "relevanceScore": 2.906179975571764,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776643675630_xujj9q6",
+      "type": "file-path",
+      "content": "script/build.ts",
+      "source": "tool:read",
+      "timestamp": 1776643675628,
+      "relevanceScore": 2.8880475401892207,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654451144_7q1ioik",
+      "type": "file-path",
+      "content": "drizzle.config.ts",
+      "source": "tool:read",
+      "timestamp": 1776654451143,
+      "relevanceScore": 2.8691116909980896,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654451145_9do4mle",
+      "type": "file-path",
+      "content": "./shared/schema.ts",
+      "source": "tool:read",
+      "timestamp": 1776654451143,
+      "relevanceScore": 2.81932707600043,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654539125_ehahbal",
+      "type": "file-path",
+      "content": "db.ts",
+      "source": "tool:read",
+      "timestamp": 1776654539125,
+      "relevanceScore": 2.7928937920058594,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654549717_szz00d4",
+      "type": "file-path",
+      "content": "express.js",
+      "source": "tool:read",
+      "timestamp": 1776654549716,
+      "relevanceScore": 2.58532012734375,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654549718_3jm262b",
+      "type": "file-path",
+      "content": "res.js",
+      "source": "tool:read",
+      "timestamp": 1776654549716,
+      "relevanceScore": 2.453317796875,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654554838_8ogtvc0",
+      "type": "file-path",
+      "content": "routes.ts",
+      "source": "tool:glob",
+      "timestamp": 1776654554838,
+      "relevanceScore": 2.2980209375,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654554840_92859l5",
+      "type": "file-path",
+      "content": "storage.ts",
+      "source": "tool:glob",
+      "timestamp": 1776654554838,
+      "relevanceScore": 1.900375,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654554841_uyemb2i",
+      "type": "file-path",
+      "content": "auth.ts",
+      "source": "tool:glob",
+      "timestamp": 1776654554838,
+      "relevanceScore": 1.6475,
+      "mentions": 1,
+      "lastEventCounter": 25
+    },
+    {
+      "id": "wm_1776654554841_nz0yku1",
+      "type": "file-path",
+      "content": "use-orders.ts",
+      "source": "tool:glob",
+      "timestamp": 1776654554838,
+      "relevanceScore": 1.35,
+      "mentions": 1,
+      "lastEventCounter": 25
+    }
+  ],
+  "eventCounter": 31,
+  "updatedAt": "2026-04-20T03:35:10.157Z"
+}

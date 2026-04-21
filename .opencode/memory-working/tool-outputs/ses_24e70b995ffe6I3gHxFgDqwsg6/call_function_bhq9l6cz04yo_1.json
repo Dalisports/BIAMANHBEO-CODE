@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_bhq9l6cz04yo_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n520:       .where(eq(kitchenOrders.id, kitchenOrderId));\n521:   }\n522: \n523:   async completeKitchenOrder(id: number) {\n524:     const kitchenOrder = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, id));\n525:     if (kitchenOrder[0]) {\n526:       await db.update(kitchenOrders)\n527:         .set({ status: \"Done\", completedAt: new Date() })\n528:         .where(eq(kitchenOrders.id, id));\n529: \n530:       const relatedOrder = await this.getOrder(kitchenOrder[0].orderId);\n531:       if (relatedOrder) {\n532:         await db.update(orders)\n533:           .set({ status: \"Ready\" })\n534:           .where(eq(orders.id, relatedOrder.id));\n535:       }\n536:     }\n537:   }\n538: \n539:   async completeKitchenItem(kitchenOrderId: number, itemName: string) {\n540:     const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));\n541:     if (!kitchenOrder) return;\n542: \n543:     const items = kitchenOrder.items as any[];\n544:     const updatedItems = items.map(item => {\n545:       if (item.name === itemName) {\n546:         return { ...item, cookingStatus: \"done\" };\n547:       }\n548:       return item;\n549:     });\n\n(Showing lines 520-549 of 657. Use offset=550 to continue.)\n</content>",
+  "timestamp": 1776801236542
+}

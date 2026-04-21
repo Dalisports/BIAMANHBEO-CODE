@@ -261,11 +261,11 @@ export default function Kitchen() {
   }, [pendingItems.length]);
 
   const handleStartItem = (fi: FlattenedItem) => {
-    startItem.mutate({ kitchenOrderId: fi.kitchenOrderId, itemName: fi.item.name });
+    startItem.mutate({ kitchenOrderId: fi.kitchenOrderId, itemName: fi.item.name, notes: fi.item.notes });
   };
 
   const handleCompleteItem = (item: CookingQueueItem) => {
-    completeItem.mutate({ kitchenOrderId: item.kitchenOrderId, itemName: item.name });
+    completeItem.mutate({ kitchenOrderId: item.kitchenOrderId, itemName: item.name, notes: item.notes });
   };
 
   return (
@@ -473,9 +473,7 @@ export default function Kitchen() {
                       </div>
                       <div className="space-y-1.5">
                         {group.items.map((item, idx) => {
-                          const isDone = doneItemKeys.has(
-                            `${item.orderId}-${item.kitchenOrderId}-${item.item.name}`,
-                          );
+                          const isDone = isItemDone(item);
                           return (
                             <div
                               key={idx}

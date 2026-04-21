@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_e3ycqztnm4jq_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n270:   async deleteCategory(id: number) {\n271:     await db.delete(categories).where(eq(categories.id, id));\n272:   }\n273: \n274:   async getMenuItems() {\n275:     return await db.select().from(menuItems).where(eq(menuItems.isActive, true));\n276:   }\n277: \n278:   async createMenuItem(item: InsertMenuItem) {\n279:     const [created] = await db.insert(menuItems).values(item).returning();\n280:     return created;\n281:   }\n282: \n283:   async updateMenuItem(id: number, updates: Partial<InsertMenuItem>) {\n284:     const [updated] = await db.update(menuItems)\n285:       .set(updates)\n286:       .where(eq(menuItems.id, id))\n287:       .returning();\n288:     return updated;\n289:   }\n\n(Showing lines 270-289 of 813. Use offset=290 to continue.)\n</content>",
+  "timestamp": 1776799319845
+}

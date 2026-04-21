@@ -1,7 +1,7 @@
 import { db } from "./db";
-import { 
-  menuItems, 
-  orders, 
+import {
+  menuItems,
+  orders,
   categories,
   kitchenOrders,
   paymentSettings,
@@ -24,7 +24,7 @@ import {
   type DailyQRCode,
   type AttendanceRecord
 } from "@shared/schema";
-import { eq, inArray, and, desc, lt, ne, sql } from "drizzle-orm";
+import { eq, inArray, and, desc, lt, ne } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
@@ -72,8 +72,8 @@ export interface IStorage {
   getKitchenOrders(): Promise<KitchenOrder[]>;
   startKitchenOrder(id: number): Promise<void>;
   completeKitchenOrder(id: number): Promise<void>;
-  startKitchenItem(kitchenOrderId: number, itemName: string): Promise<void>;
-  completeKitchenItem(kitchenOrderId: number, itemName: string): Promise<void>;
+  startKitchenItem(kitchenOrderId: number, itemName: string, notes?: string): Promise<void>;
+  completeKitchenItem(kitchenOrderId: number, itemName: string, notes?: string): Promise<void>;
   
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
@@ -288,111 +288,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async addIsStickyColumn() {
-    try {
-      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_sticky boolean DEFAULT false`);
-    } catch (err) {
-      console.log("Column is_sticky might already exist or error:", err);
-    }
-  }
-
-  async addIsPriorityColumn() {
-    try {
-      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_priority boolean DEFAULT false`);
-    } catch (err) {
-      console.log("Column is_priority might already exist or error:", err);
-    }
-  }
-
-  async createUsersTable() {
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS users (
-          id SERIAL PRIMARY KEY,
-          username TEXT UNIQUE NOT NULL,
-          password TEXT NOT NULL,
-          role TEXT NOT NULL DEFAULT 'employee',
-          full_name TEXT,
-          is_active BOOLEAN DEFAULT true,
-          created_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
-      console.log("[STORAGE] Users table created or already exists");
-    } catch (err) {
-      console.log("[STORAGE] Users table error:", err);
-    }
-  }
-
-  async createUserProfilesTable() {
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS user_profiles (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER UNIQUE NOT NULL,
-          full_name TEXT,
-          date_of_birth TEXT,
-          hometown TEXT,
-          id_card_number TEXT,
-          phone_number TEXT,
-          is_locked BOOLEAN DEFAULT false,
-          created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
-      console.log("[STORAGE] User profiles table created or already exists");
-    } catch (err) {
-      console.log("[STORAGE] User profiles table error:", err);
-    }
-  }
-
-  async createAttendanceTables() {
-    try {
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS daily_qr_codes (
-          id SERIAL PRIMARY KEY,
-          date TEXT UNIQUE NOT NULL,
-          qr_code TEXT NOT NULL,
-          created_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
-      await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS attendance_records (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL,
-          date TEXT NOT NULL,
-          qr_code TEXT NOT NULL,
-          check_in TIMESTAMP,
-          check_out TIMESTAMP,
-          total_hours INTEGER,
-          status TEXT NOT NULL DEFAULT 'checked_in',
-          created_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
-      console.log("[STORAGE] Attendance tables created or already exists");
-    } catch (err) {
-      console.log("[STORAGE] Attendance tables error:", err);
-    }
-  }
-
-  async runMigrations() {
-    try {
-      await this.addIsStickyColumn();
-    } catch (e) {}
-    try {
-      await this.addIsPriorityColumn();
-    } catch (e) {}
-    try {
-      await this.createUsersTable();
-    } catch (e) {}
-    try {
-      await this.createUserProfilesTable();
-    } catch (e) {}
-    try {
-      await this.createAttendanceTables();
-    } catch (e) {}
-  }
-
-  async deleteMenuItem(id: number) {
+async deleteMenuItem(id: number) {
     await db.update(menuItems)
       .set({ isActive: false })
       .where(eq(menuItems.id, id));
@@ -531,40 +427,71 @@ export class DatabaseStorage implements IStorage {
     const order = await this.getOrder(orderId);
     if (!order) throw new Error("Order not found");
     
-    const kitchenItems = (order.items as any[]).map(item => ({
-      name: item.name,
-      quantity: item.quantity,
-      notes: item.notes || null,
-      cookingStatus: "cooking"
-    }));
+    // Get all existing kitchen items for this order to calculate what's already been sent
+    const existingKitchenOrders = await db.select().from(kitchenOrders)
+      .where(eq(kitchenOrders.orderId, orderId));
 
-    const [existing] = await db.select().from(kitchenOrders)
-      .where(eq(kitchenOrders.orderId, orderId))
-      .limit(1);
+    const alreadySentMap: Record<string, number> = {};
+    for (const ko of existingKitchenOrders) {
+      const items = ko.items as any[];
+      for (const item of items) {
+        const key = `${item.name}|${item.notes || ""}`;
+        alreadySentMap[key] = (alreadySentMap[key] || 0) + item.quantity;
+      }
+    }
 
-    let result;
-    if (existing) {
+    // Calculate new items to send (the difference)
+    const itemsToSent: any[] = [];
+    for (const orderItem of (order.items as any[])) {
+      const key = `${orderItem.name}|${orderItem.notes || ""}`;
+      const sentQty = alreadySentMap[key] || 0;
+      const diff = orderItem.quantity - sentQty;
+
+      if (diff > 0) {
+        itemsToSent.push({
+          name: orderItem.name,
+          quantity: diff,
+          notes: orderItem.notes || null,
+          cookingStatus: "cooking"
+        });
+      }
+    }
+
+    if (itemsToSent.length === 0) {
+      // Nothing new to send, but ensure order status is updated if it was Pending
+      if (order.status === "Pending") {
+        await db.update(orders).set({ status: "InKitchen" }).where(eq(orders.id, orderId));
+      }
+      // Return the most recent kitchen order if any, or throw
+      if (existingKitchenOrders.length > 0) return existingKitchenOrders[0];
+      throw new Error("No items to send to kitchen");
+    }
+
+    // Check if there's an active (not Done) kitchen order to merge into
+    const activeKO = existingKitchenOrders.find(ko => ko.status !== "Done");
+
+    if (activeKO) {
+      const updatedItems = [...(activeKO.items as any[]), ...itemsToSent];
       const [updated] = await db.update(kitchenOrders)
-        .set({ items: kitchenItems, status: "Cooking" })
-        .where(eq(kitchenOrders.id, existing.id))
+        .set({ items: updatedItems, status: "Cooking" })
+        .where(eq(kitchenOrders.id, activeKO.id))
         .returning();
-      result = updated;
+      
+      await db.update(orders).set({ status: "InKitchen" }).where(eq(orders.id, orderId));
+      return updated;
     } else {
+      // Create new kitchen order
       const [created] = await db.insert(kitchenOrders).values({
         orderId: order.id,
         tableNumber: order.tableNumber,
-        items: kitchenItems,
+        items: itemsToSent,
         status: "Cooking",
         priority: "normal"
       }).returning();
-      result = created;
+
+      await db.update(orders).set({ status: "InKitchen" }).where(eq(orders.id, orderId));
+      return created;
     }
-
-    await db.update(orders)
-      .set({ status: "InKitchen" })
-      .where(eq(orders.id, orderId));
-
-    return result;
   }
 
   async getKitchenOrders() {
@@ -582,13 +509,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(kitchenOrders.id, id));
   }
 
-  async startKitchenItem(kitchenOrderId: number, itemName: string) {
+  async startKitchenItem(kitchenOrderId: number, itemName: string, notes?: string) {
     const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
     if (!kitchenOrder) return;
 
+    let found = false;
     const items = kitchenOrder.items as any[];
     const updatedItems = items.map(item => {
-      if (item.name === itemName) {
+      if (!found && item.name === itemName && (notes === undefined || item.notes === notes) && (item.cookingStatus === "pending" || !item.cookingStatus)) {
+        found = true;
         return { ...item, cookingStatus: "cooking" };
       }
       return item;
@@ -606,8 +535,12 @@ export class DatabaseStorage implements IStorage {
   async completeKitchenOrder(id: number) {
     const kitchenOrder = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, id));
     if (kitchenOrder[0]) {
+      // Mark all items as done
+      const items = kitchenOrder[0].items as any[];
+      const updatedItems = items.map(item => ({ ...item, cookingStatus: "done" }));
+
       await db.update(kitchenOrders)
-        .set({ status: "Done", completedAt: new Date() })
+        .set({ status: "Done", items: updatedItems, completedAt: new Date() })
         .where(eq(kitchenOrders.id, id));
 
       const relatedOrder = await this.getOrder(kitchenOrder[0].orderId);
@@ -619,13 +552,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async completeKitchenItem(kitchenOrderId: number, itemName: string) {
+  async completeKitchenItem(kitchenOrderId: number, itemName: string, notes?: string) {
     const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
     if (!kitchenOrder) return;
 
+    let found = false;
     const items = kitchenOrder.items as any[];
     const updatedItems = items.map(item => {
-      if (item.name === itemName) {
+      if (!found && item.name === itemName && (notes === undefined || (item.notes || null) === (notes || null)) && item.cookingStatus !== "done") {
+        found = true;
         return { ...item, cookingStatus: "done" };
       }
       return item;
@@ -635,17 +570,21 @@ export class DatabaseStorage implements IStorage {
       .set({ items: updatedItems })
       .where(eq(kitchenOrders.id, kitchenOrderId));
 
-    const allDone = updatedItems.every(item => item.cookingStatus === "done");
-    if (allDone) {
+    // If all items in this specific kitchen order are done, mark the kitchen order as Done
+    if (updatedItems.every(item => item.cookingStatus === "done")) {
       await db.update(kitchenOrders)
         .set({ status: "Done", completedAt: new Date() })
         .where(eq(kitchenOrders.id, kitchenOrderId));
 
-      const relatedOrder = await this.getOrder(kitchenOrder.orderId);
-      if (relatedOrder) {
-        await db.update(orders)
-          .set({ status: "Ready" })
-          .where(eq(orders.id, relatedOrder.id));
+      // Check if ALL kitchen orders for this orderId are Done
+      const allKOs = await db.select().from(kitchenOrders).where(eq(kitchenOrders.orderId, kitchenOrder.orderId));
+      if (allKOs.every(ko => ko.status === "Done")) {
+        const relatedOrder = await this.getOrder(kitchenOrder.orderId);
+        if (relatedOrder) {
+          await db.update(orders)
+            .set({ status: "Ready" })
+            .where(eq(orders.id, relatedOrder.id));
+        }
       }
     }
   }
@@ -730,6 +669,10 @@ export class DatabaseStorage implements IStorage {
       return created;
     }
     return updated;
+  }
+
+  async runMigrations() {
+    console.log("[STORAGE] Using Neon PostgreSQL - tables managed via Drizzle");
   }
 }
 

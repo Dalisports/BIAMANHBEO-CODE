@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-a1b13855a501943c",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "bash",
+  "fullOutput": "No config path provided, using default 'drizzle.config.ts'\nReading config file 'C:\\Users\\DELL\\BIAMANHBEO\\drizzle.config.ts'\n[⣷] Pulling schema from database...\n\u001b[2K\u001b[1G[✓] Pulling schema from database...\n\n[i] No changes detected\n",
+  "timestamp": 1776789241828
+}

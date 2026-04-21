@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_tvd18bzmsbzk_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts</path>\n<type>file</type>\n<content>\n560:     const todayRevenue = paidOrders.reduce((acc, o) => acc + o.totalAmount, 0);\n561:     const completedOrders = paidOrders.length;\n562:     const pendingOrders = todayOrders.filter(o => o.status === \"Pending\" || o.status === \"InKitchen\" || o.status === \"Ready\").length;\n563:     const kitchenActive = (await this.getActiveKitchenOrders()).length;\n564: \n565:     return {\n566:       todayRevenue,\n567:       completedOrders,\n568:       pendingOrders,\n569:       kitchenActive\n570:     };\n571:   }\n572: \n573:   async getBestSellers() {\n574:     const allOrders = await db.select().from(orders);\n575:     \n576:     const itemCounts: Record<string, number> = {};\n577:     \n578:     allOrders.forEach(order => {\n579:       const items = order.items as any[];\n580:       items.forEach(item => {\n581:         if (!itemCounts[item.name]) {\n582:           itemCounts[item.name] = 0;\n583:         }\n584:         itemCounts[item.name] += item.quantity;\n585:       });\n586:     });\n587: \n588:     return Object.entries(itemCounts)\n589:       .map(([name, totalQuantity]) => ({ name, totalQuantity }))\n\n(Showing lines 560-589 of 632. Use offset=590 to continue.)\n</content>",
+  "timestamp": 1776799665495
+}

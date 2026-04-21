@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-976c1936532fcc2d",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "bash",
+  "fullOutput": "No config path provided, using default 'drizzle.config.ts'\nReading config file 'C:\\Users\\DELL\\BIAMANHBEO\\drizzle.config.ts'\nPlease install either 'better-sqlite3' or '@libsql/client' for Drizzle Kit to connect to SQLite databases\n",
+  "timestamp": 1776789215538
+}

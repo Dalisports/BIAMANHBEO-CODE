@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_lonujr2k09i8_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "grep",
+  "fullOutput": "Found 6 matches\nC:\\Users\\DELL\\BIAMANHBEO\\shared\\routes.ts:\n  Line 67:   products: {\r\n\n  Line 70:       path: '/api/products' as const,\r\n\n  Line 77:       path: '/api/products' as const,\r\n\n  Line 86:       path: '/api/products/:id' as const,\r\n\n  Line 95:       path: '/api/products/:id' as const,\r\n\n  Line 187: export type MenuItemInput = z.infer<typeof api.products.create.input>;\r\n",
+  "timestamp": 1776800533622
+}

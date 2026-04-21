@@ -9,6 +9,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
+import GauAssistant from "@/pages/GauAssistant";
 import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
 import Kitchen from "@/pages/Kitchen";
@@ -61,6 +62,7 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/tables" component={Tables} />
           <Route path="/home" component={Home} />
+          <Route path="/gau-assistant" component={GauAssistant} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
           <Route path="/attendance" component={Attendance} />

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-a94e0e971b5f20a6",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "psql : The term 'psql' is not recognized as the name of a cmdlet, function, script file, or operable program. Check \r\nthe spelling of the name, or if a path was included, verify that the path is correct and try again.\r\nAt line:1 char:1\r\n+ psql -U postgres -h localhost -d postgres\r\n+ ~~~~\r\n    + CategoryInfo          : ObjectNotFound: (psql:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776654357418
+}

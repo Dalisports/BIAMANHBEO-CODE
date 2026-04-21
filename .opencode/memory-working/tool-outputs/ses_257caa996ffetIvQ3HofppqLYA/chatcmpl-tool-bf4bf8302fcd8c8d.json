@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-bf4bf8302fcd8c8d",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "\u001b[33mWARN\u001b[0m WARNING the config file at 'C:\\Users\\DELL\\BIAMANHBEO\\fly.toml' is not valid: json: cannot unmarshal object into Go struct field Config.app of type string\nError: the config for your app is missing an app name, add an app field to the fly.toml file or specify with the -a flag\n",
+  "timestamp": 1776656110155
+}

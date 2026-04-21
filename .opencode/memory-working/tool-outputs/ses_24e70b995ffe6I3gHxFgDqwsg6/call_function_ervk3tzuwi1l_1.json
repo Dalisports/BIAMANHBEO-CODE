@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_ervk3tzuwi1l_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "grep",
+  "fullOutput": "Found 6 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts:\n  Line 560:       await storage.completeKitchenOrder(id);\r\n\n  Line 598:       const deletedCount = await storage.clearOldCompletedKitchenOrders();\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts:\n  Line 74:   completeKitchenOrder(id: number): Promise<void>;\r\n\n  Line 80:   clearOldCompletedKitchenOrders(): Promise<number>;\r\n\n  Line 523:   async completeKitchenOrder(id: number) {\r\n\n  Line 619:   async clearOldCompletedKitchenOrders(): Promise<number> {\r\n",
+  "timestamp": 1776801226082
+}

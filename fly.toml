@@ -1,9 +1,8 @@
+app = "bia-manh-beo"
+
 [build]
   builder = "docker"
   image = "node:20-alpine"
-
-[app]
-  name = "bia-manh-beo"
 
 [http]
   port = 8080

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_85hamlbl5hs2_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\shared\\routes.ts</path>\n<type>file</type>\n<content>\n1: import { z } from \"zod\";\n2: import { insertMenuItemSchema, insertOrderSchema, menuItems, orders, loginSchema } from \"./schema\";\n3: \n4: export const errorSchemas = {\n5:   validation: z.object({\n6:     message: z.string(),\n7:     field: z.string().optional(),\n8:   }),\n9:   notFound: z.object({\n10:     message: z.string(),\n11:   }),\n12:   internal: z.object({\n13:     message: z.string(),\n14:   }),\n15: };\n16: \n17: export const api = {\n18:   auth: {\n19:     login: {\n20:       method: 'POST' as const,\n\n(Showing lines 1-20 of 191. Use offset=21 to continue.)\n</content>",
+  "timestamp": 1776799617900
+}

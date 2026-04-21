@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_8kw58p5t55c2_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\.env</path>\n<type>file</type>\n<content>\n1: # Database (SQLite)\n2: DATABASE_URL=./biamanhbeo.sqlite\n3: \n4: # OpenAI (optional)\n5: AI_INTEGRATIONS_OPENAI_API_KEY=your_openai_api_key\n6: AI_INTEGRATIONS_OPENAI_BASE_URL=https://api.openai.com/v1\n7: \n8: # OpenRouter (for Gấu Assistant)\n9: OPENROUTER_API_KEY=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\n10: \n11: # Server\n12: PORT=5000\n13: NODE_ENV=development\n\n(End of file - total 13 lines)\n</content>",
+  "timestamp": 1776799601272
+}

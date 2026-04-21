@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useAuth } from "@/hooks/use-auth";
+import { useWebSocket } from "@/hooks/use-websocket";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { 
@@ -67,6 +68,7 @@ async function autoSendToKitchen(orderId: number) {
 }
 
 export default function Tables() {
+  useWebSocket();
   const { data: orders, isLoading: ordersLoading } = useOrders();
   const { data: menuItems, isLoading: menuLoading } = useMenuItems();
   const { data: paymentSettings } = usePaymentSettings();

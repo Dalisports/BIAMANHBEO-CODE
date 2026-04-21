@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-a1ef828e7123f689",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\fly.toml</path>\n<type>file</type>\n<content>\n1: [build]\n2:   builder = \"docker\"\n3:   image = \"node:20-alpine\"\n4: \n5: [app]\n6:   name = \"bia-manh-beo\"\n7: \n8: [http]\n9:   port = 8080\n10:   force_https = true\n11: \n12: [[services]]\n13:   protocol = \"tcp\"\n14:   internal_port = 8080\n15:   processes = [\"app\"]\n16: \n17: [[services.ports]]\n18:   port = 80\n19:   handlers = [\"http\"]\n20: \n21: [[services.ports]]\n22:   port = 443\n23:   handlers = [\"tls\", \"http\"]\n24: \n25: [env]\n26:   NODE_ENV = \"production\"\n27:   PORT = \"8080\"\n\n(End of file - total 27 lines)\n</content>",
+  "timestamp": 1776656048283
+}

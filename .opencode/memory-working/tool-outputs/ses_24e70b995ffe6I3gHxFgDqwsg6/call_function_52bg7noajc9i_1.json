@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_52bg7noajc9i_1",
+  "sessionID": "ses_24e70b995ffe6I3gHxFgDqwsg6",
+  "tool": "grep",
+  "fullOutput": "Found 5 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts:\n  Line 517:       const kitchenOrder = await storage.sendToKitchen(id);\r\n\n  Line 889:         await storage.sendToKitchen(parsedResponse.data.orderId);\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\server\\storage.ts:\n  Line 71:   sendToKitchen(orderId: number): Promise<KitchenOrder>;\r\n\n  Line 426:   async sendToKitchen(orderId: number) {\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\server\\gau_assistant.ts:\n  Line 153:           const kitchenOrder = await storage.sendToKitchen(Number(id));\n",
+  "timestamp": 1776801210262
+}

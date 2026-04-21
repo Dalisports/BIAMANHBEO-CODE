@@ -1,0 +1,181 @@
+{
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "slots": {
+    "error": [
+      {
+        "id": "wm_1776789335051_m8rhp1a",
+        "type": "error",
+        "content": "Column is_sticky might already exist or error: TypeError: db.execute is not a function",
+        "source": "tool:bash",
+        "timestamp": 1776789335050,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776789335052_vfpvdrw",
+        "type": "error",
+        "content": "Column is_priority might already exist or error: TypeError: db.execute is not a function",
+        "source": "tool:bash",
+        "timestamp": 1776789335050,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776789335053_ahhf5bd",
+        "type": "error",
+        "content": "[STORAGE] Users table error: TypeError: db.execute is not a function",
+        "source": "tool:bash",
+        "timestamp": 1776789335050,
+        "relevanceScore": 0,
+        "mentions": 1
+      }
+    ],
+    "decision": [],
+    "todo": [],
+    "dependency": []
+  },
+  "pool": [
+    {
+      "id": "wm_1776788269799_0uzaiqb",
+      "type": "file-path",
+      "content": "index.ts",
+      "source": "tool:read",
+      "timestamp": 1776789160301,
+      "relevanceScore": 5.961448391023389,
+      "mentions": 4,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788907991_l0mzo0i",
+      "type": "file-path",
+      "content": "db.ts",
+      "source": "tool:glob",
+      "timestamp": 1776789167608,
+      "relevanceScore": 5.2050028469909515,
+      "mentions": 4,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788277481_lu9j5m8",
+      "type": "file-path",
+      "content": "routes.ts",
+      "source": "tool:read",
+      "timestamp": 1776788302063,
+      "relevanceScore": 4.79741701520307,
+      "mentions": 3,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788661857_rbaydc8",
+      "type": "file-path",
+      "content": "drizzle.config.ts",
+      "source": "tool:glob",
+      "timestamp": 1776788974484,
+      "relevanceScore": 4.663367657485287,
+      "mentions": 3,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788376068_zly5nsi",
+      "type": "file-path",
+      "content": "package.js",
+      "source": "tool:read",
+      "timestamp": 1776789160301,
+      "relevanceScore": 4.488060955719486,
+      "mentions": 3,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788269801_gz3ghuv",
+      "type": "file-path",
+      "content": "res.js",
+      "source": "tool:read",
+      "timestamp": 1776788277480,
+      "relevanceScore": 3.1999981570534812,
+      "mentions": 2,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788292104_ncc0306",
+      "type": "file-path",
+      "content": "schema.ts",
+      "source": "tool:glob",
+      "timestamp": 1776788771206,
+      "relevanceScore": 3.1446975176443264,
+      "mentions": 2,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788376070_x3z9pu2",
+      "type": "file-path",
+      "content": "script/build.ts",
+      "source": "tool:read",
+      "timestamp": 1776789160301,
+      "relevanceScore": 2.667871334780904,
+      "mentions": 2,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788730644_tx4xmz7",
+      "type": "file-path",
+      "content": "storage.ts",
+      "source": "tool:read",
+      "timestamp": 1776789358699,
+      "relevanceScore": 2.0880158077520026,
+      "mentions": 2,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788269801_eu86g14",
+      "type": "file-path",
+      "content": "express.js",
+      "source": "tool:read",
+      "timestamp": 1776788269799,
+      "relevanceScore": 1.6004674377947405,
+      "mentions": 1,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788292106_ryboyxu",
+      "type": "file-path",
+      "content": "chat.ts",
+      "source": "tool:glob",
+      "timestamp": 1776788292104,
+      "relevanceScore": 1.5991266056979585,
+      "mentions": 1,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788699584_s85n5im",
+      "type": "file-path",
+      "content": "./shared/schema.ts",
+      "source": "tool:read",
+      "timestamp": 1776788699583,
+      "relevanceScore": 1.59236470391838,
+      "mentions": 1,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776788764613_llqj2ym",
+      "type": "file-path",
+      "content": "build.ts",
+      "source": "tool:read",
+      "timestamp": 1776788764612,
+      "relevanceScore": 1.5841892950598864,
+      "mentions": 1,
+      "lastEventCounter": 52
+    },
+    {
+      "id": "wm_1776789160304_mgobgm3",
+      "type": "file-path",
+      "content": "postcss.config.js",
+      "source": "tool:read",
+      "timestamp": 1776789160301,
+      "relevanceScore": 1.099002171875,
+      "mentions": 1,
+      "lastEventCounter": 52
+    }
+  ],
+  "eventCounter": 52,
+  "updatedAt": "2026-04-21T16:35:58.699Z"
+}

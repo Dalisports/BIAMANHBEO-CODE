@@ -1,0 +1,141 @@
+{
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "slots": {
+    "error": [
+      {
+        "id": "wm_1776799678932_wf0n5ir",
+        "type": "error",
+        "content": "      throw er; // Unhandled 'error' event\r",
+        "source": "tool:bash",
+        "timestamp": 1776799678931,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776799678932_f9c9kaq",
+        "type": "error",
+        "content": "Error: listen EADDRINUSE: address already in use 0.0.0.0:5000\r",
+        "source": "tool:bash",
+        "timestamp": 1776799678931,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776799678933_yaslmz5",
+        "type": "error",
+        "content": "Emitted 'error' event on WebSocketServer instance at:\r",
+        "source": "tool:bash",
+        "timestamp": 1776799678931,
+        "relevanceScore": 0,
+        "mentions": 1
+      }
+    ],
+    "decision": [],
+    "todo": [],
+    "dependency": []
+  },
+  "pool": [
+    {
+      "id": "wm_1776798808716_k9qom1q",
+      "type": "file-path",
+      "content": "storage.ts",
+      "source": "tool:read",
+      "timestamp": 1776799668400,
+      "relevanceScore": 21.620940070750034,
+      "mentions": 11,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776799173249_sq5ogde",
+      "type": "file-path",
+      "content": "schema.ts",
+      "source": "tool:glob",
+      "timestamp": 1776799640326,
+      "relevanceScore": 8.246001322470018,
+      "mentions": 4,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798614848_uf6q1em",
+      "type": "file-path",
+      "content": "index.ts",
+      "source": "tool:read",
+      "timestamp": 1776798673364,
+      "relevanceScore": 5.019332233163762,
+      "mentions": 2,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798614849_5kuuqst",
+      "type": "file-path",
+      "content": "express.js",
+      "source": "tool:read",
+      "timestamp": 1776798614847,
+      "relevanceScore": 2.511371914978485,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798614849_owtm22v",
+      "type": "file-path",
+      "content": "res.js",
+      "source": "tool:read",
+      "timestamp": 1776798614847,
+      "relevanceScore": 2.5106441565875346,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798673364_2gcl5jl",
+      "type": "file-path",
+      "content": "package.js",
+      "source": "tool:read",
+      "timestamp": 1776798673364,
+      "relevanceScore": 2.5097879702452395,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798673366_stmpe4s",
+      "type": "file-path",
+      "content": "script/build.ts",
+      "source": "tool:read",
+      "timestamp": 1776798673364,
+      "relevanceScore": 2.507595659195764,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798673366_obmj4zv",
+      "type": "file-path",
+      "content": "postcss.config.js",
+      "source": "tool:read",
+      "timestamp": 1776798673364,
+      "relevanceScore": 2.506201502725509,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776798829518_bc8dk88",
+      "type": "file-path",
+      "content": "db.ts",
+      "source": "tool:read",
+      "timestamp": 1776798829517,
+      "relevanceScore": 2.5031501048461484,
+      "mentions": 1,
+      "lastEventCounter": 42
+    },
+    {
+      "id": "wm_1776799617901_7c6regg",
+      "type": "file-path",
+      "content": "routes.ts",
+      "source": "tool:read",
+      "timestamp": 1776799617901,
+      "relevanceScore": 2.146255296875,
+      "mentions": 1,
+      "lastEventCounter": 42
+    }
+  ],
+  "eventCounter": 45,
+  "updatedAt": "2026-04-21T19:27:58.933Z"
+}

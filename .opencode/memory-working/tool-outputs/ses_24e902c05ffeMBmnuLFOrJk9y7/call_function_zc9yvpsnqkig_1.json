@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_zc9yvpsnqkig_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\nWebSocket server initialized on /ws\nC:\\Users\\DELL\\BIAMANHBEO\\index.ts:129\r\n  await storage.runMigrations();\r\n                ^\r\n\r\nTypeError: storage.runMigrations is not a function\r\n    at <anonymous> (C:\\Users\\DELL\\BIAMANHBEO\\index.ts:129:17)\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776799651020
+}

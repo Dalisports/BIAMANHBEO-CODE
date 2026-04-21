@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_kqoipr9igj36_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\shared\\schema.ts</path>\n<type>file</type>\n<content>\n130: export type DailyQRCode = typeof dailyQRCodes.$inferSelect;\n131: export type AttendanceRecord = typeof attendanceRecords.$inferSelect;\n132: \n133: export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });\n134: export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });\n135: export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });\n\n(End of file - total 135 lines)\n</content>",
+  "timestamp": 1776799640325
+}

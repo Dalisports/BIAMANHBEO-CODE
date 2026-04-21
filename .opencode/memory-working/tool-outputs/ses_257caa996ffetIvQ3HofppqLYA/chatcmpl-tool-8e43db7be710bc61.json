@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-8e43db7be710bc61",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 db:push\n> drizzle-kit push\n\nNo config path provided, using default 'drizzle.config.ts'\nReading config file 'C:\\Users\\DELL\\BIAMANHBEO\\drizzle.config.ts'\nUsing 'pg' driver for database querying\n[⣷] Pulling schema from database...\nerror: password authentication failed for user \"postgres\"\n    at C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Object.query (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\drizzle-kit\\bin.cjs:80622:26)\n    at async fromDatabase2 (C:\\Users\\DELL\\BIAMANHBEO\\node_modules\\drizzle-kit\\bin.cjs:19276:25) {\n  length: 104,\n  severity: 'FATAL',\n  code: '28P01',\n  detail: undefined,\n  hint: undefined,\n  position: undefined,\n  internalPosition: undefined,\n  internalQuery: undefined,\n  where: undefined,\n  schema: undefined,\n  table: undefined,\n  column: undefined,\n  dataType: undefined,\n  constraint: undefined,\n  file: 'auth.c',\n  line: '320',\n  routine: 'auth_failed'\n}\n",
+  "timestamp": 1776654297503
+}

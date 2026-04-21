@@ -17,6 +17,7 @@ const BASE_NAV_ITEMS = [
   { href: "/", label: "Bàn", icon: LayoutGrid },
   { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
   { href: "/profile", label: "Cá Nhân", icon: User },
+  { href: "/gau-assistant", label: "Gấu Assistant", icon: MessageSquare },
 ];
 
 const EMPLOYEE_NAV_ITEMS = [
@@ -24,7 +25,6 @@ const EMPLOYEE_NAV_ITEMS = [
 ];
 
 const OWNER_NAV_ITEMS = [
-  { href: "/home", label: "Trợ Lý AI", icon: MessageSquare },
   { href: "/kitchen", label: "Bếp", icon: ChefHat },
   { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
   { href: "/history", label: "Lịch Sử", icon: History },

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-83fde551f1e36f0f",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "bash",
+  "fullOutput": "At line:1 char:31\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\" && npm run dev\r\n+                               ~~\r\nThe token '&&' is not a valid statement separator in this version.\r\n    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException\r\n    + FullyQualifiedErrorId : InvalidEndOfLine\r\n \r\n",
+  "timestamp": 1776798677111
+}

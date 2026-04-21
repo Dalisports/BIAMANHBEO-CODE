@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-93cc1d25433be5d8",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\n\r\nnode:internal/modules/run_main:107\r\n    triggerUncaughtException(\r\n    ^\r\nError [ERR_MODULE_NOT_FOUND]: Cannot find package '$env' imported from C:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts\r\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\r\n    at packageResolve (node:internal/modules/esm/resolve:768:81)\r\n    at moduleResolve (node:internal/modules/esm/resolve:859:18)\r\n    at defaultResolve (node:internal/modules/esm/resolve:991:11)\r\n    at nextResolve (node:internal/modules/esm/hooks:785:28)\r\n    at resolveBase (file:///C:/Users/DELL/BIAMANHBEO/node_modules/tsx/dist/esm/index.mjs?1776789248106:2:3744)\r\n    at resolveDirectory (file:///C:/Users/DELL/BIAMANHBEO/node_modules/tsx/dist/esm/index.mjs?1776789248106:2:4243)\r\n    at resolveTsPaths (file:///C:/Users/DELL/BIAMANHBEO/node_modules/tsx/dist/esm/index.mjs?1776789248106:2:4984)\r\n    at async resolve (file:///C:/Users/DELL/BIAMANHBEO/node_modules/tsx/dist/esm/index.mjs?1776789248106:2:5355)\r\n    at async nextResolve (node:internal/modules/esm/hooks:785:22) {\r\n  code: 'ERR_MODULE_NOT_FOUND'\r\n}\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776789248609
+}

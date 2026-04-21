@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-bf9df6070bf2c9f8",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": ".env does not exist\r\n",
+  "timestamp": 1776643742772
+}

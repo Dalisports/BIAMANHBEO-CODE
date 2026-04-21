@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_5fzpyjen71fa_1",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "grep",
+  "fullOutput": "Found 12 matches\nC:\\Users\\DELL\\BIAMANHBEO\\shared\\schema.ts:\n  Line 5: export const categories = pgTable(\"categories\", {\r\n\n  Line 19: export const menuItems = pgTable(\"menu_items\", {\r\n\n  Line 23:   categoryId: integer(\"category_id\").references(() => categories.id),\r\n\n  Line 33: export const orders = pgTable(\"orders\", {\r\n\n  Line 49: export const kitchenOrders = pgTable(\"kitchen_orders\", {\r\n\n  Line 51:   orderId: integer(\"order_id\").notNull().references(() => orders.id),\r\n\n  Line 133: export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });\r\n\n  Line 134: export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });\r\n\n  Line 135: export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });\r\n\n  Line 139: export type Category = typeof categories.$inferSelect;\r\n\n  Line 142: export type MenuItem = typeof menuItems.$inferSelect;\r\n\n  Line 160: export type Order = typeof orders.$inferSelect;\r\n",
+  "timestamp": 1776799177270
+}

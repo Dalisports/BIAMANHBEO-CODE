@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-b27440afe0994a6b",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "The 'fly auth token' command is deprecated. Use 'fly tokens create' instead.\nfm2_lJPECAAAAAAAEgWpxBA6v7MIW8OBTQbGkpN+dSwewrVodHRwczovL2FwaS5mbHkuaW8vdjGUAJLOABb/iB8Lk7lodHRwczovL2FwaS5mbHkuaW8vYWFhL3YxxDx2cOXsSL4GmzYVXUZJFUv/PJu9mJR18IAfLIX2EakD9dymCJc4DCRFE9/7Q97vlnTjGkeu7veL7Gwo7RrETs0qbkXPBkVfTNWiOCdjdxtm4rsIPYfAfkZ3Z1Ul0SQU776BSTUNSLoC4dlYaWujht0TG+CkvwcIxddzx35L2nMhJJglG06xO7mVbsIB0MQgK0HGz/CROieyFf0uYj6QspJLkW+t1+xIPaN/sEmQCm4=,fm2_lJPETs0qbkXPBkVfTNWiOCdjdxtm4rsIPYfAfkZ3Z1Ul0SQU776BSTUNSLoC4dlYaWujht0TG+CkvwcIxddzx35L2nMhJJglG06xO7mVbsIB0MQQzKpdZKUc3Rt47xWFzcnfRMO5aHR0cHM6Ly9hcGkuZmx5LmlvL2FhYS92MZYEks5p5Z6hzmnloRcXzgAWDo4Kkc4AFg6OxCD08hsh4d/qHopf6rI9MTlhUIXnZkCQc2u3cc2vHxwEVQ==,fo1_SpO0jOHi_optVY593ueWVhkyiKavPUlnQh5bXUiA1n8\n",
+  "timestamp": 1776656063670
+}

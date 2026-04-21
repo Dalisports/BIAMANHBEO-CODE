@@ -569,8 +569,8 @@ export async function registerRoutes(
   app.post("/api/kitchen/:id/start-item", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { itemName } = req.body;
-      await storage.startKitchenItem(id, itemName);
+      const { itemName, notes } = req.body;
+      await storage.startKitchenItem(id, itemName, notes);
       const order = await storage.getKitchenOrder(id);
       broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
       res.json({ success: true });
@@ -582,8 +582,8 @@ export async function registerRoutes(
   app.post("/api/kitchen/:id/complete-item", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { itemName } = req.body;
-      await storage.completeKitchenItem(id, itemName);
+      const { itemName, notes } = req.body;
+      await storage.completeKitchenItem(id, itemName, notes);
       const order = await storage.getKitchenOrder(id);
       broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
       res.json({ success: true });
@@ -648,7 +648,7 @@ export async function registerRoutes(
     res.json(cats);
   });
 
-  app.get("/api/settings/:key", requireOwnerMiddleware, async (req, res) => {
+  app.get("/api/settings/:key", async (req, res) => {
     try {
       const key = req.params.key;
       const setting = await storage.getSetting(key);

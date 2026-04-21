@@ -1,5 +1,7 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./server/routes";
+import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { serveStatic } from "./server/static";
 import { createServer } from "http";
 import { initWebSocket } from "./server/websocket";
@@ -122,6 +124,7 @@ async function seedMenuIfEmpty() {
 
 (async () => {
   await registerRoutes(httpServer, app);
+  registerGauAssistantRoutes(app);
   initWebSocket(httpServer);
   await storage.runMigrations();
   await seedMenuIfEmpty();

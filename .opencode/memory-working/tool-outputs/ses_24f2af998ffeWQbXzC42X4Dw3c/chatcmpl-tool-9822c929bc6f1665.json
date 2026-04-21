@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-9822c929bc6f1665",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\docker-compose.yml</path>\n<type>file</type>\n<content>\n1: version: '3.8'\n2: \n3: services:\n4:   postgres:\n5:     image: postgres:16\n6:     container_name: bia_db\n7:     environment:\n8:       POSTGRES_USER: postgres\n9:       POSTGRES_PASSWORD: password\n10:       POSTGRES_DB: biamanhbeo\n11:     ports:\n12:       - \"5432:5432\"\n13:     volumes:\n14:       - postgres_data:/var/lib/postgresql/data\n15: \n16: volumes:\n17:   postgres_data:\n\n(End of file - total 17 lines)\n</content>",
+  "timestamp": 1776788621421
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-9c914b1506651705",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts</path>\n<type>file</type>\n<content>\n1: import { drizzle } from \"drizzle-orm/node-postgres\";\n2: import pg from \"pg\";\n3: import * as schema from \"@shared/schema\";\n4: \n5: const { Pool } = pg;\n6: \n7: if (!process.env.DATABASE_URL) {\n8:   throw new Error(\n9:     \"DATABASE_URL must be set. Did you forget to provision a database?\",\n10:   );\n11: }\n12: \n13: export const pool = new Pool({ connectionString: process.env.DATABASE_URL });\n14: export const db = drizzle(pool, { schema });\n\n(End of file - total 14 lines)\n</content>",
+  "timestamp": 1776789142436
+}

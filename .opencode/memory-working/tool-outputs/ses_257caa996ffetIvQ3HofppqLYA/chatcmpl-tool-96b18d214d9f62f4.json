@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-96b18d214d9f62f4",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 dev\n> cross-env NODE_ENV=development npx tsx index.ts\n\nC:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts:8\r\n  throw new Error(\r\n        ^\r\n\r\nError: DATABASE_URL must be set. Did you forget to provision a database?\r\n    at <anonymous> (C:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts:8:9)\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776654723003
+}

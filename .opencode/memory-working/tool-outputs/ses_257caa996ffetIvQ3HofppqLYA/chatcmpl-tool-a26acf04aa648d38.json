@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-a26acf04aa648d38",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\.env.example</path>\n<type>file</type>\n<content>\n1: # Database\n2: DATABASE_URL=postgresql://postgres:password@localhost:5432/dbname\n3: \n4: # OpenAI (optional)\n5: AI_INTEGRATIONS_OPENAI_API_KEY=your_openai_api_key\n6: AI_INTEGRATIONS_OPENAI_BASE_URL=https://api.openai.com/v1\n7: \n8: # Server\n9: PORT=5000\n10: NODE_ENV=development\n\n(End of file - total 10 lines)\n</content>",
+  "timestamp": 1776643751688
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-95bb4b0d3e727607",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "\r\nStatus   Name               DisplayName                           \r\n------   ----               -----------                           \r\nRunning  postgresql-x64-18  postgresql-x64-18 - PostgreSQL Serv...\r\n\r\n\r\n",
+  "timestamp": 1776654324051
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-8bd1ea0dbf6e1687",
+  "sessionID": "ses_257caa996ffetIvQ3HofppqLYA",
+  "tool": "bash",
+  "fullOutput": "# Database\r\nDATABASE_URL=postgresql://postgres:password@localhost:5432/dbname\r\n\r\n# OpenAI (optional)\r\nAI_INTEGRATIONS_OPENAI_API_KEY=your_openai_api_key\r\nAI_INTEGRATIONS_OPENAI_BASE_URL=https://api.openai.com/v1\r\n\r\n# Server\r\nPORT=5000\r\nNODE_ENV=development\r\n",
+  "timestamp": 1776654531338
+}

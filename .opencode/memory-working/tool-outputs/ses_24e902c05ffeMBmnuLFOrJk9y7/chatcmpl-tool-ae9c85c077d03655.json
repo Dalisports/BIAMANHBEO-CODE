@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-ae9c85c077d03655",
+  "sessionID": "ses_24e902c05ffeMBmnuLFOrJk9y7",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts</path>\n<type>file</type>\n<content>\n1: import { drizzle } from \"drizzle-orm/better-sqlite3\";\n2: import Database from \"better-sqlite3\";\n3: import * as schema from \"@shared/schema\";\n4: \n5: const sqlite = new Database(process.env.DATABASE_URL?.substring(2) || \"./biamanhbeo.sqlite\");\n6: export const db = drizzle(sqlite);\n7: \n8: // Also export the sqlite instance for direct access if needed\n9: export const sqliteClient = sqlite;\n\n(End of file - total 9 lines)\n</content>",
+  "timestamp": 1776798829517
+}

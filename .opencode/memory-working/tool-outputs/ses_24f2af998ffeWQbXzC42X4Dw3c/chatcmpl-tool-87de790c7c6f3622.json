@@ -1,0 +1,7 @@
+{
+  "callID": "chatcmpl-tool-87de790c7c6f3622",
+  "sessionID": "ses_24f2af998ffeWQbXzC42X4Dw3c",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\drizzle.config.ts</path>\n<type>file</type>\n<content>\n1: import { defineConfig } from \"drizzle-kit\";\n2: \n3: if (!process.env.DATABASE_URL) {\n4:   throw new Error(\"DATABASE_URL, ensure the database is provisioned\");\n5: }\n6: \n7: export default defineConfig({\n8:   out: \"./migrations\",\n9:   schema: \"./shared/schema.ts\",\n10:   dialect: \"postgresql\",\n11:   dbCredentials: {\n12:     url: process.env.DATABASE_URL,\n13:   },\n14: });\n\n(End of file - total 14 lines)\n</content>",
+  "timestamp": 1776788699582
+}
