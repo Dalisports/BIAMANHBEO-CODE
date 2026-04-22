@@ -1,26 +1,23 @@
-app = "bia-manh-beo"
+# fly.toml app configuration file generated for biamanhbeo-code on 2026-04-22T07:44:42Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'biamanhbeo-code'
+primary_region = 'nrt'
 
 [build]
-  builder = "docker"
-  image = "node:20-alpine"
 
-[http]
-  port = 8080
-  force_https = true
-
-[[services]]
-  protocol = "tcp"
+[http_service]
   internal_port = 8080
-  processes = ["app"]
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
-[[services.ports]]
-  port = 80
-  handlers = ["http"]
-
-[[services.ports]]
-  port = 443
-  handlers = ["tls", "http"]
-
-[env]
-  NODE_ENV = "production"
-  PORT = "8080"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 512
