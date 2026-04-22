@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/use-products";
+import { useMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem, MenuItem } from "@/hooks/use-menu";
 import { formatCurrency } from "@/lib/utils";
 import { Plus, Package, Loader2, Pencil, Trash2, Check, X } from "lucide-react";
 
 export default function Products() {
-  const { data: products, isLoading } = useProducts();
-  const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
-  const deleteProduct = useDeleteProduct();
+  const { data: products, isLoading } = useMenuItems();
+  const createProduct = useCreateMenuItem();
+  const updateProduct = useUpdateMenuItem();
+  const deleteProduct = useDeleteMenuItem();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -100,7 +100,7 @@ export default function Products() {
               </tr>
             </thead>
             <tbody>
-              {products.map((product, i) => (
+              {products.map((product: MenuItem, i: number) => (
                 <motion.tr
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

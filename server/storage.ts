@@ -672,7 +672,15 @@ async deleteMenuItem(id: number) {
   }
 
   async runMigrations() {
-    console.log("[STORAGE] Using Neon PostgreSQL - tables managed via Drizzle");
+    console.log("[STORAGE] Using Fly Postgres - tables managed via Drizzle");
+  }
+
+  async addIsStickyColumn() {
+    console.log("[STORAGE] addIsStickyColumn: column already exists");
+  }
+
+  async addIsPriorityColumn() {
+    console.log("[STORAGE] addIsPriorityColumn: column already exists");
   }
 }
 
