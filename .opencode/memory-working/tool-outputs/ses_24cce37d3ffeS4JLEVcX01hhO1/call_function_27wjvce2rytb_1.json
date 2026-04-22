@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_27wjvce2rytb_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Error: name argument or flag must be specified when not running interactively\n",
+  "timestamp": 1776842056069
+}

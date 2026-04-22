@@ -1,9 +1,5 @@
 app = "bia-manh-beo"
 
-[build]
-  builder = "docker"
-  image = "node:20-alpine"
-
 [http]
   port = 8080
   force_https = true

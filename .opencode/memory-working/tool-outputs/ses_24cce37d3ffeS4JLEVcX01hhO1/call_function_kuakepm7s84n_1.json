@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_kuakepm7s84n_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\fly.toml</path>\n<type>file</type>\n<content>\n1: app = \"bia-manh-beo\"\n2: \n3: [build]\n4:   builder = \"docker\"\n5:   image = \"node:20-alpine\"\n6: \n7: [http]\n8:   port = 8080\n9:   force_https = true\n10: \n11: [[services]]\n12:   protocol = \"tcp\"\n13:   internal_port = 8080\n14:   processes = [\"app\"]\n15: \n16: [[services.ports]]\n17:   port = 80\n18:   handlers = [\"http\"]\n19: \n20: [[services.ports]]\n21:   port = 443\n22:   handlers = [\"tls\", \"http\"]\n23: \n24: [env]\n25:   NODE_ENV = \"production\"\n26:   PORT = \"8080\"\n\n(End of file - total 26 lines)\n</content>",
+  "timestamp": 1776844329069
+}

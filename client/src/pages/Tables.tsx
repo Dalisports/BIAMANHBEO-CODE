@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useAuth } from "@/hooks/use-auth";
-import { useWebSocket } from "@/hooks/use-websocket";
 import { formatCurrency, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { 
@@ -11,9 +10,9 @@ import {
 } from "lucide-react";
 
 const TABLE_STATUS = {
-  empty:   { label: "Trống",           bg: "bg-amber-400",      border: "border-amber-400",     text: "text-white",  strip: "bg-amber-500"  },
-  cooking: { label: "Đang phục vụ",    bg: "bg-orange-500", border: "border-orange-500", text: "text-white", strip: "bg-orange-600" },
-  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-500",   border: "border-blue-500",   text: "text-white",   strip: "bg-blue-600"   },
+  empty:   { label: "Trống",           bg: "bg-green-100",      border: "border-green-400",     text: "text-green-700",  strip: "bg-green-500"  },
+  cooking: { label: "Đang phục vụ",    bg: "bg-orange-100", border: "border-orange-400", text: "text-orange-700", strip: "bg-orange-500" },
+  ready:   { label: "Chờ thanh toán",  bg: "bg-blue-100",   border: "border-blue-400",   text: "text-blue-700",   strip: "bg-blue-500"   },
 };
 
 const QUICK_ITEMS = [
@@ -67,8 +66,11 @@ async function autoSendToKitchen(orderId: number) {
   await fetch(`/api/orders/${orderId}/send-to-kitchen`, { method: "POST", credentials: "include" });
 }
 
+async function autoSendToBar(orderId: number) {
+  await fetch(`/api/orders/${orderId}/send-to-bar`, { method: "POST", credentials: "include" });
+}
+
 export default function Tables() {
-  useWebSocket();
   const { data: orders, isLoading: ordersLoading } = useOrders();
   const { data: menuItems, isLoading: menuLoading } = useMenuItems();
   const { data: paymentSettings } = usePaymentSettings();
@@ -172,6 +174,8 @@ export default function Tables() {
     if (!selectedTable) return;
     const newItem: OrderItem = { menuItemId: menuItem.id, name: menuItem.name, quantity, price: menuItem.price };
 
+    const routeToBar = menuItem.categoryId === 3;
+
     if (selectedOrder) {
       const items = [...selectedOrder.items];
       const idx = items.findIndex(i => i.menuItemId === menuItem.id);
@@ -179,11 +183,11 @@ export default function Tables() {
       else items.push(newItem);
       const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
       updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total }, {
-        onSuccess: () => autoSendToKitchen(selectedOrder.id),
+        onSuccess: () => routeToBar ? autoSendToBar(selectedOrder.id) : autoSendToKitchen(selectedOrder.id),
       });
     } else {
       createOrder.mutate({ tableNumber: selectedTable.toString(), items: [newItem], totalAmount: menuItem.price * quantity }, {
-        onSuccess: (data: any) => { if (data?.id) autoSendToKitchen(data.id); },
+        onSuccess: (data: any) => { if (data?.id) routeToBar ? autoSendToBar(data.id) : autoSendToKitchen(data.id); },
       });
     }
   };
@@ -259,7 +263,6 @@ export default function Tables() {
   }
 
   const allTables = Array.from({ length: MAX_TABLES }, (_, i) => i + 1);
-  const readyCount = allTables.filter(n => { const o = getActiveOrder(n); return o && getActiveStatus(o) === "ready"; }).length;
 
   return (
     <div className="h-full flex flex-col">
@@ -268,21 +271,13 @@ export default function Tables() {
 
       </div>
 
-      {/* Status summary */}
-      <div className="grid grid-cols-1 gap-2 mb-4">
-        <div className="bg-blue-500 rounded-2xl p-4 text-white shadow-lg flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold opacity-80 uppercase tracking-wider">Chờ thanh toán</p>
-            <p className="text-2xl font-black">{readyCount} bàn</p>
-          </div>
-          <CreditCard className="w-8 h-8 opacity-40" />
-        </div>
-      </div>
+      
 
       {/* Table grid */}
       <div className="grid grid-cols-3 gap-3 overflow-y-auto">
         {allTables.map(tableNum => {
           const activeOrder = getActiveOrder(tableNum);
+          const paidOrder = getRecentPaidOrder(tableNum);
           const status: keyof typeof TABLE_STATUS = activeOrder ? getActiveStatus(activeOrder) : "empty";
           const sc = TABLE_STATUS[status];
           const isSelected = selectedTable === tableNum;
@@ -291,73 +286,58 @@ export default function Tables() {
           return (
             <motion.div
               key={tableNum}
-              whileHover={{ scale: isRenaming ? 1 : 1.02 }}
-              whileTap={{ scale: isRenaming ? 1 : 0.97 }}
               data-testid={`table-card-${tableNum}`}
               role="button"
               tabIndex={0}
               onClick={() => !isRenaming && setSelectedTable(tableNum)}
               onKeyDown={e => { if (e.key === "Enter" && !isRenaming) setSelectedTable(tableNum); }}
               className={cn(
-                "rounded-2xl border-2 overflow-hidden cursor-pointer select-none transition-all duration-200 group relative",
-                isSelected ? "ring-2 ring-amber-500 ring-offset-2 shadow-lg shadow-amber-500/20" : "hover:shadow-md",
-                sc.bg, sc.border
+                "bg-card rounded-2xl border border-border p-4 text-left hover:border-amber-400 hover:shadow-md transition-all group",
+                isSelected && "ring-2 ring-amber-500 ring-offset-2"
               )}
             >
-              <div className="p-3 flex flex-col min-h-[90px]">
-                {isRenaming ? (
-                  <div className="flex flex-col items-center gap-2 py-2" onClick={e => e.stopPropagation()}>
-                    <input
-                      autoFocus
-                      value={renameValue}
-                      onChange={e => setRenameValue(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") commitRename(tableNum);
-                        if (e.key === "Escape") setRenamingTable(null);
-                      }}
-                      className="w-full text-center text-sm rounded-lg border-2 border-amber-400 px-2 py-1 bg-white outline-none"
-                    />
-                    <button
-                      onClick={() => commitRename(tableNum)}
-                      className="px-3 py-1 rounded-lg bg-amber-500 text-black text-xs font-bold"
-                    >
-                      <Check className="w-3 h-3" />
-                    </button>
+              {isRenaming ? (
+                <div className="flex flex-col items-center gap-2 py-2" onClick={e => e.stopPropagation()}>
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") commitRename(tableNum);
+                      if (e.key === "Escape") setRenamingTable(null);
+                    }}
+                    className="w-full text-center text-sm rounded-lg border-2 border-amber-400 px-2 py-1 bg-white outline-none"
+                  />
+                  <button
+                    onClick={() => commitRename(tableNum)}
+                    className="px-3 py-1 rounded-lg bg-amber-500 text-black text-xs font-bold"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", sc.bg)}>
+                      <span className={cn("text-base font-bold", sc.text)}>{tableNum}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 transition-colors" />
                   </div>
-                ) : (
-                  <>
-                    {/* Table name row */}
-                    <div className="flex items-start justify-between mb-auto">
-                      <span className="font-black text-base leading-tight text-white">
-                        {tableName(tableNum)}
-                      </span>
-                      {isOwner && (
-                        <button
-                          data-testid={`rename-table-${tableNum}`}
-                          onClick={e => startRename(tableNum, e)}
-                          className="p-0.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-all ml-1 flex-shrink-0"
-                        >
-                          <Pencil className="w-3 h-3 text-muted-foreground" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Status + info */}
-                    <div className="mt-2">
-                      {activeOrder && (
-                        <>
-                          <p className="text-xs font-bold text-white/80">
-                            {activeOrder.items?.length || 0} món
-                          </p>
-                          <p className="text-sm font-black mt-0.5 text-white">
-                            {formatCurrency(activeOrder.totalAmount)}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+                  
+                  {activeOrder ? (
+                    <>
+                      <p className={cn("text-lg font-black", sc.text)}>
+                        {formatCurrency(activeOrder.totalAmount)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {activeOrder.items?.length || 0} món
+                      </p>
+                    </>
+                  ) : (
+                    <span className="text-xs font-bold text-green-600">✓ Trống</span>
+                  )}
+                </>
+              )}
             </motion.div>
           );
         })}
@@ -377,6 +357,9 @@ export default function Tables() {
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-border/50">
                 <div className="flex items-center gap-3">
+                  <span className={cn("px-3 py-1 rounded-full text-sm font-bold border", statusInfo.bg, statusInfo.border, statusInfo.text)}>
+                    {statusInfo.label}
+                  </span>
                   <h3 className="text-xl font-bold">{tableName(selectedTable)}</h3>
                 </div>
                 <button
@@ -440,26 +423,26 @@ export default function Tables() {
                         <div className="space-y-2">
                           {selectedOrder.items.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="w-6 h-6 rounded bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                              <button data-testid={`remove-item-${idx}`} onClick={() => handleRemoveItem(idx)} className="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200"><X className="w-4 h-4" /></button>
+                              <div className="flex items-center gap-2 flex-1 px-2">
+                                <span className="w-8 h-8 rounded bg-primary text-white flex items-center justify-center text-base font-bold">
                                   {item.quantity}
                                 </span>
-                                <span className="font-medium text-sm">{item.name}</span>
+                                <span className="font-semibold text-base">{item.name}</span>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <span className="text-base font-semibold text-muted-foreground">
                                   {formatCurrency(item.price * item.quantity)}
                                 </span>
-                                <button data-testid={`qty-minus-${idx}`} onClick={() => handleUpdateQuantity(idx, -1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Minus className="w-3 h-3" /></button>
-                                <button data-testid={`qty-plus-${idx}`} onClick={() => handleUpdateQuantity(idx, 1)} className="w-6 h-6 rounded hover:bg-secondary flex items-center justify-center"><Plus className="w-3 h-3" /></button>
-                                <button data-testid={`remove-item-${idx}`} onClick={() => handleRemoveItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200"><X className="w-3 h-3" /></button>
+                                <button data-testid={`qty-minus-${idx}`} onClick={() => handleUpdateQuantity(idx, -1)} className="w-8 h-8 rounded hover:bg-secondary flex items-center justify-center"><Minus className="w-4 h-4" /></button>
+                                <button data-testid={`qty-plus-${idx}`} onClick={() => handleUpdateQuantity(idx, 1)} className="w-8 h-8 rounded hover:bg-secondary flex items-center justify-center"><Plus className="w-4 h-4" /></button>
                               </div>
                             </div>
                           ))}
                         </div>
                         <div className="mt-3 pt-2 border-t flex justify-between">
-                          <span className="font-bold">Tổng cộng</span>
-                          <span className="text-xl font-bold text-accent">{formatCurrency(selectedOrder.totalAmount)}</span>
+                          <span className="font-bold text-lg">Tổng cộng</span>
+                          <span className="text-2xl font-bold text-red-600">{formatCurrency(selectedOrder.totalAmount)}</span>
                         </div>
                       </div>
                     )}
@@ -487,16 +470,15 @@ export default function Tables() {
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-[260px] overflow-y-auto">
+                      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 h-[320px] overflow-y-auto">
                         {filteredMenuItems.map(item => (
                           <button
                             key={item.id}
                             data-testid={`menu-item-${item.id}`}
                             onClick={() => handleAddItem(item, 1)}
-                            className="p-2 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left"
+                            className="p-3 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left flex items-center justify-center"
                           >
-                            <p className="font-medium text-sm truncate">{item.name}</p>
-                            <p className="text-xs text-muted-foreground">{formatCurrency(item.price)}</p>
+                            <p className="font-semibold text-base whitespace-normal text-center leading-tight">{item.name}</p>
                           </button>
                         ))}
                       </div>

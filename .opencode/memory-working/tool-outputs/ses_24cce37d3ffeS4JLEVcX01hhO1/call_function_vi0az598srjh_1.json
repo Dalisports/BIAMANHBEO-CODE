@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_vi0az598srjh_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "node : node:internal/modules/esm/resolve:275\r\nAt line:1 char:32\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\"; node index.ts 2>&1 | Select -First 10\r\n+                                ~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (node:internal/modules/esm/resolve:275:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n    throw new ERR_MODULE_NOT_FOUND(\r\n          ^\r\nError [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\\Users\\DELL\\BIAMANHBEO\\server\\routes' imported from \r\nC:\\Users\\DELL\\BIAMANHBEO\\index.ts\r\n    at finalizeResolution (node:internal/modules/esm/resolve:275:11)\r\n    at moduleResolve (node:internal/modules/esm/resolve:865:10)\r\n    at defaultResolve (node:internal/modules/esm/resolve:991:11)\r\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)\r\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)\r\n",
+  "timestamp": 1776843900967
+}

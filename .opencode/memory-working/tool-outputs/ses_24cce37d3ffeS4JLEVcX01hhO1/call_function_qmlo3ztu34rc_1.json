@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_qmlo3ztu34rc_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "1 machines have been retrieved from app bia-manh-beo.\nView them in the UI here (​https://fly.io/apps/bia-manh-beo/machines/)\n\n\u001b[1mbia-manh-beo\u001b[0m\n ID             │ NAME             │ STATE   │ CHECKS │ REGION │ ROLE │ IMAGE                  │ IP ADDRESS                       │ VOLUME │ CREATED              │ LAST UPDATED         │ PROCESS GROUP │ SIZE                \n 7813632b542328 │ dawn-feather-856 │ stopped │        │ sin    │      │ library/node:20-alpine │ fdaa:6b:149f:a7b:6ce:57e1:1e9b:2 │        │ 2026-04-22T08:15:19Z │ 2026-04-22T08:15:25Z │ app           │ shared-cpu-1x:256MB \n\n",
+  "timestamp": 1776845946946
+}

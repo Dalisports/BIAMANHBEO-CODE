@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_xpdqntvpuyto_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Usage:\n  fly.exe logs [flags]\n\nFlags:\n  -a, --app string       Application name\n  -c, --config string    Path to application configuration file\n  -h, --help             help for logs\n  -j, --json             JSON output\n      --machine string   Filter by machine ID\n  -n, --no-tail          Do not continually stream logs\n  -r, --region string    The target region (see 'flyctl platform regions')\n\nGlobal Flags:\n  -t, --access-token string   Fly API Access Token\n      --debug                 Print additional logs and traces\n      --verbose               Verbose output\n\nError: unknown command \"100\" for \"fly.exe logs\"\n",
+  "timestamp": 1776846123767
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_9wyqrtcqedui_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "--hostname required when not running interactively\n\nUsage:  gh auth refresh [flags]\n\nFlags:\n  -c, --clipboard               Copy one-time OAuth device code to clipboard\n  -h, --hostname string         The GitHub host to use for authentication\n      --insecure-storage        Save authentication credentials in plain text instead of credential store\n  -r, --remove-scopes strings   Authentication scopes to remove from gh\n      --reset-scopes            Reset authentication scopes to the default minimum set of scopes\n  -s, --scopes strings          Additional authentication scopes for gh to have\n  \n",
+  "timestamp": 1776835638328
+}

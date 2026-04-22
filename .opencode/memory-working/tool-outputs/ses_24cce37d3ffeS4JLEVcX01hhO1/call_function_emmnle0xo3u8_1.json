@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_emmnle0xo3u8_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "machine 287e7e7c333328 was found and is currently in stopped state, attempting to destroy...\n287e7e7c333328 has been destroyed\n",
+  "timestamp": 1776845706065
+}

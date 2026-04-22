@@ -12,6 +12,7 @@ export type MenuItem = {
   isActive: boolean;
   isSticky: boolean;
   isPriority: boolean;
+  isHidden: boolean;
   createdAt: Date | null;
 };
 

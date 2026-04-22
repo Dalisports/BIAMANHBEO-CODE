@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_2tzh0osz9erx_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": " NAME         │ DIGEST           │ STATUS   \n DATABASE_URL │ d30e5f9a9d50ad24 │ Deployed \n\n",
+  "timestamp": 1776845929244
+}

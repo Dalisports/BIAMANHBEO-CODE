@@ -34,6 +34,8 @@ export function log(message: string, source = "express") {
 (async () => {
   try {
     log("Starting server initialization...");
+    log(`DEBUG: DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
+    log(`DEBUG: NODE_ENV: ${process.env.NODE_ENV}`);
     
     initWebSocket(httpServer);
     log("[WS] WebSocket initialized");
@@ -55,6 +57,7 @@ export function log(message: string, source = "express") {
     }
 
     const port = parseInt(process.env.PORT || "5000", 10);
+    log(`DEBUG: process.env.PORT = ${process.env.PORT}, using port = ${port}`);
     httpServer.listen(port, "0.0.0.0", () => {
       log(`Server is listening on port ${port}`);
     });

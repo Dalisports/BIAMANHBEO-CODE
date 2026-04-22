@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_rd8tl1zotl95_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Invoke-RestMethod : {\"message\":\"Unauthorized\"}\r\nAt C:\\Users\\DELL\\BIAMANHBEO\\reset-tables.ps1:6 char:13\r\n+ $response = Invoke-RestMethod `\r\n+             ~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod], WebExc \r\n   eption\r\n    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand\r\n",
+  "timestamp": 1776848704511
+}

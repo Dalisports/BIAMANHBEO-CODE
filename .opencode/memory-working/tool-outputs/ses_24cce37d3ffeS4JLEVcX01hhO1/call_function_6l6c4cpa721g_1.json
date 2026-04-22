@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_6l6c4cpa721g_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "\n! First copy your one-time code: C3C2-7A5A\nOpen this URL to continue in your web browser: https://github.com/login/device\n\n\n<bash_metadata>\nbash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.\n</bash_metadata>",
+  "timestamp": 1776836837637
+}

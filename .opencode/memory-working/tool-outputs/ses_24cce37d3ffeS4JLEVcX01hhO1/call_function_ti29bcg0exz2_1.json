@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_ti29bcg0exz2_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts</path>\n<type>file</type>\n<content>\n648:     res.json(cats);\n649:   });\n650: \n651:   app.get(\"/api/settings/:key\", async (req, res) => {\n652:     try {\n653:       const key = req.params.key;\n654:       const setting = await storage.getSetting(key);\n655:       res.json(setting || { key, value: null });\n656:     } catch (err) {\n657:       res.status(500).json({ message: \"Error getting setting\" });\n658:     }\n659:   });\n660: \n661:   app.post(\"/api/settings\", requireOwnerMiddleware, async (req, res) => {\n662:     try {\n663:       const { key, value } = req.body;\n664:       if (!key) {\n665:         return res.status(400).json({ message: \"Missing key\" });\n666:       }\n667:       const setting = await storage.setSetting(key, value);\n668:       res.json(setting);\n669:     } catch (err) {\n670:       res.status(500).json({ message: \"Error saving setting\" });\n671:     }\n672:   });\n673: \n674:   app.post(\"/api/ticker\", async (req, res) => {\n675:     try {\n676:       const { text } = req.body;\n677:       if (!text) {\n\n(Showing lines 648-677 of 937. Use offset=678 to continue.)\n</content>",
+  "timestamp": 1776848647924
+}

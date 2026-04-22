@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_01np7574wh3t_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Testing authentication token... PASSED\nTesting flyctl agent... PASSED\nTesting local Docker instance... Nope\nPinging WireGuard gateway (give us a sec)... PASSED\nTesting WireGuard DNS... PASSED\nTesting WireGuard Flaps... PASSED\n\nApp specific checks for bia-manh-beo:\nChecking that app has ip addresses allocated... PASSED\nChecking A record for bia-manh-beo.fly.dev... PASSED\nChecking AAAA record for bia-manh-beo.fly.dev... PASSED\n\nBuild checks for bia-manh-beo:\nChecking docker context size (this may take little bit)... PASSED (110 MB)\n",
+  "timestamp": 1776846237008
+}

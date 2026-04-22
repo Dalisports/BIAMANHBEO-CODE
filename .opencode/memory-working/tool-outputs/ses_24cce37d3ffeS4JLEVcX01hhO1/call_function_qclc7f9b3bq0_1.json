@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_qclc7f9b3bq0_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Usage:\n  fly.exe postgres list [flags]\n\nAliases:\n  list, ls\n\nFlags:\n  -h, --help   help for list\n  -j, --json   JSON output\n\nGlobal Flags:\n  -t, --access-token string   Fly API Access Token\n      --debug                 Print additional logs and traces\n      --verbose               Verbose output\n\nError: unknown flag: --org\n",
+  "timestamp": 1776842682395
+}

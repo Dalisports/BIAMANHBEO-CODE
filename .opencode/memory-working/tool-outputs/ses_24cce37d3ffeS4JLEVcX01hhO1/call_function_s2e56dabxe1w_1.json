@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_s2e56dabxe1w_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 6 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts:\n  Line 481:   app.get(\"/api/payment-settings\", async (req, res) => {\r\n\n  Line 482:     const settings = await storage.getPaymentSettings();\r\n\n  Line 483:     res.json(settings);\r\n\n  Line 486:   app.patch(\"/api/payment-settings/:method\", async (req, res) => {\r\n\n  Line 651:   app.get(\"/api/settings/:key\", async (req, res) => {\r\n\n  Line 661:   app.post(\"/api/settings\", requireOwnerMiddleware, async (req, res) => {\r\n",
+  "timestamp": 1776848644264
+}

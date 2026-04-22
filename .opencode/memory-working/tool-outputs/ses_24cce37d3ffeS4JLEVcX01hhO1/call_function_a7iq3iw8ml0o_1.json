@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_a7iq3iw8ml0o_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "DATABASE_URL=postgresql://neondb_owner:npg_fDSswA8mZO9k@ep-ancient-brook-a12t15zb-pooler.ap-southeast-1.aws.neon.tech/n\r\neondb?sslmode=require&channel_binding=require : The term 'DATABASE_URL=postgresql://neondb_owner:npg_fDSswA8mZO9k@ep-an\r\ncient-brook-a12t15zb-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require' is not \r\nrecognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if \r\na path was included, verify that the path is correct and try again.\r\nAt line:1 char:32\r\n+ ... IAMANHBEO\"; DATABASE_URL=\"postgresql://neondb_owner:npg_fDSswA8mZO9k@ ...\r\n+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : ObjectNotFound: (DATABASE_URL=po...binding=require:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776844876133
+}

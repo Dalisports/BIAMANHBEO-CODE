@@ -7,7 +7,8 @@ export type WSEventType =
   | "ORDER_DELETED"
   | "KITCHEN_ORDER_CREATED"
   | "KITCHEN_ORDER_UPDATED"
-  | "KITCHEN_ORDER_DELETED";
+  | "KITCHEN_ORDER_DELETED"
+  | "ATTENDANCE_QR_CHANGED";
 
 export interface WSEvent {
   type: WSEventType;
@@ -51,6 +52,9 @@ export function useWebSocket(onNewOrder?: () => void) {
           case "KITCHEN_ORDER_UPDATED":
           case "KITCHEN_ORDER_DELETED":
             queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+            break;
+          case "ATTENDANCE_QR_CHANGED":
+            queryClient.invalidateQueries({ queryKey: ["/api/attendance/qr"] });
             break;
         }
       } catch (err) {

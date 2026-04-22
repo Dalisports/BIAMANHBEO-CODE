@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_gr4lqtxvl9pe_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Invoke-WebRequest : Cannot process command because of one or more missing mandatory parameters: Uri.\r\nAt line:1 char:32\r\n+ ... Users\\DELL\\BIAMANHBEO\"; curl -s https://bia-manh-beo.fly.dev/ | head  ...\r\n+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : InvalidArgument: (:) [Invoke-WebRequest], ParameterBindingException\r\n    + FullyQualifiedErrorId : MissingMandatoryParameter,Microsoft.PowerShell.Commands.InvokeWebRequestCommand\r\n \r\n",
+  "timestamp": 1776843623671
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_lwi5gqx3n67y_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "3:12:06 PM [express] Starting server initialization...\r\nWebSocket server initialized on /ws\r\n3:12:06 PM [express] [WS] WebSocket initialized\r\n3:12:06 PM [express] [ROUTES] API routes registered\r\n3:12:06 PM [express] [GAU] Gau Assistant routes registered\r\n[STORAGE] Using Fly Postgres - tables managed via Drizzle\r\n3:12:06 PM [express] [STORAGE] Migrations finished\r\n[STATIC] Serving static files from: C:\\Users\\DELL\\BIAMANHBEO\\dist\\public\r\n3:12:06 PM [express] Server is listening on port 5000\r\n\n\n<bash_metadata>\nbash tool terminated command after exceeding timeout 10000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.\n</bash_metadata>",
+  "timestamp": 1776845536110
+}

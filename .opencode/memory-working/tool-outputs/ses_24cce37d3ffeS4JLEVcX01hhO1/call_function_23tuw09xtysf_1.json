@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_23tuw09xtysf_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 9 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts:\n  Line 292:       const { name, price, categoryId, description, image, isAvailable, isSticky, isPriority } = req.body;\r\n\n  Line 293:       const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky, isPriority });\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\scripts\\sync-menu.ts:\n  Line 31:         item.isSticky ? true : false,\n\n  Line 32:         item.isPriority ? true : false,\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\shared\\schema.ts:\n  Line 28:   isSticky: boolean(\"is_sticky\").default(false),\r\n\n  Line 29:   isPriority: boolean(\"is_priority\").default(false),\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\client\\src\\hooks\\use-menu.ts:\n  Line 13:   isSticky: boolean;\r\n\n  Line 14:   isPriority: boolean;\r\n\n  Line 58:     mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean; isPriority?: boolean }) => {\r\n",
+  "timestamp": 1776850687105
+}

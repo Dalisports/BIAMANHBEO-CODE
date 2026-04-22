@@ -579,42 +579,35 @@ export default function Menu() {
               {/* Scrollable form content */}
               <div className="overflow-y-auto flex-1 px-5">
                 <form id="add-item-form" onSubmit={handleAddItem} className="space-y-4 pb-2">
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">Tên món</label>
-                    <input
-                      autoFocus
-                      type="text"
-                      value={newItem.name}
-                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                      placeholder="VD: Gà rán giòn"
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-bold mb-1.5">Tên món</label>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={newItem.name}
+                        onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                        placeholder="VD: Gà rán giòn"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
+                      <input
+                        type="number"
+                        value={newItem.price}
+                        onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                        placeholder="VD: 89000"
+                        required
+                      />
+                    </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">Giá (VNĐ)</label>
-                    <input
-                      type="number"
-                      value={newItem.price}
-                      onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                      placeholder="VD: 89000"
-                      required
-                    />
-                  </div>
+</div>
                   
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">Mô tả</label>
-                    <textarea
-                      value={newItem.description}
-                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none resize-none"
-                      rows={2}
-                      placeholder="Mô tả món ăn..."
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
                     <div className="relative">
@@ -721,17 +714,6 @@ export default function Menu() {
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">Mô tả</label>
-                    <textarea
-                      value={editForm.description}
-                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none resize-none"
-                      rows={2}
-                      placeholder="Mô tả món ăn..."
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
                     <div className="relative">

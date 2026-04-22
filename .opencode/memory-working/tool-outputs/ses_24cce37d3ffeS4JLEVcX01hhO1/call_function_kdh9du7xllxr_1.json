@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_kdh9du7xllxr_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Error: could not start machine 287e7e7c333328: failed to start VM 287e7e7c333328: failed_precondition: machine exited and not available to start (Request ID: 01KPSWJH1DQK4EQHFC8HA6N4BM-sin)\n",
+  "timestamp": 1776837806261
+}

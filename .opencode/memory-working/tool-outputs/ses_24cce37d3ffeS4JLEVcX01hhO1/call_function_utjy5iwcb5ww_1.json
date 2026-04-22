@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_utjy5iwcb5ww_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Usage:\n  fly.exe apps destroy <app name(s)> [flags]\n\nAliases:\n  destroy, delete, remove, rm\n\nFlags:\n  -h, --help   help for destroy\n  -y, --yes    Accept all confirmations (also --auto-confirm)\n\nGlobal Flags:\n  -t, --access-token string   Fly API Access Token\n      --debug                 Print additional logs and traces\n      --verbose               Verbose output\n\nError: unknown flag: --confirm\n",
+  "timestamp": 1776837453360
+}

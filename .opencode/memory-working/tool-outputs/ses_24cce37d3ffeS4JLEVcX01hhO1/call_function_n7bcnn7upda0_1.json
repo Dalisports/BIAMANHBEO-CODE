@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_n7bcnn7upda0_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\static.ts</path>\n<type>file</type>\n<content>\n1: import express, { type Express } from \"express\";\n2: import fs from \"fs\";\n3: import path from \"path\";\n4: import { fileURLToPath } from \"url\";\n5: \n6: export function serveStatic(app: Express) {\n7:   // In a bundled CJS file (dist/index.cjs), __dirname is where the bundle is\n8:   const distPath = path.resolve(process.cwd(), \"dist\", \"public\");\n9:   \n10:   console.log(`[STATIC] Serving static files from: ${distPath}`);\n11:   \n12:   if (!fs.existsSync(distPath)) {\n13:     console.error(`[STATIC] Error: Directory not found: ${distPath}`);\n14:     // Don't throw, just log. This prevents the whole app from crashing\n15:     return;\n16:   }\n17: \n18:   app.use(express.static(distPath));\n19: \n20:   app.use((req, res, next) => {\n21:     if (req.path.startsWith(\"/api\")) {\n22:       return next();\n23:     }\n24:     if (req.path === \"/\" || !req.path.includes(\".\")) {\n25:       return res.sendFile(path.resolve(distPath, \"index.html\"));\n26:     }\n27:     next();\n28:   });\n29: }\n\n(End of file - total 29 lines)\n</content>",
+  "timestamp": 1776845594934
+}

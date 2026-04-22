@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_eylbvrww94yb_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "fly : Error: app bia-manh-beo has no started VMs.\r\nAt line:1 char:32\r\n+ ... IAMANHBEO\"; fly ssh console --command \"cd /app && node dist/index.cjs ...\r\n+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (Error: app bia-...no started VMs.:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\nIt may be unhealthy or not have been deployed yet.\r\nTry the following command to verify:\r\nfly status\r\n",
+  "timestamp": 1776845856866
+}

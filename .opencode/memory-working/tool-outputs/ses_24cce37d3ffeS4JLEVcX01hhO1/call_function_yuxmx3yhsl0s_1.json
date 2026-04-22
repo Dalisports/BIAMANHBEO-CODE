@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_yuxmx3yhsl0s_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Tables.tsx</path>\n<type>file</type>\n<content>\n285: \n286:           return (\n287:             <motion.div\n288:               key={tableNum}\n289:               whileHover={{ scale: isRenaming ? 1 : 1.02 }}\n290:               whileTap={{ scale: isRenaming ? 1 : 0.97 }}\n291:               data-testid={`table-card-${tableNum}`}\n292:               role=\"button\"\n293:               tabIndex={0}\n294:               onClick={() => !isRenaming && setSelectedTable(tableNum)}\n\n(Showing lines 285-294 of 928. Use offset=295 to continue.)\n</content>",
+  "timestamp": 1776848991003
+}

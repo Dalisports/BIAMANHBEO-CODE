@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_vr3bc09hi72d_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\index.ts</path>\n<type>file</type>\n<content>\n45:     log(\"[GAU] Gau Assistant routes registered\");\n46: \n47:     await storage.runMigrations();\n48:     log(\"[STORAGE] Migrations finished\");\n49: \n50:     if (process.env.NODE_ENV === \"production\") {\n51:       serveStatic(app);\n52:     } else {\n53:       const { setupVite } = await import(\"./server/vite\");\n54:       await setupVite(httpServer, app);\n55:     }\n56: \n57:     const port = parseInt(process.env.PORT || \"5000\", 10);\n58:     httpServer.listen(port, \"0.0.0.0\", () => {\n59:       log(`Server is listening on port ${port}`);\n60:     });\n61:   } catch (error: any) {\n62:     console.error(\"FATAL ERROR DURING STARTUP:\", error);\n63:     process.exit(1);\n64:   }\n65: })();\n\n(End of file - total 65 lines)\n</content>",
+  "timestamp": 1776844313197
+}

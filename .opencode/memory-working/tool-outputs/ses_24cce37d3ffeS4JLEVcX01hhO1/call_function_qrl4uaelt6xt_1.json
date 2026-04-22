@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_qrl4uaelt6xt_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "PORT=8080 : The term 'PORT=8080' is not recognized as the name of a cmdlet, function, script file, or operable \r\nprogram. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.\r\nAt line:1 char:32\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\"; PORT=8080 NODE_ENV=production node dis ...\r\n+                                ~~~~~~~~~\r\n    + CategoryInfo          : ObjectNotFound: (PORT=8080:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776844582430
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_f3q4sigonhs3_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "refreshenv : The term 'refreshenv' is not recognized as the name of a cmdlet, function, script file, or operable \r\nprogram. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.\r\nAt line:1 char:1\r\n+ refreshenv; where gh\r\n+ ~~~~~~~~~~\r\n    + CategoryInfo          : ObjectNotFound: (refreshenv:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776835123748
+}

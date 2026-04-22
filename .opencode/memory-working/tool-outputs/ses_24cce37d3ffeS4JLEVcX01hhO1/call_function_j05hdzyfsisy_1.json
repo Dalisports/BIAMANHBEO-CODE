@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_j05hdzyfsisy_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "\n> rest-express@1.0.0 check\n> tsc\n\nclient/src/pages/Menu.tsx(581,18): error TS17008: JSX element 'form' has no corresponding closing tag.\r\nclient/src/pages/Menu.tsx(634,19): error TS17002: Expected corresponding JSX closing tag for 'motion.div'.\r\nclient/src/pages/Menu.tsx(635,17): error TS17002: Expected corresponding JSX closing tag for 'motion.div'.\r\nclient/src/pages/Menu.tsx(637,15): error TS1005: ')' expected.\r\nclient/src/pages/Menu.tsx(655,15): error TS17002: Expected corresponding JSX closing tag for 'AnimatePresence'.\r\nclient/src/pages/Menu.tsx(656,13): error TS17002: Expected corresponding JSX closing tag for 'div'.\r\nclient/src/pages/Menu.tsx(658,7): error TS1128: Declaration or statement expected.\r\nclient/src/pages/Menu.tsx(660,7): error TS2657: JSX expressions must have one parent element.\r\nclient/src/pages/Menu.tsx(882,5): error TS1128: Declaration or statement expected.\r\nclient/src/pages/Menu.tsx(883,3): error TS1109: Expression expected.\r\nclient/src/pages/Menu.tsx(884,1): error TS1128: Declaration or statement expected.\r\n",
+  "timestamp": 1776850631232
+}

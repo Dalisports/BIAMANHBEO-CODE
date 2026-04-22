@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_ztj9s0adk57b_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "psql : The term 'psql' is not recognized as the name of a cmdlet, function, script file, or operable program. Check \r\nthe spelling of the name, or if a path was included, verify that the path is correct and try again.\r\nAt line:1 char:32\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\"; psql \"postgresql://neondb_owner:npg_fD ...\r\n+                                ~~~~\r\n    + CategoryInfo          : ObjectNotFound: (psql:String) [], CommandNotFoundException\r\n    + FullyQualifiedErrorId : CommandNotFoundException\r\n \r\n",
+  "timestamp": 1776845046455
+}

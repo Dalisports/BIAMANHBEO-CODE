@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_18ztxrfkun26_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "==> Verifying app config\nValidating C:\\Users\\DELL\\BIAMANHBEO\\fly.toml\n\u001b[32m✓\u001b[0m Configuration is valid\n--> Verified app config\n==> Building image\n==> Building image\nError: failed to fetch an image or build from source: no docker daemon available\n",
+  "timestamp": 1776843057816
+}

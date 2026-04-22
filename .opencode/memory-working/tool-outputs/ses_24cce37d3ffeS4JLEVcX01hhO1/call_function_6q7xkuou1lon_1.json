@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_6q7xkuou1lon_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Kitchen.tsx</path>\n<type>file</type>\n<content>\n130:     const interval = setInterval(load, 15000);\n131:     return () => clearInterval(interval);\n132:   }, []);\n133: \n134:   const priorityNames = useMemo(\n135:     () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),\n136:     [menuItems],\n137:   );\n138: \n139:   const flattenedItems = useMemo(\n140:     () => flattenKitchenOrders(kitchenOrders),\n141:     [kitchenOrders],\n142:   );\n143: \n144:   const pendingItems = useMemo(\n145:     () => flattenedItems.filter((fi) => fi.item.cookingStatus === \"pending\" || !fi.item.cookingStatus),\n146:     [flattenedItems],\n147:   );\n148: \n149:   const cookingItems = useMemo(\n150:     () => flattenedItems.filter((fi) => fi.item.cookingStatus === \"cooking\"),\n151:     [flattenedItems],\n152:   );\n153: \n154:   const doneItems = useMemo(\n155:     () => flattenedItems.filter((fi) => fi.item.cookingStatus === \"done\" || fi.orderStatus === \"Complete\"),\n156:     [flattenedItems],\n157:   );\n158: \n159:   // Đếm đơn bếp hoàn thành (đồng bộ với menu-tv)\n\n(Showing lines 130-159 of 538. Use offset=160 to continue.)\n</content>",
+  "timestamp": 1776850710564
+}

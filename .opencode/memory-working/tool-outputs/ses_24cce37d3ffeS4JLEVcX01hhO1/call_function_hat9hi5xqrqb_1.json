@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_hat9hi5xqrqb_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Neon tables:\n  - attendance_records\n  - categories\n  - conversations\n  - daily_qr_codes\n  - kitchen_orders\n  - menu_items\n  - messages\n  - orders\n  - payment_settings\n  - playing_with_neon\n  - settings\n  - user_profiles\n  - users\n\nmenu_items: 63 rows\n",
+  "timestamp": 1776845086302
+}

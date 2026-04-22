@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_u2a2xfedckk4_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "==> Verifying app config\nValidating C:\\Users\\DELL\\BIAMANHBEO\\fly.toml\n\u001b[33mWARN\u001b[0m more than one build configuration found: [the \"node:20-alpine\" docker image, a buildpack]\n\u001b[32m✓\u001b[0m Configuration is valid\n--> Verified app config\n==> Building image\nSearching for image 'node:20-alpine' remotely...\nimage found: img_xdkzvqxojejq49nm\n\nWatch your deployment at https://fly.io/apps/bia-manh-beo/monitoring\n\nUpdating existing machines in 'bia-manh-beo' with rolling strategy\n> Acquiring lease for 7813632b542328\n> Acquired lease for 7813632b542328\n> Updating machine config for 7813632b542328\n> Updating 7813632b542328 [app]\n> Updated machine config for 7813632b542328\n> Waiting for machine 7813632b542328 to reach a good state\n> Machine 7813632b542328 reached stopped state\n> Running smoke checks on machine 7813632b542328\n> Running machine checks on machine 7813632b542328\n> Checking health of machine 7813632b542328\n✔ Machine 7813632b542328 is now in a good state\n> Clearing lease for 7813632b542328\n✔ Cleared lease for 7813632b542328\nChecking DNS configuration for bia-manh-beo.fly.dev\n✓ DNS configuration verified\n\nVisit your newly deployed app at https://bia-manh-beo.fly.dev/\n\n",
+  "timestamp": 1776846353401
+}

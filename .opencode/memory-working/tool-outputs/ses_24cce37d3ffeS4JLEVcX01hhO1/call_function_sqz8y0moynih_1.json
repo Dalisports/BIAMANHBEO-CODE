@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_sqz8y0moynih_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "[eval]:1\r\nconst db = require('better-sqlite3')('./biamanhbeo.sqlite'); const tables = db.prepare(\" SELECT name FROM sqlite_master WHERE type=table\\).all();\r\n                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nExpected ',', got '<eof>'\r\n\r\nSyntaxError: Invalid or unexpected token\r\n    at makeContextifyScript (node:internal/vm:194:14)\r\n    at compileScript (node:internal/process/execution:388:10)\r\n    at evalTypeScript (node:internal/process/execution:260:22)\r\n    at node:internal/main/eval_string:71:3\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776844947285
+}

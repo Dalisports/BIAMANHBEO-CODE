@@ -1,0 +1,241 @@
+{
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "slots": {
+    "error": [
+      {
+        "id": "wm_1776850631233_eb4vb41",
+        "type": "error",
+        "content": "client/src/pages/Menu.tsx(581,18): error TS17008: JSX element 'form' has no corresponding closing tag.\r",
+        "source": "tool:bash",
+        "timestamp": 1776850631233,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776850631234_7mpruzu",
+        "type": "error",
+        "content": "client/src/pages/Menu.tsx(634,19): error TS17002: Expected corresponding JSX closing tag for 'motion.div'.\r",
+        "source": "tool:bash",
+        "timestamp": 1776850631233,
+        "relevanceScore": 0,
+        "mentions": 1
+      },
+      {
+        "id": "wm_1776850631235_qsg70e6",
+        "type": "error",
+        "content": "client/src/pages/Menu.tsx(635,17): error TS17002: Expected corresponding JSX closing tag for 'motion.div'.\r",
+        "source": "tool:bash",
+        "timestamp": 1776850631233,
+        "relevanceScore": 0,
+        "mentions": 1
+      }
+    ],
+    "decision": [],
+    "todo": [],
+    "dependency": []
+  },
+  "pool": [
+    {
+      "id": "wm_1776827941603_dxayw1r",
+      "type": "file-path",
+      "content": "index.ts",
+      "source": "tool:glob",
+      "timestamp": 1776846277015,
+      "relevanceScore": 41.08318813014736,
+      "mentions": 16,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776828303300_9xjqygl",
+      "type": "file-path",
+      "content": "routes.ts",
+      "source": "tool:read",
+      "timestamp": 1776848722263,
+      "relevanceScore": 38.47690224713848,
+      "mentions": 15,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776828115583_pkf9620",
+      "type": "file-path",
+      "content": "res.js",
+      "source": "tool:read",
+      "timestamp": 1776848722263,
+      "relevanceScore": 25.606704898692062,
+      "mentions": 10,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776828303301_2do8dcx",
+      "type": "file-path",
+      "content": "express.js",
+      "source": "tool:read",
+      "timestamp": 1776846277015,
+      "relevanceScore": 23.107606375904368,
+      "mentions": 9,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776827984417_aoww9j8",
+      "type": "file-path",
+      "content": "package.js",
+      "source": "tool:read",
+      "timestamp": 1776846303724,
+      "relevanceScore": 20.539064474554635,
+      "mentions": 8,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776850470508_d9idk7i",
+      "type": "file-path",
+      "content": "Menu.ts",
+      "source": "tool:glob",
+      "timestamp": 1776850675625,
+      "relevanceScore": 16.07552557734468,
+      "mentions": 9,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776827941606_177q0do",
+      "type": "file-path",
+      "content": "storage.ts",
+      "source": "tool:glob",
+      "timestamp": 1776845599569,
+      "relevanceScore": 12.838796037744858,
+      "mentions": 5,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776848656565_fzuy9my",
+      "type": "file-path",
+      "content": "Tables.ts",
+      "source": "tool:read",
+      "timestamp": 1776850317967,
+      "relevanceScore": 12.276234936621307,
+      "mentions": 5,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776827941605_f7vc2ix",
+      "type": "file-path",
+      "content": "static.ts",
+      "source": "tool:glob",
+      "timestamp": 1776845594934,
+      "relevanceScore": 7.703277218931606,
+      "mentions": 3,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776827984419_jfefqfw",
+      "type": "file-path",
+      "content": "script/build.ts",
+      "source": "tool:read",
+      "timestamp": 1776845603209,
+      "relevanceScore": 7.703273647054122,
+      "mentions": 3,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776827941605_4oid7bs",
+      "type": "file-path",
+      "content": "db.ts",
+      "source": "tool:glob",
+      "timestamp": 1776845920439,
+      "relevanceScore": 7.70317339683048,
+      "mentions": 3,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776828111663_1y741wa",
+      "type": "file-path",
+      "content": "use-menu.ts",
+      "source": "tool:read",
+      "timestamp": 1776828123764,
+      "relevanceScore": 5.135519487741446,
+      "mentions": 2,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776831164854_kgqbf6h",
+      "type": "file-path",
+      "content": "tsconfig.js",
+      "source": "tool:read",
+      "timestamp": 1776831375242,
+      "relevanceScore": 5.135519487741435,
+      "mentions": 2,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776831164855_dztsfjv",
+      "type": "file-path",
+      "content": ".test.ts",
+      "source": "tool:read",
+      "timestamp": 1776831375242,
+      "relevanceScore": 5.1355194877414325,
+      "mentions": 2,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776842975657_fnj473k",
+      "type": "file-path",
+      "content": "build.ts",
+      "source": "tool:read",
+      "timestamp": 1776845609400,
+      "relevanceScore": 5.135511013759116,
+      "mentions": 2,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776845914689_ber0owo",
+      "type": "file-path",
+      "content": "drizzle.config.ts",
+      "source": "tool:glob",
+      "timestamp": 1776845914689,
+      "relevanceScore": 2.567835545565086,
+      "mentions": 1,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776844600837_q39seqq",
+      "type": "file-path",
+      "content": "vite.ts",
+      "source": "tool:read",
+      "timestamp": 1776844600837,
+      "relevanceScore": 2.5677597534634913,
+      "mentions": 1,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776845603212_o9oxeot",
+      "type": "file-path",
+      "content": "postcss.config.js",
+      "source": "tool:read",
+      "timestamp": 1776845603209,
+      "relevanceScore": 2.567754393593924,
+      "mentions": 1,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776850470507_loternz",
+      "type": "file-path",
+      "content": "MenuTv.ts",
+      "source": "tool:glob",
+      "timestamp": 1776850470507,
+      "relevanceScore": 2.379789975950758,
+      "mentions": 1,
+      "lastEventCounter": 260
+    },
+    {
+      "id": "wm_1776850710565_h5m02dm",
+      "type": "file-path",
+      "content": "Kitchen.ts",
+      "source": "tool:read",
+      "timestamp": 1776850710565,
+      "relevanceScore": 1,
+      "mentions": 1,
+      "lastEventCounter": 260
+    }
+  ],
+  "eventCounter": 260,
+  "updatedAt": "2026-04-22T09:38:30.565Z"
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_1erxgijd68wj_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\Dockerfile</path>\n<type>file</type>\n<content>\n1: FROM node:20-alpine\n2: \n3: WORKDIR /app\n4: \n5: RUN apk add --no-cache dumb-init\n6: \n7: COPY package*.json ./\n8: RUN npm ci --only=production\n9: \n10: COPY dist ./dist\n11: COPY package.json ./\n12: \n13: ENV NODE_ENV=production\n14: ENV PORT=8080\n15: ENV NODE_ENV=production\n16: \n17: EXPOSE 8080\n18: \n19: CMD [\"dumb-init\", \"node\", \"dist/index.cjs\"]\n\n(End of file - total 19 lines)\n</content>",
+  "timestamp": 1776846303723
+}

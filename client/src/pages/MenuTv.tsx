@@ -119,8 +119,8 @@ export default function MenuTv() {
   }, []);
 
   // Slideshow: ưu tiên món sticky, fallback toàn bộ món có ảnh, fallback placeholders
-  const stickyMenu = (menuItems || []).filter((m) => m.isSticky && m.image);
-  const allMenu = (menuItems || []).filter((m) => m.image);
+  const stickyMenu = (menuItems || []).filter((m) => m.isSticky && m.image && !m.isHidden);
+  const allMenu = (menuItems || []).filter((m) => m.image && !m.isHidden);
   const slideMenuItems =
     stickyMenu.length > 0 ? stickyMenu : allMenu.length > 0 ? allMenu : [];
   const slideImages =
@@ -140,7 +140,7 @@ export default function MenuTv() {
   // Build flat cooking items + run priority queue algorithm
   const priorityNames = useMemo(
     () =>
-      new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
+      new Set((menuItems || []).filter((m) => m.isPriority && !m.isHidden).map((m) => m.name)),
     [menuItems],
   );
 
@@ -307,9 +307,6 @@ export default function MenuTv() {
                             </motion.span>
                           )}
                         </div>
-                        <p className="text-[0.95vw] text-orange-300 font-medium">
-                          Đã gọi {formatElapsed(item.sentAt)}
-                        </p>
                       </div>
 
                       {/* Quantity */}

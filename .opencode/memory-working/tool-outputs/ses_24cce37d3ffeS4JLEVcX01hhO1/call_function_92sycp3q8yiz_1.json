@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_92sycp3q8yiz_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "C:\\Users\\DELL\\BIAMANHBEO\\scripts\\sync-menu.ts:6\r\nconst pool = new Pool({\r\n             ^\r\n\r\nReferenceError: Pool is not defined\r\n    at <anonymous> (C:\\Users\\DELL\\BIAMANHBEO\\scripts\\sync-menu.ts:6:14)\r\n    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)\r\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)\r\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\r\n\r\nNode.js v24.14.0\r\n",
+  "timestamp": 1776845127928
+}

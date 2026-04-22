@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_sy7g9t0olc8b_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 5 matches\nC:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts:\n  Line 7: // Fly.io provides DATABASE_URL via environment variable\r\n\n  Line 9:   connectionString: process.env.DATABASE_URL,\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\drizzle.config.ts:\n  Line 3: if (!process.env.DATABASE_URL) {\r\n\n  Line 4:   throw new Error(\"DATABASE_URL, ensure the database is provisioned\");\r\n\n  Line 12:     url: process.env.DATABASE_URL || \"./biamanhbeo.sqlite\",\r\n",
+  "timestamp": 1776842674425
+}

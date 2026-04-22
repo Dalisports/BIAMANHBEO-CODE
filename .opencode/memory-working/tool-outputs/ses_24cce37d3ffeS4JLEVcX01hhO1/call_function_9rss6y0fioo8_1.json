@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_9rss6y0fioo8_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "==> Verifying app config\nValidating C:\\Users\\DELL\\BIAMANHBEO\\fly.toml\n\u001b[33mWARN\u001b[0m more than one build configuration found: [the \"node:20-alpine\" docker image, a buildpack]\n\u001b[32m✓\u001b[0m Configuration is valid\n--> Verified app config\n==> Building image\nSearching for image 'node:20-alpine' remotely...\nimage found: img_xdkzvqxojejq49nm\n\nWatch your deployment at https://fly.io/apps/bia-manh-beo/monitoring\n\nProcess groups have changed. This will:\n * create 2 \"app\" machines\n\n> Launching new machine\nNo machines in group app, launching a new machine\n> Machine 7813632b542328 [app] was created\n\n\n<bash_metadata>\nbash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.\n</bash_metadata>",
+  "timestamp": 1776845830699
+}

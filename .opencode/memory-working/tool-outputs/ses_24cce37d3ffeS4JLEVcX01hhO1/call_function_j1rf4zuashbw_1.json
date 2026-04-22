@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_j1rf4zuashbw_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 1 matches\nC:\\Users\\DELL\\BIAMANHBEO\\.env:\n  Line 2: DATABASE_URL=postgresql://neondb_owner:npg_fDSswA8mZO9k@ep-ancient-brook-a12t15zb-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require\n",
+  "timestamp": 1776847026482
+}

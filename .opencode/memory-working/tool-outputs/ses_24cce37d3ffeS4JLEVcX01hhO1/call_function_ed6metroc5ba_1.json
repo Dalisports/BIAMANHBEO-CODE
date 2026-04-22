@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_ed6metroc5ba_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Tables.tsx</path>\n<type>file</type>\n<content>\n468:                             <p className=\"font-bold text-sm\">{item.name}</p>\n469:                             <p className=\"text-xs text-yellow-700 font-semibold\">{formatCurrency(item.price)}</p>\n470:                           </button>\n471:                         ))}\n472:                       </div>\n473:                       <div className=\"grid grid-cols-3 md:grid-cols-4 gap-2 max-h-[260px] overflow-y-auto\">\n474:                         {filteredMenuItems.map(item => (\n475:                           <button\n476:                             key={item.id}\n477:                             data-testid={`menu-item-${item.id}`}\n478:                             onClick={() => handleAddItem(item, 1)}\n479:                             className=\"p-2 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left\"\n480:                           >\n481:                             <p className=\"font-semibold text-base truncate\">{item.name}</p>\n482:                           </button>\n483:                         ))}\n484:                       </div>\n485:                     </div>\n486:                   </>\n487:                 )}\n\n(Showing lines 468-487 of 925. Use offset=488 to continue.)\n</content>",
+  "timestamp": 1776850317967
+}

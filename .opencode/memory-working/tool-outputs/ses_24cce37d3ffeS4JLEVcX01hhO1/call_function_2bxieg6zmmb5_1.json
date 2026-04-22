@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_2bxieg6zmmb5_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "mode      generateSW\r\nprecache  13 entries (1479.25 KiB)\r\nfiles generated\r\n  ../dist/public/sw.js\r\n  ../dist/public/workbox-66610c77.js\r\nbuilding server...\r\n  dist\\index.cjs  1.2mb\r\nDone in 110ms\r\n",
+  "timestamp": 1776849985069
+}

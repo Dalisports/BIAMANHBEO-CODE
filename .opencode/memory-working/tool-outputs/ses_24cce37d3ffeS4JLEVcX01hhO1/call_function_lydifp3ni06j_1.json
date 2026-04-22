@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_lydifp3ni06j_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\gen-key.mjs</path>\n<type>file</type>\n<content>\n1: import { generateKeyPairSync } from 'crypto';\n2: import { writeFileSync } from 'fs';\n3: \n4: const { publicKey, privateKey } = generateKeyPairSync('ed25519', {\n5:   publicKeyEncoding: { type: 'spki', format: 'pem' },\n6:   privateKeyEncoding: { type: 'pkcs8', format: 'pem' }\n7: });\n8: \n9: writeFileSync('C:/Users/DELL/.ssh/id_ed25519', privateKey);\n10: \n11: const spki = publicKey.replace(/-----BEGIN PUBLIC KEY-----/, '').replace(/-----END PUBLIC KEY-----/, '').trim();\n12: const buf = Buffer.from(spki, 'base64');\n13: \n14: const keyType = Buffer.from([0x00, 0x00, 0x00, 0x0b, 0x73, 0x73, 0x68, 0x2d, 0x65, 0x64, 0x32, 0x35, 0x35, 0x31, 0x39]);\n15: const keyBlob = buf.slice(-32);\n16: const keyData = Buffer.concat([keyType, keyBlob.slice(-32), keyBlob.slice(0, 32)]);\n17: const openssh = 'ssh-ed25519 ' + keyData.toString('base64') + ' github-deploy\\n';\n18: \n19: writeFileSync('C:/Users/DELL/.ssh/id_ed25519.pub', openssh);\n20: console.log('Generated!');\n21: console.log(openssh);\n\n(End of file - total 21 lines)\n</content>",
+  "timestamp": 1776834358610
+}

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_i61abswkcby4_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Menu.tsx</path>\n<type>file</type>\n<content>\n628:                           className=\"w-full h-full object-cover\"\n629:                           onError={(e) => e.currentTarget.style.display = 'none'} \n630:                         />\n631:                       </div>\n632:                     )}\n633:                   </div>\n634:                 </form>\n635:               </div>\n636: \n637:               {/* Fixed action buttons */}\n638:               <div className=\"flex gap-3 px-5 pt-3 pb-6 flex-shrink-0 border-t border-border bg-card\">\n639:                 <button\n640:                   type=\"button\"\n641:                   onClick={() => setShowAddDialog(false)}\n642:                   className=\"flex-1 px-4 py-3 rounded-xl font-bold bg-secondary text-foreground hover:bg-secondary/80 transition-colors\"\n643:                 >\n644:                   Hủy\n645:                 </button>\n646:                 <button\n647:                   type=\"submit\"\n\n(Showing lines 628-647 of 884. Use offset=648 to continue.)\n</content>",
+  "timestamp": 1776850643886
+}

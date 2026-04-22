@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_6o12k4rmt38u_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\db.ts</path>\n<type>file</type>\n<content>\n1: import { drizzle } from \"drizzle-orm/node-postgres\";\n2: import pg from \"pg\";\n3: import * as schema from \"@shared/schema\";\n4: \n5: const { Pool } = pg;\n6: \n7: // Fly.io provides DATABASE_URL via environment variable\n8: const pool = new Pool({\n9:   connectionString: process.env.DATABASE_URL,\n10: });\n11: \n12: export const db = drizzle(pool, { schema });\n\n(End of file - total 12 lines)\n</content>",
+  "timestamp": 1776841820519
+}

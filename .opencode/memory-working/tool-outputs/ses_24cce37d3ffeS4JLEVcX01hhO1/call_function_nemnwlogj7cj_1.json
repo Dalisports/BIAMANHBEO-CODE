@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_nemnwlogj7cj_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": " VERSION │ STATUS   │ DESCRIPTION │ USER                 │ DATE       \n v10     │ complete │ Release     │ huumanh.info@aol.com │ 2m17s ago  \n v9      │ complete │ Release     │ huumanh.info@aol.com │ 6m4s ago   \n v8      │ complete │ Release     │ huumanh.info@aol.com │ 15m44s ago \n v7      │ complete │ Release     │ huumanh.info@aol.com │ 18m4s ago  \n v6      │ complete │ Release     │ huumanh.info@aol.com │ 20m27s ago \n v5      │ complete │ Release     │ huumanh.info@aol.com │ 25m5s ago  \n v4      │ complete │ Release     │ huumanh.info@aol.com │ 25m24s ago \n v3      │ running  │ Release     │ huumanh.info@aol.com │ 33m8s ago  \n v2      │ complete │ Release     │ huumanh.info@aol.com │ 1h49m ago  \n v1      │ running  │ Release     │ huumanh.info@aol.com │ 1h54m ago  \n\n",
+  "timestamp": 1776844371850
+}

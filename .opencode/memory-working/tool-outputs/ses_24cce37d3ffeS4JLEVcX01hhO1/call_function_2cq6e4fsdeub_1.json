@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_2cq6e4fsdeub_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Invoke-WebRequest : Cannot bind parameter 'Headers'. Cannot convert the \"Content-Type: application/json\" value of type \r\n\"System.String\" to type \"System.Collections.IDictionary\".\r\nAt line:1 char:92\r\n+ ... beo.fly.dev/api/settings\" -H \"Content-Type: application/json\" -d \"{\\\" ...\r\n+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : InvalidArgument: (:) [Invoke-WebRequest], ParameterBindingException\r\n    + FullyQualifiedErrorId : CannotConvertArgumentNoMessage,Microsoft.PowerShell.Commands.InvokeWebRequestCommand\r\n \r\n",
+  "timestamp": 1776848672037
+}

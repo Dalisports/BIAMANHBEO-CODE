@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_8yef3ggevlmx_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 10 matches\nC:\\Users\\DELL\\BIAMANHBEO\\index.ts:\n  Line 58:     httpServer.listen(port, \"0.0.0.0\", () => {\r\n\n  Line 59:       log(`Server is listening on port ${port}`);\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\client\\src\\hooks\\use-speech.ts:\n  Line 94:   const listen = useCallback(() => {\r\n\n  Line 127:   return { isListening, listen, stop, speak, supported };\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO\\client\\src\\hooks\\use-toast.ts:\n  Line 129: const listeners: Array<(state: State) => void> = []\r\n\n  Line 135:   listeners.forEach((listener) => {\r\n\n  Line 136:     listener(memoryState)\r\n\n  Line 175:     listeners.push(setState)\r\n\n  Line 177:       const index = listeners.indexOf(setState)\r\n\n  Line 179:         listeners.splice(index, 1)\r\n",
+  "timestamp": 1776845578903
+}

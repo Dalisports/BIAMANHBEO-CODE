@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_9hrvq8jg3l04_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Write-Output : Parameter cannot be processed because the parameter name 'e' is ambiguous. Possible matches include: \r\n-ErrorAction -ErrorVariable.\r\nAt line:1 char:37\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\"; echo -e \"y\\ny\\n\" | fly postgres create ...\r\n+                                     ~~\r\n    + CategoryInfo          : InvalidArgument: (:) [Write-Output], ParameterBindingException\r\n    + FullyQualifiedErrorId : AmbiguousParameter,Microsoft.PowerShell.Commands.WriteOutputCommand\r\n \r\n",
+  "timestamp": 1776842125112
+}

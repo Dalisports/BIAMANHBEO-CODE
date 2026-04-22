@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_w2b9box27z83_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": " VERSION │ IP                     │ TYPE                       │ REGION │ CREATED AT       \n v6      │ 2a09:8280:1::109:866:0 │ public ingress (dedicated) │ global │ 1h44m ago        \n v4      │ 66.241.125.171         │ public ingress (shared)    │        │ Jan 1 0001 00:00 \n\nLearn more about Fly.io public, private, shared and dedicated IP addresses in our docs: https://fly.io/docs/networking/services/\n",
+  "timestamp": 1776843789440
+}

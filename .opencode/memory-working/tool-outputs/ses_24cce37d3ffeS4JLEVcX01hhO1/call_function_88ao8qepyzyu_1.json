@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_88ao8qepyzyu_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\vite.ts</path>\n<type>file</type>\n<content>\n1: import { type Express } from \"express\";\n2: import { createServer as createViteServer, createLogger } from \"vite\";\n3: import { type Server } from \"http\";\n4: import viteConfig from \"../vite.config\";\n5: import fs from \"fs\";\n6: import path from \"path\";\n7: import { nanoid } from \"nanoid\";\n8: \n9: const viteLogger = createLogger();\n10: \n11: export async function setupVite(server: Server, app: Express) {\n12:   const serverOptions = {\n13:     middlewareMode: true,\n14:     hmr: { server, path: \"/vite-hmr\" },\n15:     allowedHosts: true as const,\n16:   };\n17: \n18:   const vite = await createViteServer({\n19:     ...viteConfig,\n20:     configFile: false,\n21:     customLogger: {\n22:       ...viteLogger,\n23:       error: (msg, options) => {\n24:         viteLogger.error(msg, options);\n25:         process.exit(1);\n26:       },\n27:     },\n28:     server: serverOptions,\n29:     appType: \"custom\",\n30:   });\n31: \n32:   app.use(vite.middlewares);\n33: \n34:   app.use(\"/{*path}\", async (req, res, next) => {\n35:     const url = req.originalUrl;\n36: \n37:     try {\n38:       const clientTemplate = path.resolve(\n39:         import.meta.dirname,\n40:         \"..\",\n\n(Showing lines 1-40 of 58. Use offset=41 to continue.)\n</content>",
+  "timestamp": 1776844600836
+}

@@ -17,10 +17,13 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  app.use("*", (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
-    res.sendFile(path.resolve(distPath, "index.html"));
+    if (req.path === "/" || !req.path.includes(".")) {
+      return res.sendFile(path.resolve(distPath, "index.html"));
+    }
+    next();
   });
 }

@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_2dufttar82dh_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Tables.tsx</path>\n<type>file</type>\n<content>\n475:                           <button\n476:                             key={item.id}\n477:                             data-testid={`menu-item-${item.id}`}\n478:                             onClick={() => handleAddItem(item, 1)}\n479:                             className=\"p-2 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left\"\n480:                           >\n481:                             <p className=\"font-medium text-sm truncate\">{item.name}</p>\n482:                             <p className=\"text-xs text-muted-foreground\">{formatCurrency(item.price)}</p>\n483:                           </button>\n484:                         ))}\n485:                       </div>\n486:                     </div>\n487:                   </>\n488:                 )}\n489: \n490:                 {activeTableTab === \"history\" && (() => {\n491:                   const historyOrders = getTablePaidHistory(selectedTable);\n492:                   const totalRevenue = historyOrders.reduce((s, o) => s + o.totalAmount, 0);\n493: \n494:                   return (\n\n(Showing lines 475-494 of 926. Use offset=495 to continue.)\n</content>",
+  "timestamp": 1776849921666
+}

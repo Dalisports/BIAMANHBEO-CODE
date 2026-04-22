@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_4y8kkmyurbno_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Neon menu_items columns:\nrequire is not defined\n  - id\n  - name\n  - price\n  - category_id\n  - description\n  - image\n  - is_available\n  - is_active\n  - created_at\n  - is_sticky\n  - is_priority\n",
+  "timestamp": 1776845363023
+}

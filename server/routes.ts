@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import { sql } from "drizzle-orm";
+import { db } from "./db";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -181,6 +183,7 @@ export async function registerRoutes(
     try {
       const { enabled } = req.body;
       await storage.setQrEnabled(!!enabled);
+      broadcast({ type: "ATTENDANCE_QR_CHANGED", data: { enabled: !!enabled } });
       res.json({ enabled: !!enabled });
     } catch (err) {
       res.status(500).json({ message: "Error toggling QR" });
@@ -315,6 +318,19 @@ export async function registerRoutes(
     } catch (err) {
       console.error("Migration error:", err);
       res.status(500).json({ message: "Migration failed" });
+    }
+  });
+
+  app.post("/api/migrate/add-hidden-column", requireOwnerMiddleware, async (req, res) => {
+    try {
+      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false`);
+      res.json({ success: true, message: "Column is_hidden added" });
+    } catch (err: any) {
+      if (err.message?.includes("already exists") || err.code === "42701") {
+        res.json({ success: true, message: "Column already exists" });
+      } else {
+        res.status(500).json({ message: "Migration failed", error: err.message });
+      }
     }
   });
 
@@ -655,6 +671,20 @@ export async function registerRoutes(
       res.json(setting || { key, value: null });
     } catch (err) {
       res.status(500).json({ message: "Error getting setting" });
+    }
+  });
+
+  app.patch("/api/settings/:key", async (req, res) => {
+    try {
+      const key = req.params.key;
+      const { value } = req.body;
+      if (value === undefined) {
+        return res.status(400).json({ message: "Missing value" });
+      }
+      const setting = await storage.setSetting(key, value);
+      res.json(setting);
+    } catch (err) {
+      res.status(500).json({ message: "Error saving setting" });
     }
   });
 

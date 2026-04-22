@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_syahj51w17xr_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Tables in local SQLite:\n  - users\n  - sqlite_sequence\n  - user_profiles\n  - daily_qr_codes\n  - attendance_records\n  - categories\n  - settings\n  - menu_items\n  - orders\n  - kitchen_orders\n  - payment_settings\n\nRow counts:\n  users: 0 rows\n  sqlite_sequence: 1 rows\n  user_profiles: 0 rows\n  daily_qr_codes: 0 rows\n  attendance_records: 0 rows\n  categories: 0 rows\n  settings: 0 rows\n  menu_items: 39 rows\n  orders: 0 rows\n  kitchen_orders: 0 rows\n  payment_settings: 0 rows\n",
+  "timestamp": 1776845027262
+}

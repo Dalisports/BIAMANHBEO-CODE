@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_kwwy272hgwkv_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 1 matches\nC:\\Users\\DELL\\BIAMANHBEO\\index.ts:\n  Line 47:     await storage.runMigrations();\r\n",
+  "timestamp": 1776842900965
+}

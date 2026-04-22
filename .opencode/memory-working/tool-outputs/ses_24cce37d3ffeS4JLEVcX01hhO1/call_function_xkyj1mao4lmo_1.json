@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_xkyj1mao4lmo_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "powershell.exe : ScriptBlock should only be specified as a value of the Command parameter.\r\nAt line:1 char:1\r\n+ powershell -Command \"Invoke-RestMethod -Uri 'https://bia-manh-beo.fly ...\r\n+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : InvalidArgument: (:) [], ParameterBindingException\r\n    + FullyQualifiedErrorId : IncorrectValueForCommandParameter\r\n \r\n",
+  "timestamp": 1776848684728
+}

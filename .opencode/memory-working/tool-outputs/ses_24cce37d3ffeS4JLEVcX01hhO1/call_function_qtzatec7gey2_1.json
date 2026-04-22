@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_qtzatec7gey2_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "Usage:\n  fly.exe ssh console [flags]\n\nFlags:\n  -A, --address string         Address of VM to connect to\n  -a, --app string             Application name\n  -C, --command string         command to run on SSH session\n  -c, --config string          Path to application configuration file\n      --container string       Container to connect to\n  -h, --help                   help for console\n      --machine string         Run the console in the existing machine\n                               with the specified ID\n  -o, --org string             The target Fly.io organization\n  -g, --process-group string   The target process group (also --group)\n      --pty                    Allocate a pseudo-terminal (default: on\n                               when no command is provided)\n  -q, --quiet                  Don't print progress indicators for WireGuard\n  -r, --region string          The target region (see 'flyctl platform\n                               regions')\n  -s, --select                 select available instances\n  -u, --user string            Unix username to connect as (default \"root\")\n\nGlobal Flags:\n  -t, --access-token string   Fly API Access Token\n      --debug                 Print additional logs and traces\n      --verbose               Verbose output\n\nError: accepts at most 1 arg(s), received 2\n",
+  "timestamp": 1776848589334
+}

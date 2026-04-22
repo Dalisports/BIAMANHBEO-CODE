@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_1qz5j9zyp9l7_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "grep",
+  "fullOutput": "Found 14 matches\nC:\\Users\\DELL\\BIAMANHBEO\\client\\src\\pages\\Tables.tsx:\n  Line 289:               whileHover={{ scale: isRenaming ? 1 : 1.02 }}\r\n\n  Line 290:               whileTap={{ scale: isRenaming ? 1 : 0.97 }}\r\n\n  Line 654:               initial={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 655:               animate={{ scale: 1, opacity: 1 }}\r\n\n  Line 656:               exit={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 769:               initial={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 770:               animate={{ scale: 1, opacity: 1 }}\r\n\n  Line 771:               exit={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 845:               initial={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 846:               animate={{ scale: 1, opacity: 1 }}\r\n\n  Line 847:               exit={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 890:               initial={{ scale: 0.95, opacity: 0 }}\r\n\n  Line 891:               animate={{ scale: 1, opacity: 1 }}\r\n\n  Line 892:               exit={{ scale: 0.95, opacity: 0 }}\r\n",
+  "timestamp": 1776848986226
+}

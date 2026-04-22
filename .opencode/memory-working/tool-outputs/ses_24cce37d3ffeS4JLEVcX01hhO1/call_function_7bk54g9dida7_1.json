@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_7bk54g9dida7_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\server\\routes.ts</path>\n<type>file</type>\n<content>\n35:     req.user = user;\n36:     next();\n37:   }\n38: \n39:   function requireOwnerMiddleware(req: any, res: any, next: any) {\n40:     const user = getAuthUser(req);\n41:     if (!user) return res.status(401).json({ message: \"Unauthorized\" });\n42:     if (user.role !== \"owner\") return res.status(403).json({ message: \"Forbidden: Owner only\" });\n43:     req.user = user;\n44:     next();\n45:   }\n46: \n47:   app.post(api.auth.login.path, async (req, res) => {\n48:     try {\n49:       const { username, password } = req.body;\n50:       if (!username || !password) {\n51:         return res.status(400).json({ message: \"Missing username or password\" });\n52:       }\n53:       const result = await login(username, password);\n54:       if (!result) {\n55:         return res.status(401).json({ message: \"Invalid credentials\" });\n56:       }\n57:       res.json(result);\n58:     } catch (err) {\n59:       console.error(\"Login error:\", err);\n\n(Showing lines 35-59 of 937. Use offset=60 to continue.)\n</content>",
+  "timestamp": 1776848722262
+}

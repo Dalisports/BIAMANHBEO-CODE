@@ -132,7 +132,7 @@ export default function Kitchen() {
   }, []);
 
   const priorityNames = useMemo(
-    () => new Set((menuItems || []).filter((m) => m.isPriority).map((m) => m.name)),
+    () => new Set((menuItems || []).filter((m) => m.isPriority && !m.isHidden).map((m) => m.name)),
     [menuItems],
   );
 

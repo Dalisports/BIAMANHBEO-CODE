@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_7fy39c1fto2f_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "bash",
+  "fullOutput": "At line:1 char:53\r\n+ cd \"C:\\Users\\DELL\\BIAMANHBEO\"; git config user.name && git config use ...\r\n+                                                     ~~\r\nThe token '&&' is not a valid statement separator in this version.\r\n    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException\r\n    + FullyQualifiedErrorId : InvalidEndOfLine\r\n \r\n",
+  "timestamp": 1776837097976
+}

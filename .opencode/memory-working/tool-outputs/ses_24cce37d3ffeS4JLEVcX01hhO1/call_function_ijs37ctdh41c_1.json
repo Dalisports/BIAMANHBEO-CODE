@@ -1,0 +1,7 @@
+{
+  "callID": "call_function_ijs37ctdh41c_1",
+  "sessionID": "ses_24cce37d3ffeS4JLEVcX01hhO1",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO\\index.ts</path>\n<type>file</type>\n<content>\n1: import \"dotenv/config\";\n2: import express, { type Request, Response, NextFunction } from \"express\";\n3: import { registerRoutes } from \"./server/routes\";\n4: import { registerGauAssistantRoutes } from \"./server/gau_assistant\";\n5: import { serveStatic } from \"./server/static\";\n6: import { createServer } from \"http\";\n7: import { initWebSocket } from \"./server/websocket\";\n8: import { storage } from \"./server/storage\";\n9: import { startOfTomorrow } from \"date-fns\";\n10: \n11: const app = express();\n12: const httpServer = createServer(app);\n13: \n14: app.use(\n15:   express.json({\n16:     verify: (req: any, _res, buf) => {\n17:       req.rawBody = buf;\n18:     },\n19:   }),\n20: );\n\n(Showing lines 1-20 of 65. Use offset=21 to continue.)\n</content>",
+  "timestamp": 1776843835570
+}
