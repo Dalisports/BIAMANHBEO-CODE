@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, Loader2, RefreshCw, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Send, Bot, Loader2, RefreshCw, Trash2, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 
@@ -25,6 +25,13 @@ interface ContextData {
   pendingCount: number;
 }
 
+interface AIModel {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+}
+
 export default function GauAssistant() {
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
@@ -42,13 +49,30 @@ export default function GauAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [context, setContext] = useState<ContextData | null>(null);
   const [showContext, setShowContext] = useState(false);
+  const [models, setModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("auto");
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load context on mount
+  // Load context and models on mount
   useEffect(() => {
     fetchContext();
+    fetchModels();
+    // Load saved model preference
+    const savedModel = localStorage.getItem("gau_selected_model");
+    if (savedModel) setSelectedModel(savedModel);
   }, []);
+
+  const fetchModels = async () => {
+    try {
+      const res = await fetch("/api/gau-assistant/models");
+      const data = await res.json();
+      setModels(data.models);
+    } catch (err) {
+      console.error("Failed to fetch models:", err);
+    }
+  };
 
   // Save to localStorage whenever messages change
   useEffect(() => {
@@ -96,8 +120,7 @@ export default function GauAssistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input.trim(),
-          userId: 1,
-          userRole: "employee"
+          model: selectedModel === "auto" ? undefined : selectedModel,
         }),
       });
 
@@ -198,88 +221,143 @@ export default function GauAssistant() {
     { label: "Gửi bếp", example: "Gửi bếp bàn 5" },
   ];
 
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem("gau_chat_history");
+  };
+
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <Bot className="w-7 h-7 text-black" />
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-background pb-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <Bot className="w-7 h-7 text-black" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Gấu Assistant 🐻</h1>
+              <p className="text-sm text-muted-foreground">Trợ lý AI cho nhà hàng</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">Gấu Assistant 🐻</h1>
-            <p className="text-sm text-muted-foreground">Trợ lý AI cho nhà hàng</p>
+        <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowModelDropdown(!showModelDropdown)}
+                className="px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border"
+              >
+                <Bot className="w-4 h-4 text-amber-500" />
+                {models.find(m => m.id === selectedModel)?.name || "Tự động"}
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <AnimatePresence>
+                {showModelDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+                  >
+                    {models.map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          setSelectedModel(model.id);
+                          setShowModelDropdown(false);
+                          localStorage.setItem("gau_selected_model", model.id);
+                        }}
+                        className={cn(
+                          "w-full px-4 py-3 text-left hover:bg-secondary transition-colors flex flex-col",
+                          selectedModel === model.id && "bg-amber-100"
+                        )}
+                      >
+                        <span className="font-semibold text-sm">{model.name}</span>
+                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <button
+              onClick={clearChat}
+              className="px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-red-100 text-red-600 hover:bg-red-200"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear
+            </button>
+            <button
+              onClick={() => setShowContext(!showContext)}
+              className={cn(
+                "px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2",
+                showContext 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-secondary text-foreground hover:bg-secondary/80"
+              )}
+            >
+              {showContext ? "Ẩn" : "Xem"} Menu ({context?.menuItems?.length || 0} món)
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => setShowContext(!showContext)}
-          className={cn(
-            "px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2",
-            showContext 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-secondary text-foreground hover:bg-secondary/80"
-          )}
-        >
-          {showContext ? "Ẩn" : "Xem"} Menu ({context?.menuItems?.length || 0} món)
-        </button>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {quickActions.map((action) => (
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => setInput(action.example)}
+              className="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 text-sm font-medium hover:bg-amber-200 transition-colors"
+            >
+              {action.label}
+            </button>
+          ))}
           <button
-            key={action.label}
-            onClick={() => setInput(action.example)}
-            className="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 text-sm font-medium hover:bg-amber-200 transition-colors"
+            onClick={fetchContext}
+            className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-sm font-medium hover:bg-blue-200 transition-colors flex items-center gap-1"
           >
-            {action.label}
+            <RefreshCw className="w-3 h-3" />
+            Cập nhật
           </button>
-        ))}
-        <button
-          onClick={fetchContext}
-          className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-sm font-medium hover:bg-blue-200 transition-colors flex items-center gap-1"
-        >
-          <RefreshCw className="w-3 h-3" />
-          Cập nhật
-        </button>
-      </div>
+        </div>
 
-      {/* Context Panel */}
-      <AnimatePresence>
-        {showContext && context && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mb-4 overflow-hidden"
-          >
-            <div className="bg-card rounded-2xl border border-border p-4">
-              <h3 className="font-bold mb-3 text-sm uppercase tracking-wider text-muted-foreground">
-                Menu ({context.menuItems.length} món)
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                {context.menuItems.slice(0, 20).map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="flex justify-between items-center px-3 py-2 bg-secondary/50 rounded-lg text-sm"
-                  >
-                    <span className="font-medium">{item.name}</span>
-                    <span className="text-muted-foreground">{formatCurrency(item.price)}</span>
-                  </div>
-                ))}
+        {/* Context Panel */}
+        <AnimatePresence>
+          {showContext && context && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-card rounded-2xl border border-border p-4">
+                <h3 className="font-bold mb-3 text-sm uppercase tracking-wider text-muted-foreground">
+                  Menu ({context.menuItems.length} món)
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                  {context.menuItems.slice(0, 20).map((item) => (
+                    <div 
+                      key={item.id} 
+                      className="flex justify-between items-center px-3 py-2 bg-secondary/50 rounded-lg text-sm"
+                    >
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-muted-foreground">{formatCurrency(item.price)}</span>
+                    </div>
+                  ))}
+                </div>
+                {context.pendingCount > 0 && (
+                  <p className="mt-3 text-sm text-orange-600 font-medium">
+                    ⚠️ Có {context.pendingCount} đơn đang chờ xử lý
+                  </p>
+                )}
               </div>
-              {context.pendingCount > 0 && (
-                <p className="mt-3 text-sm text-orange-600 font-medium">
-                  ⚠️ Có {context.pendingCount} đơn đang chờ xử lý
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-card rounded-3xl border border-border p-4 mb-4 min-h-[400px]">
+      <div className="flex-1 overflow-y-auto bg-card rounded-3xl border border-border p-4 mb-4 min-h-[400px]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#fbbf24 transparent' }}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center mb-4">
