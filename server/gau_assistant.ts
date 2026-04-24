@@ -6,13 +6,13 @@ import { broadcast } from "./websocket";
 // OpenRouter client (default - free models)
 const openrouter = new OpenAI({
 const openrouter = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
+  apiKey: "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",
   baseURL: "https://openrouter.ai/api/v1",
 });
 
-// NVIDIA client (optional - fill NVIDIA_API_KEY in .env)
+// NVIDIA client (optional)
 const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
+  apiKey: "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",
   baseURL: "https://integrate.api.nvidia.com/v1",
 });
 
