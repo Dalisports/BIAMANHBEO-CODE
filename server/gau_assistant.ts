@@ -5,36 +5,27 @@ import { broadcast } from "./websocket";
 
 // OpenRouter client (default - free models)
 const openrouter = new OpenAI({
-const openrouter = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: "https://openrouter.ai/api/v1",
-});
-
-// NVIDIA client (optional)
-const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-  baseURL: "https://integrate.api.nvidia.com/v1",
-});
-
-// NVIDIA client (optional - fill NVIDIA_API_KEY in .env)
-const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY,
-=======
-  apiKey: process.env.OPENROUTER_API_KEY || "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",
+  apiKey: process.env.OPENROUTER_API_KEY!,
   baseURL: "https://openrouter.ai/api/v1",
 });
 
 // NVIDIA client (optional - user's NVIDIA API key)
 const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY || "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",
->>>>>>> 9db9958906e2edd781e69ac22c570bcb0989a5d0
+  apiKey: process.env.NVIDIA_API_KEY!,
+  baseURL: "https://integrate.api.nvidia.com/v1",
+});
+
+// NVIDIA API v2 (DeepSeek - hidden model)
+const nvidiaV2 = new OpenAI({
+  apiKey: "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",
   baseURL: "https://integrate.api.nvidia.com/v1",
 });
 
 // Available models for selection
 const AVAILABLE_MODELS = [
-  { id: "auto", name: "Tự động (OpenRouter)", provider: "openrouter", description: "Chọn model miễn phí tốt nhất" },
-  { id: "nvidia/gemma-2-2b-it", name: "NVIDIA Gemma 2B", provider: "nvidia", description: "Model nhanh của NVIDIA" },
+  { id: "auto", name: "Tự động (OpenRouter)", provider: "openrouter", description: "Chọn model miễn phí tốt nhất", hidden: false },
+  { id: "nvidia/gemma-2-2b-it", name: "NVIDIA Gemma 2B", provider: "nvidia", description: "Model nhanh của NVIDIA", hidden: false },
+  { id: "deepseek-v3.2", name: "DeepSeek V3", provider: "nvidia2", description: "Model suy luận mạnh", hidden: true },
 ];
 
 // FREE models list - tried in order until one works (auto-fallback on 429/credits error)
@@ -194,8 +185,8 @@ Menu: ${JSON.stringify(context.menuItems)}
       let responseText = "";
       
       if (selectedModel === "nvidia/gemma-2-2b-it") {
-        // Use NVIDIA API
-        console.log("[GauAssistant] Using NVIDIA model");
+        // Use NVIDIA Gemma 2B
+        console.log("[GauAssistant] Using NVIDIA Gemma model");
         try {
           const completion = await nvidia.chat.completions.create({
             model: "google/gemma-2-2b-it",
@@ -209,7 +200,36 @@ Menu: ${JSON.stringify(context.menuItems)}
           responseText = completion.choices[0]?.message?.content || "";
         } catch (nvidiaErr: any) {
           console.error("[GauAssistant] NVIDIA error:", nvidiaErr.message);
-          // Fallback to OpenRouter if NVIDIA fails
+          console.log("[GauAssistant] Falling back to OpenRouter");
+          const model = await findWorkingModel();
+          const completion = await openrouter.chat.completions.create({
+            model,
+            messages: [
+              { role: "system", content: systemMessage },
+              { role: "user", content: message },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.1,
+          });
+          responseText = completion.choices[0]?.message?.content || "{}";
+        }
+      } else if (selectedModel === "deepseek-v3.2") {
+        // Use NVIDIA DeepSeek V3
+        console.log("[GauAssistant] Using NVIDIA DeepSeek V3 model");
+        try {
+          const completion = await nvidiaV2.chat.completions.create({
+            model: "deepseek-ai/deepseek-v3.2",
+            messages: [
+              { role: "system", content: systemMessage },
+              { role: "user", content: message }
+            ],
+            temperature: 1,
+            top_p: 0.95,
+            max_tokens: 8192,
+          });
+          responseText = completion.choices[0]?.message?.content || "";
+        } catch (deepseekErr: any) {
+          console.error("[GauAssistant] DeepSeek error:", deepseekErr.message);
           console.log("[GauAssistant] Falling back to OpenRouter");
           const model = await findWorkingModel();
           const completion = await openrouter.chat.completions.create({

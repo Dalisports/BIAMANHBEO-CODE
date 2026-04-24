@@ -4,6 +4,7 @@ import {
   useKitchenOrders,
   useStartKitchenItem,
   useCompleteKitchenItem,
+  useOrders,
   type KitchenItem,
 } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
@@ -27,7 +28,8 @@ interface FlattenedItem {
   tableNumber: string;
   item: KitchenItem;
   sentAt: Date | null;
-  orderStatus: string;
+  kitchenOrderStatus: string; // kitchen order status (Waiting/Cooking/Done)
+  orderStatus: string; // parent order status (Pending/InKitchen/Ready/Complete)
 }
 
 function flattenKitchenOrders(
@@ -44,7 +46,8 @@ function flattenKitchenOrders(
         tableNumber: order.tableNumber,
         item,
         sentAt: order.sentAt ? new Date(order.sentAt) : null,
-        orderStatus: order.status,
+        kitchenOrderStatus: order.status, // kitchen order status
+        orderStatus: '', // will be fetched from parent order - leave empty for now
       });
     }
   }
@@ -94,6 +97,7 @@ async function saveKitchenOrder(order: string[] | null) {
 
 export default function Kitchen() {
   const { data: kitchenOrders, isLoading } = useKitchenOrders();
+  const { data: orders } = useOrders(); // for doneOrdersCount
   const { data: menuItems } = useMenuItems();
   const startItem = useStartKitchenItem();
   const completeItem = useCompleteKitchenItem();
@@ -138,9 +142,15 @@ export default function Kitchen() {
     [menuItems],
   );
 
+  // Hidden menu item names - to filter from kitchen display
+  const hiddenNames = useMemo(
+    () => new Set((menuItems || []).filter((m) => m.isHidden).map((m) => m.name)),
+    [menuItems],
+  );
+
   const flattenedItems = useMemo(
-    () => flattenKitchenOrders(kitchenOrders),
-    [kitchenOrders],
+    () => flattenKitchenOrders(kitchenOrders).filter((fi) => !hiddenNames.has(fi.item.name)),
+    [kitchenOrders, hiddenNames],
   );
 
   const pendingItems = useMemo(
@@ -159,10 +169,15 @@ export default function Kitchen() {
   );
 
   // Đếm đơn bếp hoàn thành (đồng bộ với menu-tv)
-  const doneOrdersCount = useMemo(
-    () => (kitchenOrders || []).filter((o) => o.status === "Done").length,
-    [kitchenOrders],
-  );
+  // FIX: Count orders completed TODAY via payment (kitchen orders get DELETED when paid)
+  const doneOrdersCount = useMemo(() => {
+    if (!orders) return 0;
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    return (orders || []).filter(o =>
+      o.status === 'Complete' && o.paidAt && String(o.paidAt).startsWith(todayStr)
+    ).length;
+  }, [orders]);
 
   // Build sorted cooking queue
   const autoQueue = useMemo<CookingQueueItem[]>(
@@ -214,7 +229,7 @@ export default function Kitchen() {
 
   // Group by table for "THEO BÀN" panel
   const isItemDone = (item: FlattenedItem) =>
-    item.item.cookingStatus === "done" || item.orderStatus === "Complete";
+    item.item.cookingStatus === "done" || item.kitchenOrderStatus === "Done";
 
   const ordersByTable = useMemo(() => {
     const groups: Record<string, FlattenedItem[]> = {};

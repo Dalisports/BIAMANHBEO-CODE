@@ -292,8 +292,8 @@ export async function registerRoutes(
   app.patch("/api/products/:id", requireOwnerMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const { name, price, categoryId, description, image, isAvailable, isSticky, isPriority } = req.body;
-      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky, isPriority });
+      const { name, price, categoryId, description, image, isAvailable, isSticky, isPriority, isHidden } = req.body;
+      const updated = await storage.updateMenuItem(id, { name, price, categoryId, description, image, isAvailable, isSticky, isPriority, isHidden });
       res.json(updated);
     } catch (err) {
       console.error("Update product error:", err);
@@ -853,7 +853,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
       }));
 
       const response = await getOpenAI().chat.completions.create({
-        model: "gpt-5.2",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           ...historyMessages,

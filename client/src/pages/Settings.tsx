@@ -256,9 +256,9 @@ export default function Settings() {
       if (res.ok) {
         const data = await res.json();
         setDashboardData({
-          todayRevenue: data.totalRevenue || 0,
-          todayOrders: data.totalOrders || 0,
-          activeTables: data.activeTables || 0,
+          todayRevenue: data.todayRevenue || 0,
+          todayOrders: data.completedOrders || 0,
+          activeTables: data.pendingOrders || 0,
           totalEmployees: 0,
         });
       }

@@ -214,11 +214,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAttendanceByUser(userId: number) {
-    return await db.select().from(attendanceRecords).where(eq(attendanceRecords.userId, userId)).orderBy(desc(attendanceRecords.date));
+    return await db.select().from(attendanceRecords)
+      .where(eq(attendanceRecords.userId, userId))
+      .orderBy(desc(attendanceRecords.date), desc(attendanceRecords.checkIn));
   }
 
   async getAllAttendance() {
-    return await db.select().from(attendanceRecords).orderBy(desc(attendanceRecords.date));
+    return await db.select().from(attendanceRecords)
+      .orderBy(desc(attendanceRecords.date), desc(attendanceRecords.checkIn));
   }
 
   async getHourlyRate() {
@@ -427,6 +430,12 @@ async deleteMenuItem(id: number) {
     const order = await this.getOrder(orderId);
     if (!order) throw new Error("Order not found");
     
+    // Get menu items to check isHidden
+    const allMenuItems = await db.select().from(menuItems).where(eq(menuItems.isActive, true));
+    const hiddenMenuItemIds = new Set(
+      allMenuItems.filter(m => m.isHidden).map(m => m.id)
+    );
+    
     // Get all existing kitchen items for this order to calculate what's already been sent
     const existingKitchenOrders = await db.select().from(kitchenOrders)
       .where(eq(kitchenOrders.orderId, orderId));
@@ -440,9 +449,14 @@ async deleteMenuItem(id: number) {
       }
     }
 
-    // Calculate new items to send (the difference)
+    // Calculate new items to send (the difference), excluding hidden items
     const itemsToSent: any[] = [];
     for (const orderItem of (order.items as any[])) {
+      // Skip if menu item is hidden
+      if (orderItem.menuItemId && hiddenMenuItemIds.has(orderItem.menuItemId)) {
+        continue;
+      }
+      
       const key = `${orderItem.name}|${orderItem.notes || ""}`;
       const sentQty = alreadySentMap[key] || 0;
       const diff = orderItem.quantity - sentQty;
@@ -530,6 +544,11 @@ async deleteMenuItem(id: number) {
         startedAt: kitchenOrder.startedAt || new Date()
       })
       .where(eq(kitchenOrders.id, kitchenOrderId));
+
+    // FIX: Update parent order status to InKitchen
+    await db.update(orders)
+      .set({ status: "InKitchen" })
+      .where(eq(orders.id, kitchenOrder.orderId));
   }
 
   async completeKitchenOrder(id: number) {
@@ -614,11 +633,21 @@ async deleteMenuItem(id: number) {
   }
 
   async getBestSellers() {
+    const today = new Date();
+    const start = startOfDay(today);
+    const end = endOfDay(today);
+
+    // Get all orders and filter to those paid today
     const allOrders = await db.select().from(orders);
     
     const itemCounts: Record<string, number> = {};
     
+    // Only count orders that were paid TODAY
     allOrders.forEach(order => {
+      if (order.paymentStatus !== "Paid" || !order.paidAt) return;
+      const paidAt = new Date(order.paidAt);
+      if (paidAt < start || paidAt > end) return;
+      
       const items = order.items as any[];
       items.forEach(item => {
         if (!itemCounts[item.name]) {

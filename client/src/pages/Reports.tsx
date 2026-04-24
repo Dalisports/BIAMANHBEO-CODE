@@ -242,13 +242,13 @@ export default function Reports() {
                     Tỷ lệ thanh toán
                   </span>
                   <span className="font-bold text-accent">
-                    {((paidOrders / totalOrders) * 100).toFixed(1)}%
+                    {totalOrders > 0 ? ((paidOrders / totalOrders) * 100).toFixed(1) : '0.0'}%
                   </span>
                 </div>
                 <div className="mt-2 h-3 bg-secondary rounded-full overflow-hidden">
                   <div
                     className="h-full bg-accent rounded-full transition-all"
-                    style={{ width: `${(paidOrders / totalOrders) * 100}%` }}
+                    style={{ width: `${totalOrders > 0 ? (paidOrders / totalOrders) * 100 : 0}%` }}
                   />
                 </div>
               </div>

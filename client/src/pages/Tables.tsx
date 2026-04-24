@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, usePaymentSettings, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
@@ -14,12 +14,6 @@ const TABLE_STATUS = {
   cooking: { label: "Đang phục vụ",    bg: "bg-orange-100", border: "border-orange-400", text: "text-orange-700", strip: "bg-orange-500" },
   ready:   { label: "Chờ thanh toán",  bg: "bg-blue-100",   border: "border-blue-400",   text: "text-blue-700",   strip: "bg-blue-500"   },
 };
-
-const QUICK_ITEMS = [
-  { id: 100, name: "Cốc bia",  price: 6000 },
-  { id: 101, name: "Ca bia",   price: 30000 },
-  { id: 102, name: "Lạc rang",     price: 10000 },
-];
 
 const MAX_TABLES = 15;
 const TABLE_NAMES_KEY = "tableNames";
@@ -66,8 +60,11 @@ async function autoSendToKitchen(orderId: number) {
   await fetch(`/api/orders/${orderId}/send-to-kitchen`, { method: "POST", credentials: "include" });
 }
 
+// FIX: send-to-bar was calling a non-existent endpoint. Bar routing not implemented,
+// so treat bar same as kitchen for now.
 async function autoSendToBar(orderId: number) {
-  await fetch(`/api/orders/${orderId}/send-to-bar`, { method: "POST", credentials: "include" });
+  // Bar routing not implemented - send to kitchen instead
+  await fetch(`/api/orders/${orderId}/send-to-kitchen`, { method: "POST", credentials: "include" });
 }
 
 export default function Tables() {
@@ -153,6 +150,30 @@ export default function Tables() {
     return matchSearch && item.isAvailable;
   }) || [];
 
+  // Sort by popularity (items sold the most will be at the top)
+  const sortedMenuItems = useMemo(() => {
+    const popularity: Record<number, number> = {};
+    
+    // Calculate popularity from order history
+    (orders || []).forEach(order => {
+      (order.items as any[]).forEach((item: any) => {
+        if (item.menuItemId) {
+          popularity[item.menuItemId] = (popularity[item.menuItemId] || 0) + item.quantity;
+        }
+      });
+    });
+    
+    // Sort by popularity (highest first)
+    const sorted = [...filteredMenuItems].sort((a, b) => {
+      const aSold = popularity[a.id] || 0;
+      const bSold = popularity[b.id] || 0;
+      return bSold - aSold;
+    });
+    
+    // Top 3 popular + rest
+    return sorted;
+  }, [filteredMenuItems, orders]);
+
   const tableName = (num: number) => tableNames[num] || `Bàn ${num}`;
 
   const startRename = (num: number, e: React.MouseEvent) => {
@@ -190,11 +211,6 @@ export default function Tables() {
         onSuccess: (data: any) => { if (data?.id) routeToBar ? autoSendToBar(data.id) : autoSendToKitchen(data.id); },
       });
     }
-  };
-
-  const handleQuickAdd = (item: typeof QUICK_ITEMS[0]) => {
-    if (!selectedTable) return;
-    handleAddItem(item as any, 1);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -403,7 +419,54 @@ export default function Tables() {
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
                 {activeTableTab === "order" && (
                   <>
-                    {/* Current items */}
+                    {/* Search menu - top section with popular items */}
+                    <div className="bg-secondary/50 rounded-xl p-3">
+                      {/* Popular items from menu - top 3 sorted items */}
+                      {sortedMenuItems.length > 0 && (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-bold text-yellow-600 uppercase tracking-wider">Phổ biến</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            {sortedMenuItems.slice(0, 3).map(item => (
+                              <button
+                                key={item.id}
+                                data-testid={`popular-item-${item.id}`}
+                                onClick={() => handleAddItem(item, 1)}
+                                className="p-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-center"
+                              >
+                                <p className="font-bold text-sm">{item.name}</p>
+                                <p className="text-xs text-yellow-700 font-semibold">{formatCurrency(item.price)}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Search bar */}
+                      <input
+                        data-testid="search-menu"
+                        type="text"
+                        placeholder="Tìm món..."
+                        value={searchMenu}
+                        onChange={e => setSearchMenu(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-background border mb-2"
+                      />
+                      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 h-[200px] overflow-y-auto">
+                        {sortedMenuItems.map(item => (
+                          <button
+                            key={item.id}
+                            data-testid={`menu-item-${item.id}`}
+                            onClick={() => handleAddItem(item, 1)}
+                            className="p-3 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left flex items-center justify-center"
+                          >
+                            <p className="font-semibold text-base whitespace-normal text-center leading-tight">{item.name}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Current items - middle */}
                     {selectedOrder && selectedOrder.items && selectedOrder.items.length > 0 && (
                       <div className="bg-card rounded-xl border p-3">
                         <div className="flex items-center justify-between mb-2">
@@ -440,49 +503,18 @@ export default function Tables() {
                             </div>
                           ))}
                         </div>
-                        <div className="mt-3 pt-2 border-t flex justify-between">
-                          <span className="font-bold text-lg">Tổng cộng</span>
-                          <span className="text-2xl font-bold text-red-600">{formatCurrency(selectedOrder.totalAmount)}</span>
-                        </div>
                       </div>
                     )}
 
-                    {/* Menu panel */}
-                    <div className="bg-secondary/50 rounded-xl p-2">
-                      <input
-                        data-testid="search-menu"
-                        type="text"
-                        placeholder="Tìm món..."
-                        value={searchMenu}
-                        onChange={e => setSearchMenu(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-background border mb-2"
-                      />
-                      <div className="grid grid-cols-3 gap-2 mb-2">
-                        {QUICK_ITEMS.map(item => (
-                          <button
-                            key={item.id}
-                            data-testid={`quick-item-${item.id}`}
-                            onClick={() => handleQuickAdd(item)}
-                            className="p-2 rounded-lg border-2 border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-center"
-                          >
-                            <p className="font-bold text-sm">{item.name}</p>
-                            <p className="text-xs text-yellow-700 font-semibold">{formatCurrency(item.price)}</p>
-                          </button>
-                        ))}
+                    {/* Total - bottom (always visible if there's an order) */}
+                    {selectedOrder && (
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border-2 border-amber-300 p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-lg">Tổng cộng</span>
+                          <span className="text-3xl font-bold text-red-600">{formatCurrency(selectedOrder.totalAmount)}</span>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-3 md:grid-cols-4 gap-2 h-[320px] overflow-y-auto">
-                        {filteredMenuItems.map(item => (
-                          <button
-                            key={item.id}
-                            data-testid={`menu-item-${item.id}`}
-                            onClick={() => handleAddItem(item, 1)}
-                            className="p-3 rounded-lg bg-background border hover:border-primary hover:bg-primary/5 transition-colors text-left flex items-center justify-center"
-                          >
-                            <p className="font-semibold text-base whitespace-normal text-center leading-tight">{item.name}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    )}
                   </>
                 )}
 
