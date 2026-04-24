@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link, Zap, Tv
+  Plus, Minus, ShoppingCart, Beer, X, Loader2, Search, Edit2, Trash2, AlertTriangle, UtensilsCrossed, Link, Zap, Tv, EyeOff
 } from "lucide-react";
 
 const PLACEHOLDER_IMAGES = [
@@ -74,10 +74,11 @@ export default function Menu() {
     image: "",
     isSticky: false,
     isPriority: false,
+    isHidden: false,
   });
 
   const filteredItems = menuItems?.filter(item => {
-    const matchesSearch = searchQuery === "" || 
+    const matchesSearch = searchQuery === "" ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch && item.isActive;
   });
@@ -151,6 +152,7 @@ export default function Menu() {
       image: item.image || "",
       isSticky: item.isSticky || false,
       isPriority: item.isPriority || false,
+      isHidden: item.isHidden || false,
     });
     setShowEditDialog(true);
   };
@@ -168,6 +170,7 @@ export default function Menu() {
         image: editForm.image || null,
         isSticky: editForm.isSticky,
         isPriority: editForm.isPriority,
+        isHidden: editForm.isHidden,
       },
       {
         onSuccess: () => {
@@ -345,6 +348,12 @@ export default function Menu() {
                           <div className="flex items-center gap-0.5 bg-yellow-500 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg">
                             <Tv className="w-2.5 h-2.5" />
                             <span>Sticky TV</span>
+                          </div>
+                        )}
+                        {item.isHidden && (
+                          <div className="flex items-center gap-0.5 bg-gray-600 text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                            <EyeOff className="w-2.5 h-2.5" />
+                            <span>Ẩn bếp</span>
                           </div>
                         )}
                       </div>
@@ -606,8 +615,6 @@ export default function Menu() {
                     </div>
                   </div>
                   
-</div>
-                  
                   <div>
                     <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
                     <div className="relative">
@@ -807,6 +814,44 @@ export default function Menu() {
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${editForm.isPriority ? 'bg-red-500' : 'bg-gray-300'}`}
                     >
                       <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${editForm.isPriority ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-gray-100 rounded-xl border-2 border-gray-300">
+                    <div className="flex items-center gap-2">
+                      <EyeOff className="w-4 h-4 text-gray-600" />
+                      <div>
+                        <p className="font-bold text-gray-800 text-sm">Ẩn bếp</p>
+                        <p className="text-xs text-gray-500">Không hiển thị trên bếp & TV</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newHidden = !editForm.isHidden;
+                        setEditForm({ ...editForm, isHidden: newHidden });
+                        if (editItem) {
+                          updateMenuItem.mutate({ id: editItem.id, isHidden: newHidden }, {
+                            onSuccess: () => {
+                              toast({
+                                title: newHidden ? "Đã ẩn khỏi bếp" : "Đã hiển thị ở bếp",
+                                description: `Món "${editItem.name}" ${newHidden ? 'sẽ ẩn khỏi màn hình bếp và TV' : 'sẽ hiển thị ở bếp và TV'}`,
+                              });
+                              if (editItem) editItem.isHidden = newHidden;
+                            },
+                            onError: () => {
+                              toast({
+                                title: "Lỗi",
+                                description: "Không thể cập nhật",
+                                variant: "destructive",
+                              });
+                            },
+                          });
+                        }
+                      }}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${editForm.isHidden ? 'bg-gray-600' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${editForm.isHidden ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </form>

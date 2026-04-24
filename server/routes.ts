@@ -321,7 +321,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/migrate/add-hidden-column", requireOwnerMiddleware, async (req, res) => {
+  app.post("/api/migrate/add-hidden-column", async (req, res) => {
     try {
       await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false`);
       res.json({ success: true, message: "Column is_hidden added" });

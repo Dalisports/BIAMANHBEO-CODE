@@ -7,6 +7,8 @@ import {
   type KitchenItem,
 } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
+import { useNotificationSound } from "@/hooks/use-kitchen-notification";
+import { getAuthHeaders } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
 import {
@@ -80,7 +82,7 @@ async function saveKitchenOrder(order: string[] | null) {
   try {
     const res = await fetch("/api/kitchen/order", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({ order }),
     });
@@ -95,7 +97,7 @@ export default function Kitchen() {
   const { data: menuItems } = useMenuItems();
   const startItem = useStartKitchenItem();
   const completeItem = useCompleteKitchenItem();
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const { playBell } = useNotificationSound();
 
   // Manual reorder state — persisted to server
   const [manualOrder, setManualOrder] = useState<string[] | null>(null);
@@ -116,7 +118,7 @@ export default function Kitchen() {
   // Fetch saved order on mount, then poll every 15s for multi-device sync
   useEffect(() => {
     const load = () => {
-      fetch("/api/kitchen/order", { credentials: "include" })
+      fetch("/api/kitchen/order", { credentials: "include", headers: getAuthHeaders() })
         .then((r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
@@ -256,9 +258,9 @@ export default function Kitchen() {
 
   useEffect(() => {
     if (pendingItems.length > 0) {
-      audioRef.current?.play().catch(() => {});
+      playBell();
     }
-  }, [pendingItems.length]);
+  }, [pendingItems.length, playBell]);
 
   const handleStartItem = (fi: FlattenedItem) => {
     startItem.mutate({ kitchenOrderId: fi.kitchenOrderId, itemName: fi.item.name, notes: fi.item.notes });
@@ -270,8 +272,6 @@ export default function Kitchen() {
 
   return (
     <div className="h-full pb-4">
-      <audio ref={audioRef} src="/notification.mp3" />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <h2 className="text-2xl font-bold text-foreground">BẾP</h2>

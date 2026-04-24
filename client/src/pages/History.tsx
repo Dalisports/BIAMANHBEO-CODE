@@ -6,7 +6,7 @@ import { format, startOfMonth, endOfMonth, isToday, isYesterday } from "date-fns
 import { vi } from "date-fns/locale";
 import { 
   Calendar, ChevronLeft, ChevronRight, Loader2, Receipt, Clock, 
-  CreditCard, Search, TrendingUp, LayoutGrid, ChevronDown
+  CreditCard, Search, TrendingUp, LayoutGridIcon, ChevronDown
 } from "lucide-react";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -280,7 +280,7 @@ export default function History() {
               : "bg-card border border-border text-muted-foreground hover:text-foreground"
           )}
         >
-          <LayoutGrid className="w-4 h-4" />
+          <LayoutGridIcon className="w-4 h-4" />
           Theo Bàn
         </button>
       </div>
@@ -366,7 +366,7 @@ export default function History() {
               {tableStats.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-3xl border border-dashed border-border px-4">
                   <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center mb-3">
-                    <LayoutGrid className="w-7 h-7 text-muted-foreground" />
+                    <LayoutGridIcon className="w-7 h-7 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-bold mb-1">Chưa có dữ liệu</h3>
                   <p className="text-muted-foreground text-sm">Chưa có đơn thanh toán nào trong tháng này</p>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { MessageSquare, UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGrid, LogOut, User, Menu } from "lucide-react";
+import { UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGridIcon, LogOut, User, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
@@ -14,10 +14,9 @@ import {
 import { Settings, Clock } from "lucide-react";
 
 const BASE_NAV_ITEMS = [
-  { href: "/", label: "Bàn", icon: LayoutGrid },
+  { href: "/", label: "Bàn", icon: LayoutGridIcon },
   { href: "/menu", label: "Thực Đơn", icon: UtensilsCrossed },
   { href: "/profile", label: "Cá Nhân", icon: User },
-  { href: "/gau-assistant", label: "Gấu Assistant", icon: MessageSquare },
 ];
 
 const EMPLOYEE_NAV_ITEMS = [
