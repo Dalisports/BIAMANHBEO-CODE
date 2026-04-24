@@ -5,6 +5,7 @@ import { broadcast } from "./websocket";
 
 // OpenRouter client (default - free models)
 const openrouter = new OpenAI({
+const openrouter = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
 });
@@ -12,6 +13,21 @@ const openrouter = new OpenAI({
 // NVIDIA client (optional - fill NVIDIA_API_KEY in .env)
 const nvidia = new OpenAI({
   apiKey: process.env.NVIDIA_API_KEY,
+  baseURL: "https://integrate.api.nvidia.com/v1",
+});
+
+// NVIDIA client (optional - fill NVIDIA_API_KEY in .env)
+const nvidia = new OpenAI({
+  apiKey: process.env.NVIDIA_API_KEY,
+=======
+  apiKey: process.env.OPENROUTER_API_KEY || "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",
+  baseURL: "https://openrouter.ai/api/v1",
+});
+
+// NVIDIA client (optional - user's NVIDIA API key)
+const nvidia = new OpenAI({
+  apiKey: process.env.NVIDIA_API_KEY || "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",
+>>>>>>> 9db9958906e2edd781e69ac22c570bcb0989a5d0
   baseURL: "https://integrate.api.nvidia.com/v1",
 });
 

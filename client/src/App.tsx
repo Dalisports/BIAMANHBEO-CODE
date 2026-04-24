@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
 import GauAssistant from "@/pages/GauAssistant";
+import { FloatingChatBubble } from "@/components/FloatingChatBubble";
 import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
 import Kitchen from "@/pages/Kitchen";
@@ -82,6 +83,7 @@ function App() {
         <PWAUpdatePrompt />
         <AuthProvider>
           <Router />
+        <FloatingChatBubble />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
