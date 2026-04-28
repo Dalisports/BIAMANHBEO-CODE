@@ -64,9 +64,32 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
+          },
+          {
+            urlPattern: /\/api\/products/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "menu-api-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7
+              }
+            }
+          },
+          {
+            urlPattern: /\/api\/tables/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "tables-api-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7
+              }
+            }
           }
         ],
-        navigateFallback: "/offline.html"
+        navigateFallback: "/index.html",
+        navigateFallbackAllowlist: [/^\/(?!api).*/]
       }
     }),
     ...(process.env.NODE_ENV !== "production" &&
