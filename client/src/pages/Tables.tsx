@@ -4,6 +4,8 @@ import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, useUnpayOrder, 
 import { useMenuItems } from "@/hooks/use-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency, cn } from "@/lib/utils";
+import { Receipt } from "@/components/Receipt";
+import { exportReceiptAsPDF } from "@/lib/exportReceipt";
 import { format } from "date-fns";
 import { 
   Plus, Minus, X, CreditCard, Loader2, Pencil, Check, AlertTriangle, Trash2, History, ChevronDown, ChevronRight
@@ -83,9 +85,9 @@ export default function Tables() {
   const [expandedHistoryOrders, setExpandedHistoryOrders] = useState<Set<number>>(new Set());
   const [searchMenu, setSearchMenu] = useState("");
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
-  const [showMoveModal, setShowMoveModal] = useState<number | null>(null);
-  const [moveTargetTable, setMoveTargetTable] = useState<number | null>(null);
+
   const [payMethod, setPayMethod] = useState("cash");
+  const [showReceipt, setShowReceipt] = useState<Order | null>(null);
   const [renamingTable, setRenamingTable] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showDeleteItemModal, setShowDeleteItemModal] = useState<number | null>(null);
@@ -767,6 +769,10 @@ export default function Tables() {
                     if (showPayModal) {
                       payOrder.mutate({ orderId: showPayModal, method: payMethod }, {
                         onSuccess: () => {
+                          const paidOrder = orders?.find(o => o.id === showPayModal);
+                          if (paidOrder) {
+                            setShowReceipt(paidOrder);
+                          }
                           setShowPayModal(null);
                           setSelectedTable(null);
                         },
@@ -779,6 +785,38 @@ export default function Tables() {
                   {payOrder.isPending ? "Đang xử lý..." : "Xác nhận thanh toán"}
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Receipt Preview Modal */}
+      <AnimatePresence>
+        {showReceipt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowReceipt(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 shadow-2xl border-2 border-amber-200 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-black text-amber-500">HÓA ĐƠN</h3>
+                <button
+                  onClick={() => setShowReceipt(null)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <Receipt order={showReceipt} />
             </motion.div>
           </motion.div>
         )}

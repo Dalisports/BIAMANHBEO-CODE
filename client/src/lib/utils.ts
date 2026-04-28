@@ -9,3 +9,12 @@ export function formatCurrency(amount: number) {
   const thousands = Math.round(amount / 1000);
   return `${thousands}k`;
 }
+
+export function formatCurrencyFull(amount: number) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
