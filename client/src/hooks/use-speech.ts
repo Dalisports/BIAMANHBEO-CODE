@@ -7,12 +7,32 @@ declare global {
   }
 }
 
-export function useSpeech(onResult: (text: string) => void) {
+interface UseSpeechReturn {
+  isListening: boolean;
+  listen: () => void;
+  stop: () => void;
+  speak: (text: string) => void;
+  supported: boolean;
+  interimText: string;
+  finalText: string;
+  error: string | null;
+}
+
+export function useSpeech(onResult: (text: string) => void): UseSpeechReturn {
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(true);
+  const [interimText, setInterimText] = useState("");
+  const [finalText, setFinalText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const femaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
   const activeRef = useRef(false);
+  const onResultRef = useRef(onResult);
+  const finalTextRef = useRef("");
+
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -51,29 +71,63 @@ export function useSpeech(onResult: (text: string) => void) {
     const buildRecognition = () => {
       const recognition = new SpeechRecognition();
       recognition.lang = "vi-VN";
-      recognition.interimResults = false;
+      recognition.interimResults = true;
       recognition.maxAlternatives = 1;
       recognition.continuous = true;
 
       recognition.onstart = () => {
         setIsListening(true);
+        setError(null);
       };
 
       recognition.onresult = (event: any) => {
-        const text = event.results[event.results.length - 1][0].transcript;
-        if (text.trim()) {
-          onResult(text);
+        let interim = "";
+        let final = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          const transcript = result[0].transcript;
+
+          if (result.isFinal) {
+            final += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+
+        if (interim) {
+          setInterimText(interim);
+        }
+
+        if (final.trim()) {
+          setInterimText("");
+          setFinalText(final.trim());
+          finalTextRef.current = final.trim();
+          onResultRef.current(final.trim());
         }
       };
 
       recognition.onerror = (event: any) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setError("Không được phép truy cập micro");
+          activeRef.current = false;
+          setIsListening(false);
+        } else if (event.error === "audio-capture") {
+          setError("Không tìm thấy micro");
+          activeRef.current = false;
+          setIsListening(false);
+        } else if (event.error === "network") {
+          setError("Lỗi kết nối mạng");
+        } else if (event.error === "no-speech") {
+          setInterimText("");
+        }
+
         if (event.error !== "aborted" && event.error !== "no-speech") {
           console.error("Speech recognition error", event.error);
         }
-        if (activeRef.current) {
+
+        if (activeRef.current && event.error !== "not-allowed" && event.error !== "audio-capture") {
           try { recognition.start(); } catch (_) {}
-        } else {
-          setIsListening(false);
         }
       };
 
@@ -82,6 +136,7 @@ export function useSpeech(onResult: (text: string) => void) {
           try { recognition.start(); } catch (_) {}
         } else {
           setIsListening(false);
+          setInterimText("");
         }
       };
 
@@ -89,11 +144,15 @@ export function useSpeech(onResult: (text: string) => void) {
     };
 
     recognitionRef.current = buildRecognition();
-  }, [onResult]);
+  }, []);
 
   const listen = useCallback(() => {
     if (!recognitionRef.current || activeRef.current) return;
     activeRef.current = true;
+    setError(null);
+    setInterimText("");
+    setFinalText("");
+    finalTextRef.current = "";
     try {
       recognitionRef.current.start();
     } catch (e) {
@@ -124,5 +183,5 @@ export function useSpeech(onResult: (text: string) => void) {
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  return { isListening, listen, stop, speak, supported };
+  return { isListening, listen, stop, speak, supported, interimText, finalText, finalTextRef, error };
 }

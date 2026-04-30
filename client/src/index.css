@@ -4,6 +4,80 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   BUSINESS THEME - Clean Professional Style
+   Primary: #00adc9 (cyan)
+   Background: white
+   ============================================ */
+
+.theme-business {
+  --background: 0 0% 100%; /* white */
+  --foreground: 210 20% 15%; /* dark slate */
+
+  --card: 0 0% 100%;
+  --card-foreground: 210 20% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 20% 15%;
+
+  --primary: 190 100% 38%; /* #00adc9 cyan */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 20% 96%; /* very light gray */
+  --secondary-foreground: 210 20% 15%;
+
+  --muted: 210 15% 92%;
+  --muted-foreground: 210 10% 45%;
+
+  --accent: 190 100% 38%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 210 15% 85%;
+  --input: 210 15% 90%;
+  --ring: 190 100% 38%;
+
+  --gold-light: 190 100% 55%;
+  --gold-dark: 190 100% 30%;
+  --black: 210 20% 15%;
+}
+
+.theme-business .dark {
+  --background: 210 20% 8%;
+  --foreground: 0 0% 100%;
+
+  --card: 210 20% 12%;
+  --card-foreground: 0 0% 100%;
+
+  --popover: 210 20% 12%;
+  --popover-foreground: 0 0% 100%;
+
+  --primary: 190 100% 45%; /* lighter cyan for dark mode */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 20% 18%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 210 20% 18%;
+  --muted-foreground: 210 15% 60%;
+
+  --accent: 190 100% 45%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 210 20% 25%;
+  --input: 210 20% 20%;
+  --ring: 190 100% 45%;
+}
+
+/* ============================================
+   ORIGINAL BIA MANH BEO THEME (default)
+   ============================================ */
+
 @layer base {
   :root {
     --font-sans: 'Be Vietnam Pro', sans-serif;

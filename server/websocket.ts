@@ -56,7 +56,10 @@ export type WSEventType =
   | "ORDER_DELETED"
   | "KITCHEN_ORDER_CREATED"
   | "KITCHEN_ORDER_UPDATED"
-  | "KITCHEN_ORDER_DELETED";
+  | "KITCHEN_ORDER_DELETED"
+  | "PRODUCT_CREATED"
+  | "PRODUCT_UPDATED"
+  | "PRODUCT_DELETED";
 
 export interface WSEvent {
   type: WSEventType;

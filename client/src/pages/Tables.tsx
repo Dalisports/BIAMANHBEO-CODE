@@ -88,6 +88,8 @@ export default function Tables() {
 
   const [payMethod, setPayMethod] = useState("cash");
   const [showReceipt, setShowReceipt] = useState<Order | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState<number | null>(null);
+  const [moveTargetTable, setMoveTargetTable] = useState<number | null>(null);
   const [renamingTable, setRenamingTable] = useState<number | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [showDeleteItemModal, setShowDeleteItemModal] = useState<number | null>(null);

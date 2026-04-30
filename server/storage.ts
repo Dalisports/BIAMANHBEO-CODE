@@ -51,6 +51,7 @@ export interface IStorage {
   unpayOrder(id: number): Promise<void>;
 
   getMenuItems(): Promise<typeof menuItems.$inferSelect[]>;
+  getMenuItem(id: number): Promise<typeof menuItems.$inferSelect | undefined>;
   createMenuItem(item: InsertMenuItem): Promise<typeof menuItems.$inferSelect>;
   updateMenuItem(id: number, item: Partial<InsertMenuItem>): Promise<typeof menuItems.$inferSelect>;
   deleteMenuItem(id: number): Promise<void>;
@@ -276,6 +277,11 @@ export class DatabaseStorage implements IStorage {
 
   async getMenuItems() {
     return await db.select().from(menuItems).where(eq(menuItems.isActive, true));
+  }
+
+  async getMenuItem(id: number) {
+    const [item] = await db.select().from(menuItems).where(eq(menuItems.id, id));
+    return item;
   }
 
   async createMenuItem(item: InsertMenuItem) {

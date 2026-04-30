@@ -4,8 +4,10 @@ import { registerRoutes } from "./server/routes";
 import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { serveStatic } from "./server/static";
 import { createServer } from "http";
+import { createServer as createHttpsServer } from "https";
 import { initWebSocket } from "./server/websocket";
 import { storage } from "./server/storage";
+import { readFileSync } from "fs";
 import { startOfTomorrow } from "date-fns";
 
 const app = express();
@@ -36,11 +38,26 @@ export function log(message: string, source = "express") {
     log("Starting server initialization...");
     log(`DEBUG: DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
     log(`DEBUG: NODE_ENV: ${process.env.NODE_ENV}`);
+
+    const port = parseInt(process.env.PORT || "5000", 10);
+    const useHttps = process.env.USE_HTTPS === "true";
     
-    initWebSocket(httpServer);
+    let mainServer: import("http").Server | import("https").Server;
+    
+    if (useHttps) {
+      const httpsServer = createHttpsServer({
+        key: readFileSync("./certs/localhost+2-key.pem"),
+        cert: readFileSync("./certs/localhost+2.pem"),
+      }, app);
+      mainServer = httpsServer;
+    } else {
+      mainServer = httpServer;
+    }
+
+    initWebSocket(mainServer);
     log("[WS] WebSocket initialized");
 
-    await registerRoutes(httpServer, app);
+    await registerRoutes(mainServer, app);
     log("[ROUTES] API routes registered");
 
     registerGauAssistantRoutes(app);
@@ -53,14 +70,18 @@ export function log(message: string, source = "express") {
       serveStatic(app);
     } else {
       const { setupVite } = await import("./server/vite");
-      await setupVite(httpServer, app);
+      await setupVite(mainServer, app);
     }
 
-    const port = parseInt(process.env.PORT || "5000", 10);
-    log(`DEBUG: process.env.PORT = ${process.env.PORT}, using port = ${port}`);
-    httpServer.listen(port, "0.0.0.0", () => {
-      log(`Server is listening on port ${port}`);
-    });
+    if (useHttps) {
+      (mainServer as import("https").Server).listen(port, "0.0.0.0", () => {
+        log(`HTTPS Server is listening on port ${port}`);
+      });
+    } else {
+      (mainServer as import("http").Server).listen(port, "0.0.0.0", () => {
+        log(`Server is listening on port ${port}`);
+      });
+    }
   } catch (error: any) {
     console.error("FATAL ERROR DURING STARTUP:", error);
     process.exit(1);

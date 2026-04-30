@@ -1,101 +1,81 @@
 import type { Express, Request, Response } from "express";
-import OpenAI from "openai";
 import { storage } from "./storage";
 import { broadcast } from "./websocket";
 
-// OpenRouter client (default - free models)
-const openrouter = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY!,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+// Ollama client for local Gemma 4
+const OLLAMA_URL = "http://localhost:11434";
+const OLLAMA_MODEL = "gemma4-fast:latest";
 
-// NVIDIA client (optional - user's NVIDIA API key)
-const nvidia = new OpenAI({
-  apiKey: process.env.NVIDIA_API_KEY!,
-  baseURL: "https://integrate.api.nvidia.com/v1",
-});
-
-// NVIDIA API v2 (DeepSeek - hidden model)
-const nvidiaV2 = new OpenAI({
-  apiKey: "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",
-  baseURL: "https://integrate.api.nvidia.com/v1",
-});
+// Fly.io Ollama (Gemma 2 - deployed)
+const FLY_OLLAMA_URL = "https://troly-gau.fly.dev";
+const FLY_OLLAMA_MODEL = "gemma2:2b";
 
 // Available models for selection
 const AVAILABLE_MODELS = [
-  { id: "auto", name: "Tự động (OpenRouter)", provider: "openrouter", description: "Chọn model miễn phí tốt nhất", hidden: false },
-  { id: "nvidia/gemma-2-2b-it", name: "NVIDIA Gemma 2B", provider: "nvidia", description: "Model nhanh của NVIDIA", hidden: false },
-  { id: "deepseek-v3.2", name: "DeepSeek V3", provider: "nvidia2", description: "Model suy luận mạnh", hidden: true },
+  { id: "ollama/gemma4-fast:latest", name: "Gemma 4 Fast (Local 8B)", provider: "ollama", description: "Model local nhanh - RTX 3060", hidden: false },
+  { id: "fly/gemma2:2b", name: "Gemma 2 (Fly.io)", provider: "flyollama", description: "Model cloud - không cần local", hidden: false },
 ];
 
-// FREE models list - tried in order until one works (auto-fallback on 429/credits error)
-const FREE_MODELS = [
-  "inclusionai/ling-2.6-1t:free",
-  "tencent/hy3-preview:free",
-  "inclusionai/ling-2.6-flash:free",
-  "baidu/qianfan-ocr-fast:free",
-  "google/gemma-4-26b-a4b-it:free",
-  "google/gemma-4-31b-it:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-  "minimax/minimax-m2.5:free",
-  "qwen/qwen3-next-80b-a3b-instruct:free",
-  "openai/gpt-oss-120b:free",
-];
+// Call Ollama with full messages array (supports conversation history)
+async function callOllamaMessages(messages: any[]): Promise<string> {
+  console.log(`[GauAssistant] Calling Ollama with ${messages.length} messages...`);
+  const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      messages,
+      stream: false
+    })
+  });
 
-// Track current model index
-let currentModelIndex = 0;
-let workingModel: string | null = null;
+  if (!response.ok) {
+    throw new Error(`Ollama error: ${response.status}`);
+  }
 
-// Check if error is due to no credits / rate limit
-function isCreditsError(err: any): boolean {
-  const msg = err?.message || "";
-  return msg.includes("429") || msg.includes("rate limit") || msg.includes("credits") || msg.includes("quota") || msg.includes("insufficient");
+  const data = await response.json();
+  console.log("[GauAssistant] Ollama response:", JSON.stringify(data).substring(0, 200));
+  return data.message?.content || "";
 }
 
-// Find a working free model (auto-fallback on credits error)
-async function findWorkingModel(): Promise<string> {
-  // Try current model first
-  if (workingModel) {
+// Call Fly.io Ollama with full messages array (supports conversation history)
+async function callFlyOllamaMessages(messages: any[]): Promise<string> {
+  console.log(`[GauAssistant] Calling Fly.io Ollama with ${messages.length} messages...`);
+  const response = await fetch(`${FLY_OLLAMA_URL}/api/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: FLY_OLLAMA_MODEL,
+      messages,
+      stream: false
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Fly Ollama error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("[GauAssistant] Fly Ollama response:", JSON.stringify(data).substring(0, 200));
+  return data.message?.content || "";
+}
+
+// Retry logic with exponential backoff
+async function callWithRetry(callFn: () => Promise<string>, maxRetries = 2): Promise<string> {
+  let lastErr: any;
+  for (let i = 0; i <= maxRetries; i++) {
     try {
-      await openrouter.chat.completions.create({
-        model: workingModel,
-        messages: [{ role: "user", content: "test" }],
-        max_tokens: 5,
-      });
-      return workingModel;
-    } catch (err) {
-      if (!isCreditsError(err)) {
-        // Model totally broken, don't use it
-        workingModel = null;
+      if (i > 0) {
+        console.log(`[GauAssistant] Retry ${i}/${maxRetries}...`);
+        await new Promise(r => setTimeout(r, 1000 * i));
       }
-      // If credits error, try next model
+      return await callFn();
+    } catch (err: any) {
+      lastErr = err;
+      console.error(`[GauAssistant] Attempt ${i + 1} failed:`, err.message);
     }
   }
-  
-  // Find next working model
-  const startIndex = currentModelIndex;
-  do {
-    const model = FREE_MODELS[currentModelIndex];
-    console.log(`[GauAssistant] Testing model: ${model}`);
-    try {
-      await openrouter.chat.completions.create({
-        model,
-        messages: [{ role: "user", content: "test" }],
-        max_tokens: 5,
-      });
-      workingModel = model;
-      console.log(`[GauAssistant] ✅ Working model: ${model}`);
-      return model;
-    } catch (err: any) {
-      console.log(`[GauAssistant] ❌ Model ${model} failed: ${err.message}`);
-      if (isCreditsError(err)) {
-        // Credits issue - skip this model permanently for this session
-        currentModelIndex = (currentModelIndex + 1) % FREE_MODELS.length;
-      }
-    }
-  } while (currentModelIndex !== startIndex);
-  
-  throw new Error("No working free model found - all models out of credits");
+  throw lastErr;
 }
 
 // System prompt for Gấu Assistant
@@ -103,6 +83,20 @@ const GAU_SYSTEM_PROMPT = `Bạn là Gấu 🐻 - trợ lý AI thông minh cho n
 
 ## Nhiệm vụ
 Bạn hỗ trợ nhân viên thực hiện các tác vụ quản lý nhà hàng thông qua ngôn ngữ tự nhiên.
+
+## CÁC TÍNH NĂNG ĐẦY ĐỦ:
+1. **Tạo Order mới** - Tạo đơn hàng cho khách
+2. **Thêm món vào order** - Thêm món vào đơn đang có
+3. **Sửa món trong order** - Sửa số lượng hoặc xóa món
+4. **Gửi bếp** - Gửi order đến bếp để chế biến
+5. **Cập nhật trạng thái món ăn** - Đang nấu / Đã xong
+6. **Đổi bàn** - Chuyển đơn từ bàn này sang bàn khác
+7. **Báo tổng tiền** - Xem tổng tiền các bàn đang hoạt động
+8. **Thanh toán** - Thanh toán đơn hàng (tiền mặt, chuyển khoản...)
+9. **Thêm món vào menu** - Tạo món mới trong thực đơn
+10. **Sửa món trong menu** - Đổi tên, giá, mô tả món ăn
+11. **Xóa món trong menu** - Ẩn món khỏi thực đơn
+12. **Báo cáo doanh thu** - Xem thống kê doanh thu ngày
 
 ## QUAN TRỌNG - Table Number Format:
 - LUÔN dùng SỐ ĐƠN GIẢN cho tableNumber, ví dụ: "1", "2", "3"
@@ -113,31 +107,130 @@ Bạn hỗ trợ nhân viên thực hiện các tác vụ quản lý nhà hàng 
 - KHÔNG có câu "Vâng", "Tôi đã", "OK"
 - Chỉ trả lời ĐÚNG một JSON object thuần túy, không có markdown code block
 
-## Các lệnh bạn có thể thực hiện (DÙNG /api/orders):
-1. **Tạo Order**: 
-   - Action: { "action": "EXECUTE", "apiPath": "/api/orders/create", "apiMethod": "POST", "apiBody": { "tableNumber": "2", "items": [...], "totalAmount": ... } }
+## SỬ DỤNG THÔNG TIN NGƯỜI DÙNG (Memory):
+- Khi có section "THÔNG TIN NGƯỜI DÙNG & THÓI QUEN" trong prompt, hãy dùng nó để:
+  1. Nhớ lại các bàn thường xuyên thao tác → gợi ý nhanh
+  2. Nhớ món thường gọi → đề xuất món tương tự
+  3. Nhớ hành động thường dùng → ưu tiên phản hồi nhanh cho các tác vụ đó
+- Ví dụ: nếu người dùng nói "order bàn quen" và memory ghi "Bàn 5 (12 lần)" → hiểu là bàn 5
 
-2. **Thêm món**: 
-   - Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/update", "apiMethod": "PUT", "apiBody": { "items": [...] } }
+## Các lệnh API:
 
-3. **Gửi bếp**: 
-   - Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/send-to-kitchen", "apiMethod": "POST" }
+### 1. TẠO ORDER MỚI:
+- Action: { "action": "EXECUTE", "apiPath": "/api/orders/create", "apiMethod": "POST", "apiBody": { "tableNumber": "5", "items": [{menuItemId: 1, name: "Gà rán", price: 145000, quantity: 2}], "totalAmount": 290000 } }
 
-4. **Thanh toán**: 
-   - Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/pay", "apiMethod": "POST", "apiBody": { "method": "cash|transfer" } }
+### 2. THÊM MÓN VÀO ORDER (đơn đang có):
+- Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/update", "apiMethod": "PUT", "apiBody": { "items": [{menuItemId: 3, name: "Cơm rang", price: 50000, quantity: 1}] } }
 
-5. **Đổi bàn**: 
-   - Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/move", "apiMethod": "POST", "apiBody": { "tableNumber": "2" } }
+### 3. GỬI BẾP:
+- Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/send-to-kitchen", "apiMethod": "POST" }
 
-## Nếu cần hỏi lại khách:
-- Action: { "action": "REPLY", "message": "Câu hỏi của bạn" }
+### 4. CẬP NHẬT TRẠNG THÁI MÓN ĂN (bếp):
+- Bắt đầu nấu: { "action": "EXECUTE", "apiPath": "/api/kitchen/ID_BẾP/start", "apiMethod": "POST" }
+- Xong 1 món: { "action": "EXECUTE", "apiPath": "/api/kitchen/ID_BẾP/complete-item", "apiMethod": "POST", "apiBody": { "itemName": "Tên món" } }
+- Xong hết: { "action": "EXECUTE", "apiPath": "/api/kitchen/ID_BẾP/complete", "apiMethod": "POST" }
+
+### 5. ĐỔI BÀN:
+- Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/move", "apiMethod": "POST", "apiBody": { "tableNumber": "7" } }
+
+### 6. THANH TOÁN:
+- Action: { "action": "EXECUTE", "apiPath": "/api/orders/ID_THẬT/pay", "apiMethod": "POST", "apiBody": { "method": "cash" } }
+- method: "cash" (tiền mặt), "transfer" (chuyển khoản), "vnpay", "momo"
+
+### 7. BÁO TỔNG TIỀN CÁC BÀN:
+- Action: { "action": "REPLY", "message": "Tổng tiền các bàn đang hoạt động:\nBàn 1: 250.000đ\nBàn 3: 180.000đ\nTổng cộng: 430.000đ" }
+- Tính tổng từ activeOrders, mỗi bàn 1 dòng, cuối cùng Tổng cộng
+
+### 8. THÊM MÓN VÀO MENU:
+- Action: { "action": "EXECUTE", "apiPath": "/api/products", "apiMethod": "POST", "apiBody": { "name": "Trà sữa", "price": 35000, "isAvailable": true, "isActive": true } }
+
+### 9. SỬA MÓN TRONG MENU:
+- Action: { "action": "EXECUTE", "apiPath": "/api/products/ID_MÓN", "apiMethod": "PATCH", "apiBody": { "name": "Tên mới", "price": 40000 } }
+
+### 10. XÓA MÓN TRONG MENU:
+- Action: { "action": "EXECUTE", "apiPath": "/api/products/ID_MÓN", "apiMethod": "DELETE" }
+
+### 11. BÁO CÁO DOANH THU:
+- Action: { "action": "REPLY", "message": "📊 BÁO CÁO HÔM NAY:\n💰 Doanh thu: X.XXX.XXXđ\n✅ Đơn đã thanh toán: XX\n⏳ Đơn đang chờ: XX\n🍳 Đơn đang nấu: XX" }
+
+## Khi cần xác nhận với khách hàng:
+- Action: { "action": "CONFIRM", "confirmText": "Bạn có muốn...?", "apiPath": "...", "apiMethod": "...", "apiBody": {...} }
+
+## Khi chỉ cần trả lời bình thường (không cần API):
+- Action: { "action": "REPLY", "message": "Nội dung trả lời" }
+
+## Cách xử lý khi có lỗi:
+- Nếu không tìm thấy đơn của bàn nào đó → REPLY: "Không tìm thấy đơn đang hoạt động cho bàn X"
+- Nếu thiếu thông tin → REPLY: hỏi khách bổ sung
+- Nếu có lỗi server → ERROR: "Gấu đang gặp sự cố, thử lại sau nhé!"
 
 ## Luôn nhớ:
-- LUÔN dùng /api/orders
+- LUÔN dùng /api/orders hoặc /api/products hoặc /api/kitchen tùy tác vụ
 - tableNumber CHỈ là SỐ: "1", "2", "3" - không có chữ "Bàn"
 - KHÔNG viết gì khác ngoài JSON
 - Thay ID_THẬT bằng ID thực tế từ danh sách đơn đang hoạt động
 - Trả lời bằng tiếng Việt trong field "message"
+- Khi tạo order mới, tự động tính totalAmount = tổng(price * quantity) của các món
+
+## Ví dụ các tình huống:
+
+### Tạo order:
+- Input: "order bàn 5: 2 gà rán, 1 cocacola"
+- Tìm menu items "gà rán" và "cocacola" trong danh sách menu
+- Tính tổng tiền
+- Trả về EXECUTE cho /api/orders/create
+
+### Thêm món vào order đang có:
+- Input: "thêm 1 cơm rang vào bàn 3"
+- Tìm đơn bàn 3 trong activeOrders (status != Complete)
+- Trả về EXECUTE cho /api/orders/ID/update
+
+### Gửi bếp:
+- Input: "gửi bếp bàn 5"
+- Tìm đơn bàn 5 trong activeOrders
+- Trả về EXECUTE cho /api/orders/ID/send-to-kitchen
+
+### Cập nhật trạng thái món (bếp):
+- Input: "bàn 5 đang nấu rồi" hoặc "món gà rán bàn 5 đã xong"
+- Tìm kitchen order tương ứng
+- Trả về EXECUTE cho /api/kitchen/ID/start hoặc /complete-item
+
+### Thanh toán:
+- Input: "thanh toán bàn 3"
+- Tìm đơn của bàn 3 trong activeOrders
+- Trả về EXECUTE cho /api/orders/ID/pay
+
+### Đổi bàn:
+- Input: "chuyển bàn 3 sang bàn 7"
+- Tìm đơn bàn 3, đổi sang bàn 7
+- Trả về EXECUTE cho /api/orders/ID/move
+
+### Báo tổng tiền:
+- Input: "xem tổng tiền các bàn"
+- Tính tổng từ activeOrders, liệt kê từng bàn
+- Trả về REPLY với message chứa bảng tổng tiền
+
+### Thêm món vào menu:
+- Input: "thêm món trà sữa trân châu giá 35 nghìn"
+- Trả về EXECUTE cho /api/products
+
+### Sửa món trong menu:
+- Input: "đổi giá gà rán thành 150 nghìn"
+- Tìm menu item "gà rán", lấy id
+- Trả về EXECUTE cho /api/products/ID
+
+### Xóa món khỏi menu:
+- Input: "xóa món cocacola khỏi menu"
+- Tìm menu item "cocacola", lấy id
+- Trả về EXECUTE cho /api/products/ID (DELETE)
+
+### Báo cáo doanh thu:
+- Input: "xem doanh thu hôm nay" hoặc "thống kê"
+- Trả về REPLY với thông tin từ dailyReport
+
+### Hỏi thêm khi thiếu thông tin:
+- Input: "order bàn 5"
+- Nếu không có danh sách món → REPLY: "Bạn muốn đặt những món gì cho bàn 5?"
 
 ## Thông tin Menu & Đơn hàng hiện tại:
 `;
@@ -166,98 +259,65 @@ export function registerGauAssistantRoutes(app: Express): void {
 
   // GET /api/gau-assistant/models - List available AI models
   app.get("/api/gau-assistant/models", async (req: Request, res: Response) => {
-    res.json({ models: AVAILABLE_MODELS });
+    // Default model depends on environment
+    const defaultModel = "ollama/gemma3:1b";
+
+    res.json({ 
+      models: AVAILABLE_MODELS,
+      defaultModel 
+    });
   });
 
   // POST /api/gau-assistant/chat
   app.post("/api/gau-assistant/chat", async (req: Request, res: Response) => {
     try {
-      const { message, model: selectedModel } = req.body;
+      const { message, history, model: selectedModel, memory } = req.body;
       if (!message) return res.status(400).json({ error: "Message required" });
 
       const context = await getRestaurantContext();
-      const systemMessage = `${GAU_SYSTEM_PROMPT}
+
+      const memorySection = memory ? `
+## THÔNG TIN NGƯỜI DÙNG & THÓI QUEN
+${memory}
+` : "";
+
+      const systemMessage = `${GAU_SYSTEM_PROMPT}${memorySection}
 Menu: ${JSON.stringify(context.menuItems)}
 Đơn đang hoạt động: ${JSON.stringify(context.activeOrders)}`;
 
-      console.log(`[GauAssistant] Processing message with model: ${selectedModel || 'auto'}`);
+      // Build conversation messages (limit to last 8)
+      const messages: any[] = [];
+
+      if (history && Array.isArray(history)) {
+        const recentHistory = history.slice(-8);
+        for (const msg of recentHistory) {
+          if (msg.role === "user" || msg.role === "assistant") {
+            messages.push({ role: msg.role, content: msg.content });
+          }
+        }
+      }
+
+      messages.push({ role: "user", content: message });
+
+      const effectiveModel = selectedModel || "ollama/gemma3:1b";
+      console.log(`[GauAssistant] Processing message with model: ${effectiveModel}, history: ${messages.length - 1} messages`);
 
       let responseText = "";
-      
-      if (selectedModel === "nvidia/gemma-2-2b-it") {
-        // Use NVIDIA Gemma 2B
-        console.log("[GauAssistant] Using NVIDIA Gemma model");
+
+      const allMessages = [{ role: "system", content: systemMessage }, ...messages];
+
+      if (effectiveModel.startsWith("ollama/")) {
+        console.log(`[GauAssistant] Using Ollama local model: ${effectiveModel}`);
         try {
-          const completion = await nvidia.chat.completions.create({
-            model: "google/gemma-2-2b-it",
-            messages: [
-              { role: "system", content: systemMessage },
-              { role: "user", content: message }
-            ],
-            temperature: 0.1,
-            max_tokens: 1024,
-          });
-          responseText = completion.choices[0]?.message?.content || "";
-        } catch (nvidiaErr: any) {
-          console.error("[GauAssistant] NVIDIA error:", nvidiaErr.message);
-          console.log("[GauAssistant] Falling back to OpenRouter");
-          const model = await findWorkingModel();
-          const completion = await openrouter.chat.completions.create({
-            model,
-            messages: [
-              { role: "system", content: systemMessage },
-              { role: "user", content: message },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.1,
-          });
-          responseText = completion.choices[0]?.message?.content || "{}";
-        }
-      } else if (selectedModel === "deepseek-v3.2") {
-        // Use NVIDIA DeepSeek V3
-        console.log("[GauAssistant] Using NVIDIA DeepSeek V3 model");
-        try {
-          const completion = await nvidiaV2.chat.completions.create({
-            model: "deepseek-ai/deepseek-v3.2",
-            messages: [
-              { role: "system", content: systemMessage },
-              { role: "user", content: message }
-            ],
-            temperature: 1,
-            top_p: 0.95,
-            max_tokens: 8192,
-          });
-          responseText = completion.choices[0]?.message?.content || "";
-        } catch (deepseekErr: any) {
-          console.error("[GauAssistant] DeepSeek error:", deepseekErr.message);
-          console.log("[GauAssistant] Falling back to OpenRouter");
-          const model = await findWorkingModel();
-          const completion = await openrouter.chat.completions.create({
-            model,
-            messages: [
-              { role: "system", content: systemMessage },
-              { role: "user", content: message },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.1,
-          });
-          responseText = completion.choices[0]?.message?.content || "{}";
+          responseText = await callWithRetry(() => callOllamaMessages(allMessages));
+        } catch (ollamaErr: any) {
+          console.error("[GauAssistant] Ollama failed, falling back to Fly:", ollamaErr.message);
+          console.log("[GauAssistant] Using Fly.io Gemma 2 (fallback)");
+          responseText = await callWithRetry(() => callFlyOllamaMessages(allMessages));
         }
       } else {
-        // Use OpenRouter (auto-select best available free model)
-        const model = await findWorkingModel();
-        console.log(`[GauAssistant] Using OpenRouter model: ${model}`);
-
-        const completion = await openrouter.chat.completions.create({
-          model,
-          messages: [
-            { role: "system", content: systemMessage },
-            { role: "user", content: message },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1,
-        });
-        responseText = completion.choices[0]?.message?.content || "{}";
+        console.log("[GauAssistant] Using Fly.io Gemma 2");
+        responseText = await callWithRetry(() => callFlyOllamaMessages(allMessages));
       }
 
       console.log("[GauAssistant] AI Response:", responseText);
@@ -270,12 +330,7 @@ Menu: ${JSON.stringify(context.menuItems)}
       }
     } catch (err: any) {
       console.error("[GauAssistant] Chat Error:", err.message);
-      if (isCreditsError(err)) {
-        workingModel = null;
-        res.status(503).json({ action: "ERROR", message: "Gấu đang hết credit một chút, đang chuyển model... thử lại nhé!" });
-      } else {
-        res.status(500).json({ action: "ERROR", message: "Gấu đang bận một chút, bạn thử lại nhé!" });
-      }
+      res.status(500).json({ action: "ERROR", message: "Gấu đang bận một chút, bạn thử lại nhé!" });
     }
   });
 
@@ -292,9 +347,31 @@ Menu: ${JSON.stringify(context.menuItems)}
 
       // Handle creation separately - use /api/orders
       if (apiPath === "/api/orders/create") {
-        const order = await storage.createOrder(apiBody);
+        // Transform items: convert Gemma's format (id, name, price, quantity) to DB format (menuItemId, price, quantity)
+        const dbItems = (apiBody.items || []).map((item: any) => ({
+          menuItemId: item.id || item.menuItemId,
+          quantity: item.quantity,
+          price: item.price,
+          notes: item.notes || ""
+        }));
+        
+        const dbOrder = {
+          tableNumber: String(apiBody.tableNumber),
+          customerName: apiBody.customerName || `Bàn ${apiBody.tableNumber}`,
+          totalAmount: apiBody.totalAmount,
+          items: dbItems
+        };
+        
+        const order = await storage.createOrder(dbOrder);
         broadcast({ type: "ORDER_CREATED", data: order });
         return res.json({ success: true, action: "ORDER_CREATED", data: order });
+      }
+
+      // Handle product creation - use /api/products
+      if (apiPath === "/api/products" && apiMethod === "POST") {
+        const product = await storage.createMenuItem(apiBody);
+        broadcast({ type: "PRODUCT_CREATED", data: product });
+        return res.json({ success: true, action: "PRODUCT_CREATED", data: product });
       }
 
       // Handle actions with IDs: /api/orders/{id}/...
@@ -354,131 +431,4 @@ Menu: ${JSON.stringify(context.menuItems)}
     }
   });
 
-  // POST /api/nvidia-chat/chat - NVIDIA AI chat with restaurant actions
-  app.post("/api/nvidia-chat/chat", async (req: Request, res: Response) => {
-    try {
-      const { message } = req.body;
-      if (!message) return res.status(400).json({ error: "Message required" });
-
-      console.log("[NVIDIA Chat] Message:", message);
-
-      // Get context
-      const context = await getRestaurantContext();
-      
-      // System prompt with full capabilities
-      const systemPrompt = `Bạn là trợ lý AI của nhà hàng BIA MẠNH BÉO. Bạn có thể:
-- Tạo order mới cho khách
-- Thanh toán đơn hàng
-- Đổi bàn
-- Gửi bếp
-- Tư vấn món ăn, giá cả
-
-**Menu nhà hàng:**
-${context.menuItems.map(m => `- ${m.name}: ${m.price.toLocaleString()}đ`).join('\n')}
-
-**Đơn đang hoạt động:**
-${context.activeOrders.map(o => `- Đơn #${o.id} (Bàn ${o.table}): ${o.total.toLocaleString()}đ - ${o.status}`).join('\n')}
-
-Khi khách muốn order/thanh toán/đổi bàn - hãy trả lời ngắn gọn xác nhận. Nếu thiếu thông tin thì hỏi khách.
-Luôn trả lời bằng tiếng Việt, thân thiện.`;
-
-      const completion = await nvidia.chat.completions.create({
-        model: "google/gemma-2-2b-it",
-        messages: [
-          { role: "user", content: systemPrompt + "\n\nKhách: " + message }
-        ],
-        temperature: 0.2,
-        top_p: 0.7,
-        max_tokens: 1024,
-        stream: false,
-      });
-
-      const content = completion.choices[0]?.message?.content || "";
-      console.log("[NVIDIA Chat] Response:", content);
-
-      // Parse intent from message and execute actions
-      const msgLower = message.toLowerCase();
-      
-      // Order creation pattern: "order bàn X", "gọi món", "đặt bàn"
-      const orderMatch = msgLower.match(/(?:order|gọi|đặt|mang)\s*(?:bàn|cho)\s*(\d+)/i);
-      // Pay pattern: "thanh toán bàn X", "trả tiền bàn X"
-      const payMatch = msgLower.match(/(?:thanh toán|trả(?: tiền)?)\s*(?:bàn)?\s*(\d+)/i);
-      // Move pattern: "chuyển bàn X sang Y", "đổi bàn X sang Y"
-      const moveMatch = msgLower.match(/(?:chuyển|đổi)\s*bàn\s*(\d+)\s*(?:sang|ra)\s*(\d+)/i);
-
-      // Check if intent is action-related
-      const intentLower = content.toLowerCase();
-      
-      if (orderMatch) {
-        const tableNum = orderMatch[1];
-        // Extract items from message - look for common menu items
-        const items: { menuItemId: number; quantity: number; price: number }[] = [];
-        
-        // Simple item extraction based on menu
-        for (const menuItem of context.menuItems) {
-          const itemName = menuItem.name.toLowerCase();
-          if (msgLower.includes(itemName)) {
-            // Find quantity if specified
-            const qtyMatch = msgLower.match(new RegExp(`(\d+)\s*(?:cái|ly|cốc|phần|con|quả)?\s*${itemName}`));
-            const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
-            items.push({ menuItemId: menuItem.id, quantity: qty, price: menuItem.price });
-          }
-        }
-
-        if (items.length > 0) {
-          const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-          const customerName = `Bàn ${tableNum}`;
-          
-          try {
-            const order = await storage.createOrder({ tableNumber: tableNum, items, totalAmount, customerName });
-            broadcast({ type: "ORDER_CREATED", data: order });
-            res.json({ 
-              content: `✅ Đã tạo order cho bàn ${tableNum}: ${items.map(i => `${i.quantity}x ${context.menuItems.find(m => m.id === i.menuItemId)?.name}`).join(', ')} - ${totalAmount.toLocaleString()}đ`
-            });
-          } catch (err: any) {
-            console.error("[NVIDIA Chat] Order error:", err);
-            res.json({ content: content + "\n\n(Tạo order gặp lỗi, vui lòng thử lại)" });
-          }
-        } else {
-          res.json({ content });
-        }
-      } else if (payMatch) {
-        const tableNum = payMatch[1];
-        // Find active order for this table
-        const order = context.activeOrders.find(o => o.table === tableNum);
-        if (order) {
-          try {
-            await storage.payOrder(order.id, "cash");
-            broadcast({ type: "ORDER_UPDATED", data: { ...order, status: "Complete", paymentStatus: "Paid" } });
-            broadcast({ type: "KITCHEN_ORDER_DELETED", data: { orderId: order.id } });
-            res.json({ content: `✅ Đã thanh toán cho bàn ${tableNum}: ${order.total.toLocaleString()}đ` });
-          } catch (err) {
-            res.json({ content: content });
-          }
-        } else {
-          res.json({ content: `Không tìm thấy đơn đang hoạt động cho bàn ${tableNum}.` });
-        }
-      } else if (moveMatch) {
-        const fromTable = moveMatch[1];
-        const toTable = moveMatch[2];
-        const order = context.activeOrders.find(o => o.table === fromTable);
-        if (order) {
-          try {
-            await storage.updateOrder(order.id, { tableNumber: toTable });
-            broadcast({ type: "ORDER_UPDATED", data: { ...order, tableNumber: toTable } });
-            res.json({ content: `✅ Đã chuyển bàn ${fromTable} sang bàn ${toTable}` });
-          } catch (err) {
-            res.json({ content: content });
-          }
-        } else {
-          res.json({ content: `Không tìm thấy đơn đang hoạt động cho bàn ${fromTable}.` });
-        }
-      } else {
-        res.json({ content });
-      }
-    } catch (err: any) {
-      console.error("[NVIDIA Chat] Error:", err.message);
-      res.status(500).json({ error: err.message || "Chat failed" });
-    }
-  });
 }

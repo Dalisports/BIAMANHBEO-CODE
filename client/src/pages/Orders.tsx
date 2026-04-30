@@ -5,7 +5,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { Receipt } from "@/components/Receipt";
 import { exportReceiptAsPDF } from "@/lib/exportReceipt";
 import { 
-  CheckCircle2, Clock, Loader2, Receipt, Trash2, ChevronDown, 
+  CheckCircle2, Clock, Loader2, Trash2, ChevronDown, 
   Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy, Edit2, Plus, Minus
 } from "lucide-react";
 
@@ -240,7 +240,7 @@ export default function Orders() {
       ) : !filteredOrders?.length ? (
         <div className="flex flex-col items-center justify-center py-24 text-center px-4 bg-card rounded-3xl border border-border border-dashed">
           <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground mb-4">
-            <Receipt className="w-8 h-8" />
+             <ReceiptIcon className="w-8 h-8" />
           </div>
           <h3 className="text-xl font-bold text-foreground mb-2">Chưa có đơn hàng nào</h3>
           <p className="text-muted-foreground max-w-sm">Sử dụng trợ lý AI: "Order bàn 5: 2 bia, 1 đầu lợn"</p>

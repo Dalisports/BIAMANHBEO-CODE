@@ -56,7 +56,7 @@ export function useUpdateMenuItem() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean; isPriority?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: number; name?: string; price?: number; description?: string; image?: string | null; isSticky?: boolean; isAvailable?: boolean; isPriority?: boolean; isHidden?: boolean }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -64,8 +64,19 @@ export function useUpdateMenuItem() {
         credentials: "include",
       });
       
-      if (!res.ok) throw new Error("Failed to update menu item");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw Object.assign(new Error(errorData.message || "Failed to update menu item"), { status: res.status });
+      }
+      
       return res.json();
+    },
+    onError: (error: any) => {
+      if (error?.status === 401) {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
+        window.location.href = "/login";
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });

@@ -273,6 +273,17 @@ export async function registerRoutes(
     res.json(prods);
   });
 
+  app.get("/api/products/:id", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const item = await storage.getMenuItem(id);
+      if (!item) return res.status(404).json({ message: "Product not found" });
+      res.json(item);
+    } catch (err) {
+      res.status(500).json({ message: "Internal error" });
+    }
+  });
+
   app.post(api.products.create.path, async (req, res) => {
     try {
       const input = api.products.create.input.parse(req.body);

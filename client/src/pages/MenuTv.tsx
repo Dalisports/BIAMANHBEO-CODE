@@ -144,10 +144,18 @@ export default function MenuTv() {
     [menuItems],
   );
 
+  // Hidden menu item names - to filter from TV display
+  const hiddenNames = useMemo(
+    () => new Set((menuItems || []).filter((m) => m.isHidden).map((m) => m.name)),
+    [menuItems],
+  );
+
   const allFlatItems = useMemo<CookingQueueItem[]>(() => {
     const result: CookingQueueItem[] = [];
     (kitchenOrders || []).forEach((order) => {
       order.items.forEach((item: KitchenItem) => {
+        // Skip hidden items
+        if (hiddenNames.has(item.name)) return;
         result.push({
           key: `${order.orderId}-${order.id}-${item.name}`,
           kitchenOrderId: order.id,
@@ -162,7 +170,7 @@ export default function MenuTv() {
       });
     });
     return result;
-  }, [kitchenOrders]);
+  }, [kitchenOrders, hiddenNames]);
 
   const cookingItems = useMemo(() => {
     const autoQueue = buildCookingQueue(allFlatItems, priorityNames);

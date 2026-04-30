@@ -96,3 +96,18 @@ export function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
+
+export function isTokenValid(): boolean {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return false;
+  try {
+    const parts = token.split(":");
+    if (parts.length !== 5) return false;
+    const timestamp = parseInt(parts[3]);
+    const age = Date.now() - timestamp;
+    const maxAge = 7 * 24 * 60 * 60 * 1000;
+    return age < maxAge;
+  } catch {
+    return false;
+  }
+}

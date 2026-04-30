@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth, getAuthHeaders } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePaymentSettings, useUpdatePaymentSetting, useDailyReport, useBestSellers, useOrders } from "@/hooks/use-orders";
-import { X, DollarSign, TrendingUp, ShoppingBag, Users, Trophy, QrCode, RefreshCw, Tv } from "lucide-react";
+import { X, DollarSign, TrendingUp, ShoppingBag, Users, Trophy, QrCode, RefreshCw, Tv, Palette, Check, Beer } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +28,7 @@ interface PaymentMethod {
 
 export default function Settings() {
   const { isOwner } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   
   const [hourlyRate, setHourlyRate] = useState(50000);
@@ -314,11 +316,91 @@ export default function Settings() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cài đặt</h1>
         {isOwner && (
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-600">
+          <Badge variant="outline" className={cn("bg-amber-500/10 text-amber-600", theme === "business" && "bg-cyan-500/10 text-cyan-600")}>
             Chỉ dành cho Chủ Quán
           </Badge>
         )}
       </div>
+
+      {/* Theme Selection Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="w-5 h-5" />
+            Giao diện
+          </CardTitle>
+          <CardDescription>Chọn giao diện phù hợp với phong cách của bạn</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Original Theme Card */}
+            <button
+              onClick={() => setTheme("original")}
+              className={cn(
+                "relative p-4 rounded-xl border-2 transition-all text-left",
+                theme === "original"
+                  ? "border-amber-500 bg-amber-50 shadow-md"
+                  : "border-border hover:border-amber-300"
+              )}
+            >
+              {theme === "original" && (
+                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-black" />
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 flex items-center justify-center">
+                  <Beer className="w-6 h-6 text-black" />
+                </div>
+                <div>
+                  <p className="font-bold text-amber-600">Giao diện gốc</p>
+                  <p className="text-xs text-muted-foreground">Bia Mạnh Béo</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-6 h-6 rounded-full bg-amber-400" />
+                <div className="w-6 h-6 rounded-full bg-yellow-400" />
+                <div className="w-6 h-6 rounded-full bg-black" />
+                <div className="flex items-center text-xs text-muted-foreground ml-1">Golden + Dark</div>
+              </div>
+            </button>
+
+            {/* Business Theme Card */}
+            <button
+              onClick={() => setTheme("business")}
+              className={cn(
+                "relative p-4 rounded-xl border-2 transition-all text-left",
+                theme === "business"
+                  ? "border-cyan-500 bg-cyan-50 shadow-md"
+                  : "border-border hover:border-cyan-300"
+              )}
+            >
+              {theme === "business" && (
+                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-white" />
+                </div>
+              )}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+                    <path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-cyan-600">Giao diện mới</p>
+                  <p className="text-xs text-muted-foreground">Business Edition</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-6 h-6 rounded-full bg-cyan-500" />
+                <div className="w-6 h-6 rounded-full bg-white border" />
+                <div className="w-6 h-6 rounded-full bg-slate-700" />
+                <div className="flex items-center text-xs text-muted-foreground ml-1">Cyan + White</div>
+              </div>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="dashboard" className="w-full" key={isOwner ? "owner" : "employee"}>
         <TabsList className={isOwner ? "grid w-full grid-cols-3" : "grid w-full grid-cols-1"}>

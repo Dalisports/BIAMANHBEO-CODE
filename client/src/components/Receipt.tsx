@@ -1,6 +1,6 @@
 import React from "react";
 import { Order, OrderItem } from "@/hooks/use-orders";
-import { formatCurrencyFullFull } from "@/lib/utils";
+import { formatCurrencyFull } from "@/lib/utils";
 import { exportReceiptAsPDF } from "@/lib/exportReceipt";
 
 interface ReceiptProps {

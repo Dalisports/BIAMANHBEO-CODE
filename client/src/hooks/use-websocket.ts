@@ -8,6 +8,9 @@ export type WSEventType =
   | "KITCHEN_ORDER_CREATED"
   | "KITCHEN_ORDER_UPDATED"
   | "KITCHEN_ORDER_DELETED"
+  | "PRODUCT_CREATED"
+  | "PRODUCT_UPDATED"
+  | "PRODUCT_DELETED"
   | "ATTENDANCE_QR_CHANGED";
 
 export interface WSEvent {
