@@ -5,9 +5,11 @@ import { getDefaultMethods, getMethodConfig } from "./payment-utils";
 import type { Order } from "@/hooks/use-orders";
 
 interface PaymentModalProps {
-  showPayModal: number | null;
+  showPayModal: boolean;
   selectedTable: number | null;
   tableNames: Record<number, string>;
+  orderTotal: number;
+  paymentSettings?: any[];
   payMethod: string;
   setPayMethod: (method: string) => void;
   onClose: () => void;
@@ -19,6 +21,8 @@ export function PaymentModal({
   showPayModal,
   selectedTable,
   tableNames,
+  orderTotal,
+  paymentSettings,
   payMethod,
   setPayMethod,
   onClose,
@@ -58,7 +62,7 @@ export function PaymentModal({
             <div className="mb-4 p-4 bg-green-50 rounded-xl border-2 border-green-200">
               <p className="text-sm text-muted-foreground">{tableName}</p>
               <p className="text-2xl font-black text-green-600">
-                {formatCurrency(0)}
+                {formatCurrency(orderTotal)}
               </p>
             </div>
 
@@ -88,7 +92,7 @@ export function PaymentModal({
             </div>
 
             {payMethod !== "cash" && (() => {
-              const config = getMethodConfig(payMethod);
+              const config = getMethodConfig(payMethod, paymentSettings);
               return (
                 <div className="mb-4 p-4 bg-secondary/50 rounded-xl">
                   {config.qrImageUrl ? (

@@ -1,30 +1,30 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { getActiveOrder } from "./table-utils";
+import type { Order } from "@/hooks/use-orders";
 
 interface MoveTableModalProps {
-  showMoveModal: number | null;
+  showMoveModal: boolean;
   selectedTable: number | null;
   maxTables: number;
-  moveTargetTable: number | null;
-  setMoveTargetTable: (table: number | null) => void;
+  orders: Order[];
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (targetTable: number) => void;
 }
 
 export function MoveTableModal({
   showMoveModal,
   selectedTable,
   maxTables,
-  moveTargetTable,
-  setMoveTargetTable,
+  orders,
   onClose,
   onConfirm,
 }: MoveTableModalProps) {
+  const [moveTargetTable, setMoveTargetTable] = useState<number | null>(null);
   const allTables = Array.from({ length: maxTables }, (_, i) => i + 1);
 
   const getActiveOrder = (tableNum: number) => {
-    return undefined;
+    return orders?.find(o => o.tableNumber === tableNum.toString() && o.status !== "Complete");
   };
 
   return (

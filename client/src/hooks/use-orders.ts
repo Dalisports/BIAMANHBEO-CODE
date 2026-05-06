@@ -341,11 +341,11 @@ export type PaymentSetting = {
 export function usePaymentSettings() {
   return useQuery({
     queryKey: ["/api/payment-settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/payment-settings", { credentials: "include", headers: getAuthHeaders() });
-      if (!res.ok) throw new Error("Failed to fetch payment settings");
-      return res.json() as Promise<PaymentSetting[]>;
-    },
+  queryFn: async () => {
+       const res = await fetch("/api/payment-settings", { credentials: "include" });
+       if (!res.ok) throw new Error("Failed to fetch payment settings");
+       return res.json() as Promise<PaymentSetting[]>;
+     },
   });
 }
 

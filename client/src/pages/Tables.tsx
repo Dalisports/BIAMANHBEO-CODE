@@ -203,26 +203,29 @@ export default function Tables() {
       />
       )}
 
-      {/* Payment Modal */}
-      <PaymentModal
-        showPayModal={showPayModal}
-        selectedTable={selectedTable}
-        tableNames={tableNames}
-        payMethod={payMethod}
-        setPayMethod={setPayMethod}
-        onClose={() => setShowPayModal(null)}
-        onConfirm={() => showPayModal && handlePay(showPayModal)}
-        isPending={payOrder.isPending}
-      />
+       {/* Payment Modal */}
+       <PaymentModal
+         showPayModal={!!showPayModal}
+         selectedTable={selectedTable}
+         tableNames={tableNames}
+         orderTotal={selectedOrder ? selectedOrder.totalAmount : 0}
+         paymentSettings={paymentSettings}
+         payMethod={payMethod}
+         setPayMethod={setPayMethod}
+         onClose={() => setShowPayModal(null)}
+         onConfirm={() => showPayModal && handlePay(showPayModal)}
+         isPending={payOrder.isPending}
+       />
 
-      {/* Move Table Modal */}
-      <MoveTableModal
-        showMoveModal={showMoveModal}
-        selectedTable={selectedTable}
-        maxTables={MAX_TABLES}
-        onClose={() => setShowMoveModal(null)}
-        onConfirm={handleMoveTable}
-      />
+       {/* Move Table Modal */}
+       <MoveTableModal
+         showMoveModal={!!showMoveModal}
+         selectedTable={selectedTable}
+         maxTables={MAX_TABLES}
+         orders={orders || []}
+         onClose={() => setShowMoveModal(null)}
+         onConfirm={handleMoveTable}
+       />
 
       {/* Delete Confirmation Modal - cùng cấp với các modal khác */}
       <ConfirmDeleteModal
