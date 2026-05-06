@@ -1,0 +1,389 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAuthHeaders } from "./use-auth";
+
+export type OrderItem = {
+  menuItemId?: number;
+  name: string;
+  quantity: number;
+  price: number;
+  notes?: string;
+};
+
+export type Order = {
+  id: number;
+  tableNumber: string;
+  customerName: string | null;
+  phone: string | null;
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  paymentMethod: string | null;
+  items: OrderItem[];
+  notes: string | null;
+  createdAt: Date | null;
+  completedAt: Date | null;
+  paidAt: Date | null;
+};
+
+export type KitchenItem = {
+  name: string;
+  quantity: number;
+  notes?: string;
+  cookingStatus?: "pending" | "cooking" | "done";
+};
+
+export type KitchenOrder = {
+  id: number;
+  orderId: number;
+  tableNumber: string;
+  items: KitchenItem[];
+  status: string;
+  priority: string;
+  sentAt: Date | null;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  notes: string | null;
+};
+
+export function useOrders() {
+  return useQuery({
+    queryKey: ["/api/orders"],
+    queryFn: async () => {
+      const res = await fetch("/api/orders", { credentials: "include", headers: getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      return res.json() as Promise<Order[]>;
+    },
+  });
+}
+
+export function useOrder(id: number) {
+  return useQuery({
+    queryKey: ["/api/orders", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/orders/${id}`, { credentials: "include", headers: getAuthHeaders() });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("Failed to fetch order");
+      return res.json() as Promise<Order>;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { tableNumber: string; items: OrderItem[]; totalAmount: number; customerName?: string; phone?: string; notes?: string }) => {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          ...data,
+          status: "Pending",
+          paymentStatus: "Unpaid",
+        }),
+        credentials: "include" });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create order");
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useUpdateOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: number } & Partial<Order>) => {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(updates),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to update order");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useDeleteOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "DELETE", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to delete order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useSendToKitchen() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const res = await fetch(`/api/orders/${orderId}/send-to-kitchen`, {
+        method: "POST", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to send to kitchen");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+    },
+  });
+}
+
+export function usePayOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ orderId, method }: { orderId: number; method: string }) => {
+      const res = await fetch(`/api/orders/${orderId}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ method }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to pay order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useKitchenOrders() {
+  return useQuery({
+    queryKey: ["/api/kitchen"],
+    queryFn: async () => {
+      const res = await fetch("/api/kitchen", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch kitchen orders");
+      return res.json() as Promise<KitchenOrder[]>;
+    },
+  });
+}
+
+export function useStartKitchenOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/kitchen/${id}/start`, {
+        method: "POST", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to start kitchen order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useCompleteKitchenOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/kitchen/${id}/complete`, {
+        method: "POST", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to complete kitchen order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useStartKitchenItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ kitchenOrderId, itemName, notes }: { kitchenOrderId: number; itemName: string; notes?: string }) => {
+      const res = await fetch(`/api/kitchen/${kitchenOrderId}/start-item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ itemName, notes }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to start kitchen item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useCompleteKitchenItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ kitchenOrderId, itemName, notes }: { kitchenOrderId: number; itemName: string; notes?: string }) => {
+      const res = await fetch(`/api/kitchen/${kitchenOrderId}/complete-item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ itemName, notes }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to complete kitchen item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useClearCompletedKitchenOrders() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      console.log("[CLEAR] Calling clear-completed API...");
+      const res = await fetch("/api/kitchen/clear-completed", {
+        method: "POST", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      
+      console.log("[CLEAR] Response status:", res.status);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to clear completed orders");
+      }
+      const data = await res.json();
+      console.log("[CLEAR] Response data:", data);
+      return data as { success: boolean; deletedCount: number };
+    },
+    onSuccess: (data) => {
+      console.log("[CLEAR] Success, invalidating queries. Deleted:", data.deletedCount);
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+    },
+    onError: (error) => {
+      console.error("[CLEAR] Error:", error);
+    },
+  });
+}
+
+export function useDailyReport() {
+  return useQuery({
+    queryKey: ["/api/reports/daily"],
+    queryFn: async () => {
+      const res = await fetch("/api/reports/daily", { credentials: "include", headers: getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch daily report");
+      return res.json();
+    },
+  });
+}
+
+export function useBestSellers() {
+  return useQuery({
+    queryKey: ["/api/reports/best-sellers"],
+    queryFn: async () => {
+      const res = await fetch("/api/reports/best-sellers", { credentials: "include", headers: getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch best sellers");
+      return res.json() as Promise<{ name: string; totalQuantity: number }[]>;
+    },
+  });
+}
+
+export type PaymentSetting = {
+  id: number;
+  method: string;
+  label: string | null;
+  icon: string | null;
+  qrImageUrl: string | null;
+  accountName: string | null;
+  accountNumber: string | null;
+  bankName: string | null;
+  additionalInfo: string | null;
+  isEnabled: boolean | null;
+};
+
+export function usePaymentSettings() {
+  return useQuery({
+    queryKey: ["/api/payment-settings"],
+    queryFn: async () => {
+      const res = await fetch("/api/payment-settings", { credentials: "include", headers: getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch payment settings");
+      return res.json() as Promise<PaymentSetting[]>;
+    },
+  });
+}
+
+export function useUnpayOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const res = await fetch(`/api/orders/${orderId}/unpay`, {
+        method: "POST", headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to unpay order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
+export function useUpdatePaymentSetting() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ method, ...data }: { method: string } & Partial<PaymentSetting>) => {
+      const res = await fetch(`/api/payment-settings/${method}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to update payment setting");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payment-settings"] });
+    },
+  });
+}

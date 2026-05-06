@@ -1,0 +1,9 @@
+{
+  "model": "anthropic/claude-3-haiku",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello"
+    }
+  ]
+}
