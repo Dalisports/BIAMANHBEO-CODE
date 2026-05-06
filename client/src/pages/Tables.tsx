@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSettings, useSendToKitchen, type Order, type OrderItem } from "@/hooks/use-orders";
+import { motion, AnimatePresence } from "framer-motion";
+import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSettings, useUpdatePaymentSetting, useSendToKitchen, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useTableNames } from "@/hooks/use-table-names";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings, X } from "lucide-react";
+import { Receipt } from "@/components/Receipt";
 
 import { TableGrid } from "@/components/tables/TableGrid";
 import { TableDetailModal } from "@/components/tables/TableDetailModal";
@@ -33,6 +35,19 @@ export default function Tables() {
   const [renameValue, setRenameValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<"table" | "item" | null>(null);
   const [deleteItemIndex, setDeleteItemIndex] = useState<number | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [editingSetting, setEditingSetting] = useState<string | null>(null);
+  const [settingForm, setSettingForm] = useState({
+    label: "",
+    icon: "",
+    qrImageUrl: "",
+    accountName: "",
+    accountNumber: "",
+    bankName: "",
+    additionalInfo: "",
+  });
+  const updatePaymentSetting = useUpdatePaymentSetting();
+  const [showReceipt, setShowReceipt] = useState<Order | null>(null);
 
   const getActiveOrder = (tableNum: number): Order | undefined =>
     orders?.find(o => o.tableNumber === tableNum.toString() && o.status !== "Complete");
@@ -116,6 +131,10 @@ export default function Tables() {
   const handlePay = (orderId: number) => {
     payOrder.mutate({ orderId, method: payMethod }, {
       onSuccess: () => {
+        const paidOrder = orders?.find(o => o.id === orderId);
+        if (paidOrder) {
+          setShowReceipt(paidOrder);
+        }
         setShowPayModal(null);
         setSelectedTable(null);
       }
@@ -147,6 +166,53 @@ export default function Tables() {
       setShowMoveModal(null);
       setSelectedTable(null);
     });
+  };
+
+  const getDefaultMethods = () => [
+    { id: "cash", label: "Tiền mặt", icon: "💵" },
+    { id: "transfer", label: "Chuyển khoản", icon: "🏦" },
+    { id: "vnpay", label: "VNPay", icon: "💳" },
+    { id: "momo", label: "MoMo", icon: "📱" },
+  ];
+
+  const getMethodConfig = (methodId: string) => {
+    const defaults = getDefaultMethods().find(m => m.id === methodId);
+    const custom = paymentSettings?.find(p => p.method === methodId);
+    return {
+      id: methodId,
+      label: custom?.label || defaults?.label || methodId,
+      icon: custom?.icon || defaults?.icon || "💳",
+      qrImageUrl: custom?.qrImageUrl || null,
+      accountName: custom?.accountName || null,
+      accountNumber: custom?.accountNumber || null,
+      bankName: custom?.bankName || null,
+      additionalInfo: custom?.additionalInfo || null,
+      isEnabled: custom?.isEnabled ?? true,
+    };
+  };
+
+  const openSettings = (method: string) => {
+    const config = getMethodConfig(method);
+    setSettingForm({
+      label: config.label,
+      icon: config.icon,
+      qrImageUrl: config.qrImageUrl || "",
+      accountName: config.accountName || "",
+      accountNumber: config.accountNumber || "",
+      bankName: config.bankName || "",
+      additionalInfo: config.additionalInfo || "",
+    });
+    setEditingSetting(method);
+  };
+
+  const saveSettings = () => {
+    if (editingSetting) {
+      updatePaymentSetting.mutate({
+        method: editingSetting,
+        ...settingForm,
+      });
+      setEditingSetting(null);
+    }
   };
 
   if (ordersLoading || menuLoading) {
@@ -215,6 +281,7 @@ export default function Tables() {
          onClose={() => setShowPayModal(null)}
          onConfirm={() => showPayModal && handlePay(showPayModal)}
          isPending={payOrder.isPending}
+         onOpenSettings={() => { setShowPayModal(null); setShowSettingsModal(true); }}
        />
 
        {/* Move Table Modal */}
@@ -245,6 +312,205 @@ export default function Tables() {
           else if (showDeleteConfirm === "item") confirmDeleteItem();
         }}
       />
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowSettingsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-border max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-blue-500">CÀI ĐẶT THANH TOÁN</h3>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {getDefaultMethods().map((method) => {
+                  const config = getMethodConfig(method.id);
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => openSettings(method.id)}
+                      className={`p-4 rounded-xl border-2 transition-all text-left relative ${
+                        editingSetting === method.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-border hover:border-blue-300"
+                      }`}
+                    >
+                      <span className="text-2xl">{config.icon}</span>
+                      <span className="block font-semibold mt-1">{config.label}</span>
+                      {(config.qrImageUrl || config.accountNumber) && (
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {editingSetting && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">{getMethodConfig(editingSetting).icon}</span>
+                    <h4 className="font-bold">Cài đặt: {getMethodConfig(editingSetting).label}</h4>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Tên hiển thị</label>
+                    <input
+                      type="text"
+                      value={settingForm.label}
+                      onChange={(e) => setSettingForm({ ...settingForm, label: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: Chuyển khoản MB Bank"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Icon (emoji)</label>
+                    <input
+                      type="text"
+                      value={settingForm.icon}
+                      onChange={(e) => setSettingForm({ ...settingForm, icon: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: 🏦"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">URL Ảnh QR</label>
+                    <input
+                      type="text"
+                      value={settingForm.qrImageUrl}
+                      onChange={(e) => setSettingForm({ ...settingForm, qrImageUrl: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="https://..."
+                    />
+                    {settingForm.qrImageUrl && (
+                      <div className="mt-2">
+                        <img src={settingForm.qrImageUrl} alt="Preview" className="h-24 rounded-lg border" onError={(e) => e.currentTarget.style.display = 'none'} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Tên tài khoản</label>
+                      <input
+                        type="text"
+                        value={settingForm.accountName}
+                        onChange={(e) => setSettingForm({ ...settingForm, accountName: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                        placeholder="VD: NGUYEN VAN A"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Số tài khoản</label>
+                      <input
+                        type="text"
+                        value={settingForm.accountNumber}
+                        onChange={(e) => setSettingForm({ ...settingForm, accountNumber: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                        placeholder="VD: 1234567890"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Tên ngân hàng</label>
+                    <input
+                      type="text"
+                      value={settingForm.bankName}
+                      onChange={(e) => setSettingForm({ ...settingForm, bankName: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background"
+                      placeholder="VD: MB Bank"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Thông tin thêm</label>
+                    <textarea
+                      value={settingForm.additionalInfo}
+                      onChange={(e) => setSettingForm({ ...settingForm, additionalInfo: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background resize-none h-20"
+                      placeholder="VD: Nội dung chuyển khoản: Thanh toan ban..."
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setEditingSetting(null)}
+                      className="flex-1 px-4 py-3 rounded-xl font-semibold bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={saveSettings}
+                      disabled={updatePaymentSetting.isPending}
+                      className="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
+                    >
+                      {updatePaymentSetting.isPending ? "Đang lưu..." : "Lưu"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!editingSetting && (
+                <p className="text-center text-muted-foreground text-sm">
+                  Chọn phương thức thanh toán để cài đặt QR và thông tin tài khoản
+                </p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Receipt Modal */}
+      <AnimatePresence>
+        {showReceipt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowReceipt(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 shadow-2xl border-2 border-amber-200 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-black text-amber-500">HÓA ĐƠN</h3>
+                <button
+                  onClick={() => setShowReceipt(null)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <Receipt order={showReceipt} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

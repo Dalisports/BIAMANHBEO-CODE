@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CreditCard } from "lucide-react";
+import { X, CreditCard, Settings } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getDefaultMethods, getMethodConfig } from "./payment-utils";
 import type { Order } from "@/hooks/use-orders";
@@ -15,6 +15,7 @@ interface PaymentModalProps {
   onClose: () => void;
   onConfirm: () => void;
   isPending: boolean;
+  onOpenSettings: () => void;
 }
 
 export function PaymentModal({
@@ -28,6 +29,7 @@ export function PaymentModal({
   onClose,
   onConfirm,
   isPending,
+  onOpenSettings,
 }: PaymentModalProps) {
   const tableName = selectedTable ? tableNames[selectedTable] || `Bàn ${selectedTable}` : "";
 
@@ -50,13 +52,22 @@ export function PaymentModal({
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-black text-green-500">THANH TOÁN</h3>
-              <button
-                data-testid="close-pay-modal"
-                onClick={onClose}
-                className="p-2 rounded-full hover:bg-secondary transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onOpenSettings}
+                  className="p-2 rounded-full hover:bg-blue-50 text-blue-500 transition-colors"
+                  title="Cài đặt thanh toán"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button
+                  data-testid="close-pay-modal"
+                  onClick={onClose}
+                  className="p-2 rounded-full hover:bg-secondary transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="mb-4 p-4 bg-green-50 rounded-xl border-2 border-green-200">

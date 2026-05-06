@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./server/routes";
-import { registerGauAssistantRoutes } from "./server/gau_assistant";
+// import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { serveStatic } from "./server/static";
 import { createServer } from "http";
 import { createServer as createHttpsServer } from "https";
@@ -60,8 +60,8 @@ export function log(message: string, source = "express") {
     await registerRoutes(mainServer, app);
     log("[ROUTES] API routes registered");
 
-    registerGauAssistantRoutes(app);
-    log("[GAU] Gau Assistant routes registered");
+    // registerGauAssistantRoutes(app);
+    // log("[GAU] Gau Assistant routes registered");
 
     await storage.runMigrations();
     log("[STORAGE] Migrations finished");
