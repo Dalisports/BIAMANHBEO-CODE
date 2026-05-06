@@ -67,7 +67,8 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/tables" component={Tables} />
           <Route path="/home" component={Home} />
-          <Route path="/gau-assistant" component={GauAssistant} />
+          {/* Ẩn trang Gấu Assistant */}
+          {/* <Route path="/gau-assistant" component={GauAssistant} /> */}
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
           <Route path="/attendance" component={Attendance} />
@@ -89,7 +90,8 @@ function App() {
         <PWAUpdatePrompt />
         <AuthProvider>
           <Router />
-          {location !== "/menu-tv" && location !== "/menutv" && <FloatingChatBubble />}
+          {/* Ẩn bong bóng chat Gấu Assistant */}
+          {/* {location !== "/menu-tv" && location !== "/menutv" && <FloatingChatBubble />} */}
           <DebugToolbar />
         </AuthProvider>
       </TooltipProvider>
