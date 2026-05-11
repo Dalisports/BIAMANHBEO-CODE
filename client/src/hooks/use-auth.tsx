@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export type UserRole = "owner" | "employee";
+export type UserRole = "owner" | "admin" | "employee";
 
 export interface AuthUser {
   userId: number;
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
-        isOwner: user?.role === "owner",
+        isOwner: !!(user && ["owner", "admin"].includes(user.role)),
       }}
     >
       {children}
@@ -110,4 +111,62 @@ export function isTokenValid(): boolean {
   } catch {
     return false;
   }
+}
+
+// User management hooks
+export interface SystemUser {
+  id: number;
+  username: string;
+  role: string;
+  fullName: string | null;
+  isActive: boolean;
+  createdAt: Date | null;
+}
+
+export function useUsers() {
+  return useQuery({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await fetch("/api/users", { credentials: "include", headers: getAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json() as Promise<SystemUser[]>;
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<SystemUser>) => {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update user");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete user");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+  });
 }

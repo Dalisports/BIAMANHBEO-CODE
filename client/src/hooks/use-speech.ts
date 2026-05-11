@@ -15,6 +15,7 @@ interface UseSpeechReturn {
   supported: boolean;
   interimText: string;
   finalText: string;
+  finalTextRef: React.MutableRefObject<string>;
   error: string | null;
 }
 

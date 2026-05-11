@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGridIcon, LogOut, User, Menu } from "lucide-react";
+import { UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGridIcon, LogOut, User, Menu, Bell, CreditCard } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useWebSocket } from "@/hooks/use-websocket";
-import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { useWebSocket, WSEvent } from "@/hooks/use-websocket";
+import { useNotificationContext } from "@/contexts/NotificationContext";
+import { NotificationToast } from "@/components/NotificationToast";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import {
@@ -32,16 +34,117 @@ const OWNER_NAV_ITEMS = [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
-  const playSound = useNotificationSound();
+  const [location, navigate] = useLocation();
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const { user, logout, isOwner } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-
-  useWebSocket(() => {
-    playSound();
-  });
-
+  const { theme, toggleTheme, toggleDarkMode, isDarkMode } = useTheme();
   const isBusinessTheme = theme === "business";
+  const isLuminaTheme = theme === "lumina";
+
+  const {
+    addEvent,
+    dismiss,
+    isVisible,
+    summary,
+    notifications,
+    currentBatchSize,
+    markAllAsDisplayed,
+  } = useNotificationContext();
+
+  const unreadCount = (notifications || []).filter((n: any) => !n.displayed).length;
+
+  useWebSocket({
+    onMessage: (event: WSEvent) => {
+      switch (event.type) {
+        case "ORDER_CREATED":
+          addEvent({
+            type: "order",
+            title: "ORDER MỚI",
+            body: "Có đơn hàng mới",
+            items: event.data?.items?.map((i: any) => i.name) || [],
+            tableNumber: event.data?.tableNumber,
+            orderId: event.data?.id,
+            username: user?.username || "Staff",
+          });
+          break;
+        case "ORDER_UPDATED":
+          if (event.data?.paymentStatus === "Paid") {
+          addEvent({
+            type: "payment",
+            title: "Thanh toán",
+            body: `Bàn ${event.data?.tableNumber} đã thanh toán`,
+            tableNumber: event.data?.tableNumber,
+            orderId: event.data?.id,
+            items: event.data?.items?.map((i: any) => i.name) || [],
+          });
+        } else if (event.data?.status === "Complete") {
+          addEvent({
+            type: "order",
+            title: "HOÀN THÀNH",
+            body: `Bàn ${event.data?.tableNumber} - Đơn hoàn tất`,
+            tableNumber: event.data?.tableNumber,
+            orderId: event.data?.id,
+            items: event.data?.items?.map((i: any) => i.name) || [],
+          });
+        } else if (event.data?.status === "Pending") {
+          addEvent({
+            type: "order",
+            title: "THÊM MÓN",
+            body: `Bàn ${event.data?.tableNumber} - Thêm món vào đơn`,
+            items: event.data?.items?.map((i: any) => i.name) || [],
+            tableNumber: event.data?.tableNumber,
+            orderId: event.data?.id,
+            username: user?.username || "Staff",
+          });
+        }
+        break;
+      case "ORDER_DELETED":
+        addEvent({
+          type: "order",
+          title: "ĐƠN HỦY",
+          body: "Đơn hàng đã bị hủy",
+          tableNumber: event.data?.tableNumber,
+          orderId: event.data?.id,
+          username: user?.username || "Staff",
+        });
+        break;
+      case "KITCHEN_ORDER_CREATED":
+        addEvent({
+          type: "kitchen",
+          title: "CẦN NẤU",
+          body: "Có đơn mới từ bếp",
+          items: event.data?.items?.map((i: any) => i.name) || [],
+          tableNumber: event.data?.tableNumber,
+          orderId: event.data?.orderId,
+          username: user?.username || "Kitchen",
+        });
+        break;
+      case "KITCHEN_ORDER_UPDATED":
+        if (event.data?.status === "Done") {
+          addEvent({
+            type: "kitchen",
+            title: "RA MÓN",
+            body: "Món đã xong, sẵn sàng phục vụ",
+            items: event.data?.items?.map((i: any) => i.name) || [],
+            tableNumber: event.data?.tableNumber,
+            orderId: event.data?.orderId,
+            username: "Kitchen",
+          });
+        }
+        break;
+      case "KITCHEN_ORDER_DELETED":
+        addEvent({
+          type: "kitchen",
+          title: "BẾP: ĐƠN BỊ HỦY",
+          body: "Đơn bếp đã bị hủy",
+          tableNumber: event.data?.tableNumber,
+          orderId: event.data?.orderId,
+          username: user?.username || "Kitchen",
+        });
+        break;
+      }
+    },
+  });
 
   return (
     <div className={cn("min-h-screen flex flex-col md:flex-row", isBusinessTheme ? "bg-slate-50" : "bg-background")}>
@@ -106,7 +209,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="mt-auto pt-6 border-t border-border/50">
-          <div className={cn(
+          {/* Hidden: Quick Commands box */}
+          {false && <div className={cn(
             "rounded-2xl p-4 border-2",
             isBusinessTheme
               ? "bg-cyan-50 border-cyan-200/50"
@@ -131,7 +235,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <span className={cn("italic leading-relaxed", isBusinessTheme ? "text-slate-600" : "text-muted-foreground")}>"Thanh toán bàn 3"</span>
               </div>
             </div>
-          </div>
+          </div>}
 
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-sm">
@@ -206,7 +310,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DropdownMenu open={showNotificationDropdown} onOpenChange={(open) => { setShowNotificationDropdown(open); if (open) markAllAsDisplayed(); }}>
+              <DropdownMenuTrigger asChild>
+                <button className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
+                  <Bell className="w-6 h-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto">
+                <div className="px-4 py-2 border-b border-border font-bold flex items-center justify-between">
+                  <span>Thông báo</span>
+                  {unreadCount > 0 && (
+                    <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">{unreadCount} mới</span>
+                  )}
+                </div>
+                {(notifications || []).length === 0 ? (
+                  <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    Không có thông báo nào
+                  </div>
+                ) : (
+                  <>
+                    {notifications.slice(0, 5).map((batch: any, idx: number) => (
+                      <DropdownMenuItem
+                        key={idx}
+                        onClick={() => { navigate("/notifications"); setShowNotificationDropdown(false); }}
+                        className="flex flex-col items-start gap-1 cursor-pointer py-3"
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          {batch.events[0]?.type === "order" && <UtensilsCrossed className="w-4 h-4 text-amber-500" />}
+                          {batch.events[0]?.type === "kitchen" && <ChefHat className="w-4 h-4 text-orange-500" />}
+                          {batch.events[0]?.type === "payment" && <CreditCard className="w-4 h-4 text-green-500" />}
+                          <span className="font-bold text-sm">{batch.events[0]?.title || ""}</span>
+                          {!batch.displayed && <div className="w-2 h-2 bg-red-500 rounded-full ml-auto flex-shrink-0" />}
+                        </div>
+                        <span className="text-xs text-muted-foreground">{batch.events[0]?.body || ""}</span>
+                      </DropdownMenuItem>
+                    ))}
+                    {notifications.length > 5 && (
+                      <DropdownMenuItem
+                        onClick={() => { navigate("/notifications"); setShowNotificationDropdown(false); }}
+                        className="text-center text-sm text-amber-500 font-bold cursor-pointer border-t border-border"
+                      >
+                        Xem tất cả thông báo ({notifications.length})
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
                 <Menu className="w-6 h-6" />
@@ -248,13 +406,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenu>
+          </div>
         </header>
 
         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
           {children}
         </div>
       </main>
+
+      <NotificationToast
+        isVisible={isVisible}
+        summary={summary}
+        onDismiss={dismiss}
+      />
     </div>
   );
 }

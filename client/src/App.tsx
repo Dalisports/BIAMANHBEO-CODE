@@ -5,13 +5,16 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import Notifications from "@/pages/Notifications";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { NotificationDetailProvider } from "@/contexts/NotificationDetailContext";
+import { NotificationDetailModal } from "@/components/NotificationDetailModal";
+import { useNotificationDetail } from "@/contexts/NotificationDetailContext";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
-import GauAssistant from "@/pages/GauAssistant";
-import { FloatingChatBubble } from "@/components/FloatingChatBubble";
 import Menu from "@/pages/Menu";
 import Orders from "@/pages/Orders";
 import Kitchen from "@/pages/Kitchen";
@@ -25,63 +28,97 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Attendance from "@/pages/Attendance";
 import { DebugToolbar } from "@/components/DebugToolbar";
+import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({ component: Component, requireOwner = false }: { component: any; requireOwner?: boolean }) {
   const { user, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return null;
   }
-  
+
   if (!user) {
     return <Redirect href="/login" />;
   }
-  
+
   if (requireOwner && user.role !== "owner") {
     return <Redirect href="/" />;
   }
-  
+
   return <Component />;
 }
 
 function Router() {
   const { user, isLoading } = useAuth();
-  
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <Switch>
+      {/* Public routes */}
       <Route path="/menu-tv" component={MenuTv} />
-          <Route path="/menutv" component={MenuTvSimple} />
+      <Route path="/menutv" component={MenuTvSimple} />
       <Route path="/login" component={Login} />
-      {!user && !isLoading && (
+      <Route path="/app" component={Login} />
+
+      {/* Protected routes wrapped in Layout */}
+      {!user ? (
         <Route path="*">
           <Redirect href="/login" />
         </Route>
+      ) : (
+        <Layout>
+          <Switch>
+            <Route path="/"><ProtectedRoute component={Tables} /></Route>
+            <Route path="/orders"><ProtectedRoute component={Orders} /></Route>
+            <Route path="/kitchen"><ProtectedRoute component={Kitchen} /></Route>
+            <Route path="/menu"><ProtectedRoute component={Menu} /></Route>
+            <Route path="/reports"><ProtectedRoute component={Reports} requireOwner /></Route>
+            <Route path="/history"><ProtectedRoute component={History} /></Route>
+            <Route path="/tables"><ProtectedRoute component={Tables} /></Route>
+            <Route path="/home"><ProtectedRoute component={Home} /></Route>
+            <Route path="/settings"><ProtectedRoute component={Settings} /></Route>
+            <Route path="/notifications"><ProtectedRoute component={Notifications} /></Route>
+            <Route path="/profile"><ProtectedRoute component={Profile} /></Route>
+            <Route path="/attendance"><ProtectedRoute component={Attendance} /></Route>
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
       )}
-      <Layout>
-        <Switch>
-          <Route path="/" component={Tables} />
-          <Route path="/orders" component={Orders} />
-          <Route path="/kitchen" component={Kitchen} />
-          <Route path="/menu" component={Menu} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/history" component={History} />
-          <Route path="/tables" component={Tables} />
-          <Route path="/home" component={Home} />
-          {/* Ẩn trang Gấu Assistant */}
-          {/* <Route path="/gau-assistant" component={GauAssistant} /> */}
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/attendance" component={Attendance} />
-        </Switch>
-      </Layout>
+      
+      {/* Fallback for cases not caught above */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+function AppContent() {
   const [location] = useLocation();
-  
+  const { isDetailModalVisible, selectedNotification, hideNotificationDetail } = useNotificationDetail();
+
+  return (
+    <>
+      <Router />
+      {/* Global Notification Detail Modal */}
+      <NotificationDetailModal
+        isVisible={isDetailModalVisible}
+        notification={selectedNotification}
+        onClose={hideNotificationDetail}
+      />
+      {/* Ẩn bong bóng chat Gấu Assistant */}
+      {/* {location !== "/menu-tv" && location !== "/menutv" && <FloatingChatBubble />} */}
+      <DebugToolbar />
+    </>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -89,10 +126,11 @@ function App() {
         <PWAInstallPrompt />
         <PWAUpdatePrompt />
         <AuthProvider>
-          <Router />
-          {/* Ẩn bong bóng chat Gấu Assistant */}
-          {/* {location !== "/menu-tv" && location !== "/menutv" && <FloatingChatBubble />} */}
-          <DebugToolbar />
+          <NotificationProvider>
+            <NotificationDetailProvider>
+              <AppContent />
+            </NotificationDetailProvider>
+          </NotificationProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

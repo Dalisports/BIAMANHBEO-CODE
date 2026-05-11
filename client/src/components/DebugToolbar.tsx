@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/use-auth";
 
 const isDev = () => {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  return hostname.includes("fly.dev") || hostname.includes("localhost");
+  const isProd = hostname.includes("prod") || hostname.includes("production");
+  return (hostname.includes("fly.dev") || hostname.includes("localhost")) && !isProd;
 };
 
 export function DebugToolbar() {
@@ -108,7 +109,7 @@ export function DebugToolbar() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Current User</p>
-                    <p className="font-mono">{user?.name || "Chưa đăng nhập"}</p>
+                    <p className="font-mono">{user?.username || "Chưa đăng nhập"}</p>
                     <p className="text-xs text-muted-foreground">{user?.role || "-"}</p>
                   </div>
                 </div>

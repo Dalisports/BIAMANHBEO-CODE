@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSettings, useUpdatePaymentSetting, useSendToKitchen, type Order, type OrderItem } from "@/hooks/use-orders";
+import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSettings, useUpdatePaymentSetting, useSendToKitchen, useKitchenOrders, useRemoveKitchenItem, type Order, type OrderItem } from "@/hooks/use-orders";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useTableNames } from "@/hooks/use-table-names";
-import { Loader2, Settings, X } from "lucide-react";
+import { getAuthHeaders } from "@/hooks/use-auth";
+import { Loader2, Settings, X, LayoutGrid } from "lucide-react";
 import { Receipt } from "@/components/Receipt";
 
 import { TableGrid } from "@/components/tables/TableGrid";
@@ -15,18 +17,20 @@ import { ConfirmDeleteModal } from "@/components/tables/ConfirmDeleteModal";
 const MAX_TABLES = 15;
 
 export default function Tables() {
+  const queryClient = useQueryClient();
   const { data: orders, isLoading: ordersLoading } = useOrders();
   const { data: menuItems, isLoading: menuLoading } = useMenuItems();
   const { data: paymentSettings } = usePaymentSettings();
+  const { data: kitchenOrders } = useKitchenOrders();
   const createOrder = useCreateOrder();
   const updateOrder = useUpdateOrder();
   const sendToKitchen = useSendToKitchen();
   const payOrder = usePayOrder();
+  const removeKitchenItem = useRemoveKitchenItem();
 
   const { tableNames, saveTableNames } = useTableNames();
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"order" | "history">("order");
   const [searchMenu, setSearchMenu] = useState("");
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
   const [payMethod, setPayMethod] = useState("cash");
@@ -48,16 +52,25 @@ export default function Tables() {
   });
   const updatePaymentSetting = useUpdatePaymentSetting();
   const [showReceipt, setShowReceipt] = useState<Order | null>(null);
+  const [activeTab, setActiveTab] = useState<"order" | "history">("order");
 
   const getActiveOrder = (tableNum: number): Order | undefined =>
     orders?.find(o => o.tableNumber === tableNum.toString() && o.status !== "Complete");
 
   const selectedOrder = selectedTable ? getActiveOrder(selectedTable) : undefined;
-  const currentStatus = selectedOrder?.status === "Ready" ? "ready" : "cooking";
+  const currentStatus = !selectedOrder ? "empty" : selectedOrder.status === "Ready" ? "ready" : "cooking";
 
-  useEffect(() => {
-    setActiveTab("order");
-  }, [selectedTable]);
+  const doneItemNames = useMemo(() => {
+    if (!selectedOrder || !kitchenOrders) return new Set<string>();
+    const done = new Set<string>();
+    const kitchenOrder = kitchenOrders.find(ko => ko.orderId === selectedOrder.id);
+    if (kitchenOrder) {
+      kitchenOrder.items
+        .filter(item => item.cookingStatus === "done")
+        .forEach(item => done.add(item.name));
+    }
+    return done;
+  }, [selectedOrder, kitchenOrders]);
 
   const handleAddItem = (menuItem: any, quantity: number = 1) => {
     if (!selectedTable) return;
@@ -94,46 +107,67 @@ export default function Tables() {
   };
 
   const handleRemoveItem = (index: number) => {
-    console.log("handleRemoveItem called, index:", index);
     setDeleteItemIndex(index);
     setShowDeleteConfirm("item");
   };
 
   const confirmDeleteItem = () => {
-    console.log("confirmDeleteItem called", { selectedOrderId: selectedOrder?.id, deleteItemIndex });
     if (!selectedOrder || deleteItemIndex === null) return;
+    
+    const deletedItem = selectedOrder.items[deleteItemIndex];
     const items = [...selectedOrder.items];
     items.splice(deleteItemIndex, 1);
+    
     if (items.length === 0) { 
       confirmDeleteTable(); 
       return; 
     }
+    
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
     updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
+    
+    // Also remove from kitchen
+    const kitchenOrder = kitchenOrders?.find(ko => ko.orderId === selectedOrder.id);
+    if (kitchenOrder && deletedItem) {
+      removeKitchenItem.mutate({ 
+        kitchenOrderId: kitchenOrder.id, 
+        itemName: deletedItem.name, 
+        notes: deletedItem.notes 
+      });
+    }
+    
     setShowDeleteConfirm(null);
     setDeleteItemIndex(null);
   };
 
   const handleClearTable = async () => {
     if (!selectedOrder) return;
-    console.log("handleClearTable called");
     setShowDeleteConfirm("table");
   };
 
   const confirmDeleteTable = async () => {
-    console.log("confirmDeleteTable called", { selectedOrderId: selectedOrder?.id });
     if (!selectedOrder) return;
-    await fetch(`/api/orders/${selectedOrder.id}`, { method: "DELETE", credentials: "include" });
+    await fetch(`/api/orders/${selectedOrder.id}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: getAuthHeaders(),
+    });
+    await queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
     setSelectedTable(null);
     setShowDeleteConfirm(null);
   };
 
   const handlePay = (orderId: number) => {
     payOrder.mutate({ orderId, method: payMethod }, {
-      onSuccess: () => {
-        const paidOrder = orders?.find(o => o.id === orderId);
-        if (paidOrder) {
-          setShowReceipt(paidOrder);
+      onSuccess: (freshOrder) => {
+        // Use the fresh order returned from the server directly
+        if (freshOrder && freshOrder.id === orderId) {
+          setShowReceipt(freshOrder);
+        } else {
+          // Fallback to cached data if something goes wrong
+          const paidOrder = orders?.find(o => o.id === orderId);
+          if (paidOrder) setShowReceipt(paidOrder);
         }
         setShowPayModal(null);
         setSelectedTable(null);
@@ -159,12 +193,17 @@ export default function Tables() {
     if (!selectedOrder) return;
     fetch(`/api/orders/${selectedOrder.id}/move`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify({ tableNumber: targetTable.toString() }),
       credentials: "include",
-    }).then(() => {
+    }).then(async () => {
+      // Refresh orders data
+      await queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
       setShowMoveModal(null);
-      setSelectedTable(null);
+      // Tự động chọn bàn mới sau khi đổi
+      setSelectedTable(targetTable);
+    }).catch(err => {
+      console.error("Move table failed:", err);
     });
   };
 
@@ -252,7 +291,7 @@ export default function Tables() {
           menuItems={menuItems || []}
           searchMenu={searchMenu}
           setSearchMenu={setSearchMenu}
-          onClose={() => setSelectedTable(null)}
+          onClose={() => { setSelectedTable(null); setActiveTab("order"); }}
           onTabChange={setActiveTab}
           onAddItem={handleAddItem}
           onUpdateQuantity={handleUpdateQuantity}
@@ -260,13 +299,8 @@ export default function Tables() {
           onClearTable={handleClearTable}
           onShowPayModal={() => selectedOrder && setShowPayModal(selectedOrder.id)}
           onShowMoveModal={() => selectedOrder && setShowMoveModal(selectedOrder.id)}
-        showDeleteConfirm={showDeleteConfirm}
-        deleteItemIndex={deleteItemIndex}
-        onDeleteCancel={() => {
-          setShowDeleteConfirm(null);
-          setDeleteItemIndex(null);
-        }}
-      />
+          doneItemNames={doneItemNames}
+        />
       )}
 
        {/* Payment Modal */}

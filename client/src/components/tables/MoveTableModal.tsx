@@ -87,7 +87,7 @@ export function MoveTableModal({
                 Hủy
               </button>
               <button
-                onClick={onConfirm}
+                onClick={() => moveTargetTable && onConfirm(moveTargetTable)}
                 disabled={!moveTargetTable}
                 className="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >

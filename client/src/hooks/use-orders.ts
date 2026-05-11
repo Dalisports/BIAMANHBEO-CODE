@@ -7,6 +7,7 @@ export type OrderItem = {
   quantity: number;
   price: number;
   notes?: string;
+  cookingStatus?: "pending" | "cooking" | "done";
 };
 
 export type Order = {
@@ -114,6 +115,7 @@ export function useUpdateOrder() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
     },
   });
 }
@@ -182,7 +184,7 @@ export function useKitchenOrders() {
   return useQuery({
     queryKey: ["/api/kitchen"],
     queryFn: async () => {
-      const res = await fetch("/api/kitchen", { credentials: "include" });
+      const res = await fetch("/api/kitchen", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch kitchen orders");
       return res.json() as Promise<KitchenOrder[]>;
     },
@@ -273,32 +275,54 @@ export function useCompleteKitchenItem() {
   });
 }
 
+export function useRemoveKitchenItem() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ kitchenOrderId, itemName, notes }: { kitchenOrderId: number; itemName: string; notes?: string }) => {
+      const res = await fetch(`/api/kitchen/${kitchenOrderId}/remove-item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ itemName, notes }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to remove kitchen item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    },
+  });
+}
+
 export function useClearCompletedKitchenOrders() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async () => {
-      console.log("[CLEAR] Calling clear-completed API...");
+
       const res = await fetch("/api/kitchen/clear-completed", {
         method: "POST", headers: getAuthHeaders(),
         credentials: "include",
       });
       
-      console.log("[CLEAR] Response status:", res.status);
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to clear completed orders");
       }
       const data = await res.json();
-      console.log("[CLEAR] Response data:", data);
+
       return data as { success: boolean; deletedCount: number };
     },
     onSuccess: (data) => {
-      console.log("[CLEAR] Success, invalidating queries. Deleted:", data.deletedCount);
+
       queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
     },
     onError: (error) => {
-      console.error("[CLEAR] Error:", error);
+
     },
   });
 }
@@ -342,7 +366,7 @@ export function usePaymentSettings() {
   return useQuery({
     queryKey: ["/api/payment-settings"],
   queryFn: async () => {
-       const res = await fetch("/api/payment-settings", { credentials: "include" });
+       const res = await fetch("/api/payment-settings", { credentials: "include", headers: getAuthHeaders() });
        if (!res.ok) throw new Error("Failed to fetch payment settings");
        return res.json() as Promise<PaymentSetting[]>;
      },

@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useMenuItems } from "./use-menu";
 import { useOrders } from "./use-orders";
 import { subDays, isAfter } from "date-fns";
+import { getAuthHeaders } from "./use-auth";
 
 const SHORTCUT_CACHE_KEY = 'daily_shortcuts_cache';
-
 interface ShortcutCache {
   date: string;
   lastUpdateHour: number;
@@ -44,7 +44,7 @@ export function useShortcuts() {
   });
 
   useEffect(() => {
-    fetch("/api/shortcuts", { credentials: "include" })
+    fetch("/api/shortcuts", { credentials: "include", headers: getAuthHeaders() })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -85,7 +85,7 @@ export function useShortcuts() {
     try {
       await fetch("/api/shortcuts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ position, menuItemId }),
         credentials: "include",
       });
@@ -95,7 +95,7 @@ export function useShortcuts() {
     }
   };
 
-  const getShortcutItem = (pos: number, menuItems: any[]) => {
+  const getShortcutItem = (pos: number, menuItems: any[] | undefined) => {
     if (pos >= 1 && pos <= 3) {
       return shortcuts[pos] ? menuItems?.find(m => m.id === shortcuts[pos]) || null : null;
     }
@@ -110,7 +110,7 @@ export function useShortcuts() {
   return { shortcuts, updateShortcut, isLoading, cachedTopItemIds, getShortcutItem, menuItems };
 }
 
-function getSortedByPopularity(menuItems: any[], orders: any[]) {
+function getSortedByPopularity(menuItems: any[] | undefined, orders: any[] | undefined) {
   const popularity: Record<number, number> = {};
   const fourteenDaysAgo = subDays(new Date(), 14);
   

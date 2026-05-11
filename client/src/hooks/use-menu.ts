@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAuthHeaders } from "./use-auth";
+import { normalizeSearchText } from "@/lib/search-utils";
 
 export type MenuItem = {
   id: number;
@@ -14,15 +15,21 @@ export type MenuItem = {
   isPriority: boolean;
   isHidden: boolean;
   createdAt: Date | null;
+  searchName?: string;
 };
 
 export function useMenuItems() {
   return useQuery({
     queryKey: ["/api/products"],
     queryFn: async () => {
-      const res = await fetch("/api/products", { credentials: "include" });
+      const res = await fetch("/api/products", { credentials: "include", headers: getAuthHeaders() });
       if (!res.ok) throw new Error("Failed to fetch menu items");
-      return res.json() as Promise<MenuItem[]>;
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data.value || []);
+      return items.map((item: any) => ({
+        ...item,
+        searchName: normalizeSearchText(item.name),
+      }));
     },
   });
 }

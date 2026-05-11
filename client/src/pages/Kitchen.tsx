@@ -138,13 +138,13 @@ export default function Kitchen() {
   }, []);
 
   const priorityNames = useMemo(
-    () => new Set((menuItems || []).filter((m) => m.isPriority && !m.isHidden).map((m) => m.name)),
+    () => new Set<string>((menuItems || []).filter((m: any) => m.isPriority && !m.isHidden).map((m: any) => m.name)),
     [menuItems],
   );
 
   // Hidden menu item names - to filter from kitchen display
   const hiddenNames = useMemo(
-    () => new Set((menuItems || []).filter((m) => m.isHidden).map((m) => m.name)),
+    () => new Set<string>((menuItems || []).filter((m: any) => m.isHidden).map((m: any) => m.name)),
     [menuItems],
   );
 
@@ -173,10 +173,14 @@ export default function Kitchen() {
   const doneOrdersCount = useMemo(() => {
     if (!orders) return 0;
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    return (orders || []).filter(o =>
-      o.status === 'Complete' && o.paidAt && String(o.paidAt).startsWith(todayStr)
-    ).length;
+    // Use local timezone instead of UTC to avoid off-by-one day errors in VN (UTC+7)
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return (orders || []).filter(o => {
+      if (o.status !== 'Complete' || !o.paidAt) return false;
+      const d = new Date(o.paidAt);
+      const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return dStr === todayStr;
+    }).length;
   }, [orders]);
 
   // Build sorted cooking queue

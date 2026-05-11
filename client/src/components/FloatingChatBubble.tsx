@@ -16,6 +16,7 @@ interface AIModel {
   name: string;
   provider: string;
   description: string;
+  hidden?: boolean;
 }
 
 interface FloatingChatBubbleProps {
@@ -84,7 +85,7 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
     (async () => {
       const defaultModel = await fetchModels();
       const savedModel = localStorage.getItem("gau_selected_model");
-      const validModels = ["openrouter/gemma-3-5b", "ollama/gemma4:fast", "google/gemini-2.0-flash"];
+      const validModels = ["openrouter/gemma-3-5b", "ollama/gemma4:fast", "google/gemini-2.0-flash", "minimax"];
       if (savedModel && validModels.includes(savedModel)) {
         setSelectedModel(savedModel);
       } else {

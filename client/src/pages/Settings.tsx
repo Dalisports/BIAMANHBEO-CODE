@@ -128,7 +128,7 @@ export default function Settings() {
 
   const fetchQrData = async () => {
     try {
-      const res = await fetch("/api/attendance/qr");
+      const res = await fetch("/api/attendance/qr", { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setQrData({ qrCode: data.qrCode, date: data.date, enabled: !!data.enabled });
@@ -338,12 +338,12 @@ export default function Settings() {
               onClick={() => setTheme("original")}
               className={cn(
                 "relative p-4 rounded-xl border-2 transition-all text-left",
-                theme === "original"
+                (theme === "original" || theme === "default")
                   ? "border-amber-500 bg-amber-50 shadow-md"
                   : "border-border hover:border-amber-300"
               )}
             >
-              {theme === "original" && (
+              {(theme === "original" || theme === "default") && (
                 <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
                   <Check className="w-4 h-4 text-black" />
                 </div>

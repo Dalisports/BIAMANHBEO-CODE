@@ -1,7 +1,25 @@
 export const TABLE_STATUS = {
-  empty:   { label: "Trống",           bg: "bg-black/50",       border: "border-black/50",    text: "text-black/50",    strip: "bg-black/50"    },
-  cooking: { label: "Đang phục vụ",    bg: "bg-amber-100",    border: "border-amber-400",   text: "text-amber-600",   strip: "bg-amber-500"   },
-  ready:   { label: "Chưa thanh toán",  bg: "bg-green-100",     border: "border-green-400",   text: "text-green-600",   strip: "bg-green-500"   },
+  empty: {
+    bg: "bg-black/50",
+    text: "text-black/50",
+    shadow: "shadow-lg shadow-black/30",
+    border: "border-black/50",
+    label: "Trống",
+  },
+  cooking: {
+    bg: "bg-[#f59e0b]",
+    text: "text-[#78350f]",
+    shadow: "shadow-lg shadow-amber-200",
+    border: "border-[#f59e0b]",
+    label: "Đang phục vụ",
+  },
+  ready: {
+    bg: "bg-green-100",
+    text: "text-green-700",
+    shadow: "shadow-lg shadow-green-200",
+    border: "border-green-400",
+    label: "Sẵn sàng",
+  },
 } as const;
 
 export type TableStatus = keyof typeof TABLE_STATUS;

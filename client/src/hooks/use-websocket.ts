@@ -23,6 +23,12 @@ export function useWebSocket(onNewOrder?: () => void) {
   const queryClient = useQueryClient();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const reconnectAttempts = useRef(0);
+  const onNewOrderRef = useRef(onNewOrder);
+
+  // Keep ref in sync without triggering reconnect
+  useEffect(() => {
+    onNewOrderRef.current = onNewOrder;
+  }, [onNewOrder]);
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -42,7 +48,7 @@ export function useWebSocket(onNewOrder?: () => void) {
         switch (wsEvent.type) {
           case "ORDER_CREATED":
             queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-            onNewOrder?.();
+            onNewOrderRef.current?.();
             break;
           case "ORDER_UPDATED":
           case "ORDER_DELETED":
@@ -50,7 +56,7 @@ export function useWebSocket(onNewOrder?: () => void) {
             break;
           case "KITCHEN_ORDER_CREATED":
             queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
-            onNewOrder?.();
+            onNewOrderRef.current?.();
             break;
           case "KITCHEN_ORDER_UPDATED":
           case "KITCHEN_ORDER_DELETED":
@@ -75,7 +81,7 @@ export function useWebSocket(onNewOrder?: () => void) {
     wsRef.current.onerror = (err) => {
       console.error("WebSocket error:", err);
     };
-  }, [queryClient, onNewOrder]);
+  }, [queryClient]);
 
   useEffect(() => {
     connect();

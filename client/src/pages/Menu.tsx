@@ -360,7 +360,7 @@ export default function Menu() {
                     )}
 
                     {isOwner && (
-                      <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex gap-1">
                         <button
                           onClick={() => handleOpenEdit(item)}
                           className="p-1.5 md:p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-lg transition-colors active:scale-90"

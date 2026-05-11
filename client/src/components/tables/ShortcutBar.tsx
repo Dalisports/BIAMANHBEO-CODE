@@ -1,4 +1,4 @@
-import { getShortcutItem } from "@/hooks/use-shortcuts";
+import { cn } from "@/lib/utils";
 import type { OrderItem } from "@/hooks/use-orders";
 
 interface ShortcutBarProps {

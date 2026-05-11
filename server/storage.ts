@@ -30,6 +30,8 @@ import { startOfDay, endOfDay, startOfToday } from "date-fns";
 export interface IStorage {
   getUsers(): Promise<User[]>;
   createUser(user: { username: string; password: string; role: string; fullName?: string }): Promise<User>;
+  updateUser(id: number, data: { role?: string; fullName?: string; isActive?: boolean }): Promise<User>;
+  deleteUser(id: number): Promise<void>;
   getUserProfile(userId: number): Promise<UserProfile | null>;
   getAllUserProfiles(): Promise<UserProfile[]>;
   createOrUpdateUserProfile(data: InsertUserProfile): Promise<UserProfile>;
@@ -75,6 +77,7 @@ export interface IStorage {
   completeKitchenOrder(id: number): Promise<void>;
   startKitchenItem(kitchenOrderId: number, itemName: string, notes?: string): Promise<void>;
   completeKitchenItem(kitchenOrderId: number, itemName: string, notes?: string): Promise<void>;
+  removeKitchenItem(kitchenOrderId: number, itemName: string, notes?: string): Promise<void>;
   
   getDailyReport(): Promise<{ todayRevenue: number; completedOrders: number; pendingOrders: number; kitchenActive: number }>;
   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;
@@ -101,6 +104,22 @@ export class DatabaseStorage implements IStorage {
       isActive: true,
     }).returning();
     return created;
+  }
+
+  async updateUser(id: number, data: { role?: string; fullName?: string; isActive?: boolean }) {
+    const [updated] = await db.update(users)
+      .set({
+        ...(data.role !== undefined && { role: data.role }),
+        ...(data.fullName !== undefined && { fullName: data.fullName }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteUser(id: number) {
+    await db.update(users).set({ isActive: false }).where(eq(users.id, id));
   }
 
   async getAllUserProfiles() {
@@ -641,6 +660,25 @@ async deleteMenuItem(id: number) {
             .where(eq(orders.id, relatedOrder.id));
         }
       }
+    }
+  }
+
+  async removeKitchenItem(kitchenOrderId: number, itemName: string, notes?: string) {
+    const [kitchenOrder] = await db.select().from(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
+    if (!kitchenOrder) return;
+
+    const items = kitchenOrder.items as any[];
+    const updatedItems = items.filter(item => 
+      !(item.name === itemName && (notes === undefined || (item.notes || null) === (notes || null)))
+    );
+
+    if (updatedItems.length === 0) {
+      // If no items left, delete the kitchen order
+      await db.delete(kitchenOrders).where(eq(kitchenOrders.id, kitchenOrderId));
+    } else {
+      await db.update(kitchenOrders)
+        .set({ items: updatedItems })
+        .where(eq(kitchenOrders.id, kitchenOrderId));
     }
   }
 

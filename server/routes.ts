@@ -7,7 +7,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
-import { broadcast } from "./websocket";
+import { broadcastEvent } from "./websocket";
 import { login, register, verifyAuth, requireAuth, requireOwner } from "./auth";
 
 let _openai: OpenAI | null = null;
@@ -21,10 +21,21 @@ function getOpenAI(): OpenAI {
   return _openai;
 }
 
+let _nvidiaAI: OpenAI | null = null;
+function getNvidiaAI(): OpenAI {
+  if (!_nvidiaAI) {
+    _nvidiaAI = new OpenAI({
+      apiKey: process.env.NVIDIA_API_KEY || "",
+      baseURL: "https://integrate.api.nvidia.com/v1",
+    });
+  }
+  return _nvidiaAI;
+}
+
 let _googleAI: GoogleGenAI | null = null;
 function getGoogleAI(): GoogleGenAI {
   if (!_googleAI) {
-    _googleAI = new GoogleGenAI({ apiKey: "AIzaSyDHytCA5dy4MqxAXixQANZ4TIIDj69G3Dg" });
+    _googleAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_KEY || "" });
   }
   return _googleAI;
 }
@@ -35,6 +46,18 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // WebSocket health check endpoint
+  app.get("/api/ws-status", (req, res) => {
+    res.json({
+      status: "ok",
+      websocket: {
+        path: "/ws",
+        protocol: req.headers["x-forwarded-proto"] || req.protocol,
+      },
+      timestamp: Date.now(),
+    });
+  });
 
   function getAuthUser(req: any) {
     const authHeader = req.headers.authorization;
@@ -81,15 +104,15 @@ export async function registerRoutes(
     try {
       const { username, password, fullName } = req.body;
       console.log("[ROUTES] Register request:", username);
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Missing username or password" });
       }
-      
+
       const existingUsers = await storage.getUsers();
       const role = existingUsers.length === 0 ? "owner" : "employee";
       console.log("[ROUTES] Existing users:", existingUsers.length, "-> role:", role);
-      
+
       const result = await register(username, password, role, fullName);
       if (!result) {
         return res.status(400).json({ message: "Username already exists" });
@@ -118,12 +141,12 @@ export async function registerRoutes(
     try {
       const { fullName, dateOfBirth, hometown, idCardNumber, phoneNumber, lock } = req.body;
       const userId = req.user.userId;
-      
+
       const existing = await storage.getUserProfile(userId);
       if (existing?.isLocked) {
         return res.status(403).json({ message: "Profile is locked. Contact owner to edit." });
       }
-      
+
       const profile = await storage.createOrUpdateUserProfile({
         userId,
         fullName: fullName || null,
@@ -132,12 +155,12 @@ export async function registerRoutes(
         idCardNumber: idCardNumber || null,
         phoneNumber: phoneNumber || null,
       });
-      
+
       if (lock) {
         await storage.lockUserProfile(userId);
         profile.isLocked = true;
       }
-      
+
       res.json(profile);
     } catch (err) {
       console.error("Profile error:", err);
@@ -170,7 +193,38 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/attendance/qr", async (req, res) => {
+  // User management routes (admin/owner only)
+  app.get("/api/users", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const allUsersFromDb = await storage.getUsers();
+      res.json(allUsersFromDb);
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
+  app.put("/api/users/:id", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const { role, fullName, isActive } = req.body;
+      const updated = await storage.updateUser(userId, { role, fullName, isActive });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireOwnerMiddleware, async (req: any, res) => {
+    try {
+      const userId = Number(req.params.id);
+      await storage.deleteUser(userId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Error deleting user" });
+    }
+  });
+
+  app.get("/api/attendance/qr", requireAuthMiddleware, async (req, res) => {
     try {
       const qr = await storage.getTodayQRCode();
       const enabled = await storage.getQrEnabled();
@@ -194,7 +248,7 @@ export async function registerRoutes(
     try {
       const { enabled } = req.body;
       await storage.setQrEnabled(!!enabled);
-      broadcast({ type: "ATTENDANCE_QR_CHANGED", data: { enabled: !!enabled } });
+      broadcastEvent("ATTENDANCE_QR_CHANGED", { enabled: !!enabled });
       res.json({ enabled: !!enabled });
     } catch (err) {
       res.status(500).json({ message: "Error toggling QR" });
@@ -236,10 +290,10 @@ export async function registerRoutes(
       const users = await storage.getUsers();
       const profiles = await storage.getAllUserProfiles();
       const hourlyRate = await storage.getHourlyRate();
-      
+
       const userMap = Object.fromEntries(users.map(u => [u.id, u]));
       const profileMap = Object.fromEntries(profiles.map(p => [p.userId, p]));
-      
+
       const result = records.map(r => ({
         ...r,
         username: userMap[r.userId]?.username,
@@ -253,7 +307,7 @@ export async function registerRoutes(
         fullName: profileMap[u.id]?.fullName || u.fullName || u.username,
         phoneNumber: profileMap[u.id]?.phoneNumber || null,
       }));
-      
+
       res.json({ records: result, hourlyRate, users: usersWithProfile });
     } catch (err) {
       res.status(500).json({ message: "Error fetching attendance" });
@@ -279,25 +333,26 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.products.list.path, async (req, res) => {
+  app.get(api.products.list.path, requireAuthMiddleware, async (req, res) => {
     const prods = await storage.getMenuItems();
-    // Sắp xếp: 3 món cố định lên đầu (theo thứ tự ID), còn lại theo ABC
-    const fixedIds = [67, 42, 26]; // Cốc bia, Ca bia, Lạc rang
-    const fixedSet = new Set(fixedIds);
+    // Sắp xếp: Món ghim (isSticky) lên đầu, sau đó đến món ưu tiên (isPriority), 
+    // cuối cùng sắp xếp theo tên ABC.
     const sorted = [...(prods || [])].sort((a: any, b: any) => {
-      const aFixed = fixedSet.has(a.id);
-      const bFixed = fixedSet.has(b.id);
-      if (aFixed && !bFixed) return -1;
-      if (!aFixed && bFixed) return 1;
-      if (aFixed && bFixed) {
-        return fixedIds.indexOf(a.id) - fixedIds.indexOf(b.id);
-      }
+      // 1. Kiểm tra isSticky
+      if (a.isSticky && !b.isSticky) return -1;
+      if (!a.isSticky && b.isSticky) return 1;
+      
+      // 2. Kiểm tra isPriority (nếu cả hai cùng sticky hoặc cùng không sticky)
+      if (a.isPriority && !b.isPriority) return -1;
+      if (!a.isPriority && b.isPriority) return 1;
+      
+      // 3. Sắp xếp theo tên
       return a.name.localeCompare(b.name, 'vi');
     });
     res.json(sorted);
   });
 
-  app.get("/api/products/:id", async (req, res) => {
+  app.get("/api/products/:id", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const item = await storage.getMenuItem(id);
@@ -308,7 +363,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.products.create.path, async (req, res) => {
+  app.post(api.products.create.path, requireOwnerMiddleware, async (req, res) => {
     try {
       const input = api.products.create.input.parse(req.body);
       const prod = await storage.createMenuItem(input);
@@ -356,7 +411,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/migrate/add-hidden-column", async (req, res) => {
+  app.post("/api/migrate/add-hidden-column", requireOwnerMiddleware, async (req, res) => {
     try {
       await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false`);
       res.json({ success: true, message: "Column is_hidden added" });
@@ -379,27 +434,27 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.orders.list.path, async (req, res) => {
+  app.get(api.orders.list.path, requireAuthMiddleware, async (req, res) => {
     const { tableNumber, status } = req.query;
     let ords = await storage.getOrders();
-    
+
     if (tableNumber) {
       ords = ords.filter(o => o.tableNumber === tableNumber);
     }
     if (status) {
       ords = ords.filter(o => o.status === status);
     }
-    
+
     res.json(ords);
   });
 
-  app.get(api.orders.get.path, async (req, res) => {
+  app.get(api.orders.get.path, requireAuthMiddleware, async (req, res) => {
     const ord = await storage.getOrder(Number(req.params.id));
     if (!ord) return res.status(404).json({ message: "Not found" });
     res.json(ord);
   });
 
-  app.post(api.orders.create.path, async (req, res) => {
+  app.post(api.orders.create.path, requireAuthMiddleware, async (req, res) => {
     try {
       const input = api.orders.create.input.parse(req.body);
       const tableNum = input.tableNumber;
@@ -408,12 +463,12 @@ export async function registerRoutes(
         ...input,
         customerName: input.customerName || customerName,
       });
-      
+
       if ('merged' in result) {
-        broadcast({ type: "ORDER_UPDATED", data: result.order });
+        broadcastEvent("ORDER_UPDATED", result.order);
         res.status(200).json({ ...result.order, merged: true });
       } else {
-        broadcast({ type: "ORDER_CREATED", data: result });
+        broadcastEvent("ORDER_CREATED", result);
         res.status(201).json(result);
       }
     } catch (err) {
@@ -427,7 +482,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.orders.update.path, async (req, res) => {
+  app.put(api.orders.update.path, requireAuthMiddleware, async (req, res) => {
     try {
       const input = api.orders.update.input.parse(req.body);
       const ord = await storage.updateOrder(Number(req.params.id), input);
@@ -437,7 +492,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.orders.complete.path, async (req, res) => {
+  app.post(api.orders.complete.path, requireAuthMiddleware, async (req, res) => {
     try {
       const { ids } = api.orders.complete.input.parse(req.body);
       await storage.completeOrders(ids);
@@ -447,7 +502,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/orders/uncomplete/:id", async (req, res) => {
+  app.post("/api/orders/uncomplete/:id", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.uncompleteOrder(id);
@@ -517,7 +572,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/orders/:id/unpay", async (req, res) => {
+  app.post("/api/orders/:id/unpay", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.unpayOrder(id);
@@ -527,23 +582,23 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/orders/:id", async (req, res) => {
+  app.delete("/api/orders/:id", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.deleteOrder(id);
-      broadcast({ type: "ORDER_DELETED", data: { id } });
+      broadcastEvent("ORDER_DELETED", { id });
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete order" });
     }
   });
 
-  app.get("/api/payment-settings", async (req, res) => {
+  app.get("/api/payment-settings", requireAuthMiddleware, async (req, res) => {
     const settings = await storage.getPaymentSettings();
     res.json(settings);
   });
 
-  app.patch("/api/payment-settings/:method", async (req, res) => {
+  app.patch("/api/payment-settings/:method", requireOwnerMiddleware, async (req, res) => {
     try {
       const method = req.params.method;
       const { label, icon, qrImageUrl, accountName, accountNumber, bankName, additionalInfo, isEnabled } = req.body;
@@ -557,32 +612,32 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/orders/:id/pay", async (req, res) => {
+  app.post("/api/orders/:id/pay", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { method } = req.body;
-      const order = await storage.getOrder(id);
       await storage.payOrder(id, method);
-      broadcast({ type: "KITCHEN_ORDER_DELETED", data: { orderId: id } });
-      broadcast({ type: "ORDER_UPDATED", data: { ...order, status: "Complete", paymentStatus: "Paid" } });
-      res.json({ success: true });
+      const paidOrder = await storage.getOrder(id); // get fresh order
+      broadcastEvent("KITCHEN_ORDER_DELETED", { orderId: id });
+      broadcastEvent("ORDER_UPDATED", { ...paidOrder });
+      res.json(paidOrder);
     } catch (err) {
       res.status(400).json({ message: "Error paying" });
     }
   });
 
-  app.post("/api/orders/:id/send-to-kitchen", async (req, res) => {
+  app.post("/api/orders/:id/send-to-kitchen", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const kitchenOrder = await storage.sendToKitchen(id);
-      broadcast({ type: "KITCHEN_ORDER_CREATED", data: kitchenOrder });
+      broadcastEvent("KITCHEN_ORDER_CREATED", kitchenOrder);
       res.status(201).json(kitchenOrder);
     } catch (err) {
       res.status(400).json({ message: "Error sending to kitchen" });
     }
   });
 
-  app.post("/api/orders/:id/move", async (req, res) => {
+  app.post("/api/orders/:id/move", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { tableNumber } = req.body;
@@ -590,69 +645,81 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Missing table number" });
       }
       const updated = await storage.updateOrder(id, { tableNumber });
-      broadcast({ type: "ORDER_UPDATED", data: updated });
+      broadcastEvent("ORDER_UPDATED", updated);
       res.json(updated);
     } catch (err) {
       res.status(400).json({ message: "Error moving order" });
     }
   });
 
-  app.get("/api/kitchen", async (req, res) => {
+  app.get("/api/kitchen", requireAuthMiddleware, async (req, res) => {
     const kitchenOrders = await storage.getKitchenOrders();
     res.json(kitchenOrders);
   });
 
-  app.post("/api/kitchen/:id/start", async (req, res) => {
+  app.post("/api/kitchen/:id/start", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.startKitchenOrder(id);
       const order = await storage.getKitchenOrder(id);
-      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      broadcastEvent("KITCHEN_ORDER_UPDATED", order);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error starting" });
     }
   });
 
-  app.post("/api/kitchen/:id/complete", async (req, res) => {
+  app.post("/api/kitchen/:id/complete", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.completeKitchenOrder(id);
       const order = await storage.getKitchenOrder(id);
-      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      broadcastEvent("KITCHEN_ORDER_UPDATED", order);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error completing" });
     }
   });
 
-  app.post("/api/kitchen/:id/start-item", async (req, res) => {
+  app.post("/api/kitchen/:id/start-item", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { itemName, notes } = req.body;
       await storage.startKitchenItem(id, itemName, notes);
       const order = await storage.getKitchenOrder(id);
-      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      broadcastEvent("KITCHEN_ORDER_UPDATED", order);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error starting item" });
     }
   });
 
-  app.post("/api/kitchen/:id/complete-item", async (req, res) => {
+  app.post("/api/kitchen/:id/complete-item", requireAuthMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { itemName, notes } = req.body;
       await storage.completeKitchenItem(id, itemName, notes);
       const order = await storage.getKitchenOrder(id);
-      broadcast({ type: "KITCHEN_ORDER_UPDATED", data: order });
+      broadcastEvent("KITCHEN_ORDER_UPDATED", order);
       res.json({ success: true });
     } catch (err) {
       res.status(400).json({ message: "Error completing item" });
     }
   });
 
-  app.post("/api/kitchen/clear-completed", async (req, res) => {
+  app.post("/api/kitchen/:id/remove-item", requireAuthMiddleware, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { itemName, notes } = req.body;
+      await storage.removeKitchenItem(id, itemName, notes);
+      broadcastEvent("KITCHEN_ORDER_UPDATED", { id });
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Error removing item" });
+    }
+  });
+
+  app.post("/api/kitchen/clear-completed", requireAuthMiddleware, async (req, res) => {
     try {
       console.log("[CLEAR] Starting to clear old completed kitchen orders...");
       const deletedCount = await storage.clearOldCompletedKitchenOrders();
@@ -664,7 +731,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/kitchen/order", async (req, res) => {
+  app.get("/api/kitchen/order", requireAuthMiddleware, async (req, res) => {
     try {
       const setting = await storage.getSetting("kitchen_item_order");
       let order: string[] | null = null;
@@ -682,7 +749,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/kitchen/order", async (req, res) => {
+  app.post("/api/kitchen/order", requireAuthMiddleware, async (req, res) => {
     try {
       const { order } = req.body;
       if (order !== null && order !== undefined) {
@@ -703,12 +770,12 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/categories", async (req, res) => {
+  app.get("/api/categories", requireAuthMiddleware, async (req, res) => {
     const cats = await storage.getCategories();
     res.json(cats);
   });
 
-  app.get("/api/settings/:key", async (req, res) => {
+  app.get("/api/settings/:key", requireAuthMiddleware, async (req, res) => {
     try {
       const key = req.params.key;
       const setting = await storage.getSetting(key);
@@ -718,7 +785,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/settings/:key", async (req, res) => {
+  app.patch("/api/settings/:key", requireOwnerMiddleware, async (req, res) => {
     try {
       const key = req.params.key;
       const { value } = req.body;
@@ -747,7 +814,7 @@ export async function registerRoutes(
 
   // Shortcuts feature removed per user request
 
-  app.post("/api/ticker", async (req, res) => {
+  app.post("/api/ticker", requireOwnerMiddleware, async (req, res) => {
     try {
       const { text } = req.body;
       if (!text) {
@@ -760,7 +827,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/categories", async (req, res) => {
+  app.post("/api/categories", requireOwnerMiddleware, async (req, res) => {
     try {
       const { name, displayOrder } = req.body;
       const cat = await storage.createCategory({ name, displayOrder: displayOrder || 0 });
@@ -770,7 +837,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/categories/:id", async (req, res) => {
+  app.patch("/api/categories/:id", requireOwnerMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const { name, displayOrder } = req.body;
@@ -781,7 +848,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/categories/:id", async (req, res) => {
+  app.delete("/api/categories/:id", requireOwnerMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
       await storage.deleteCategory(id);
@@ -809,19 +876,19 @@ export async function registerRoutes(
     }
   });
 
-  app.post(api.chat.process.path, async (req, res) => {
+  app.post(api.chat.process.path, requireAuthMiddleware, async (req, res) => {
     try {
       const { message, history, model } = api.chat.process.input.parse(req.body);
-      
+
       const menuItemsList = await storage.getMenuItems();
       const categoriesList = await storage.getCategories();
       const pendingOrders = await storage.getPendingOrders();
       const activeKitchenOrders = await storage.getActiveKitchenOrders();
       const allOrders = await storage.getOrders();
       const dailyReport = await storage.getDailyReport();
-      
+
       const nonPendingOrders = allOrders.filter(o => o.status !== "Complete");
-      
+
       const systemPrompt = `Bạn là AI assistant quản lý NHÀ HÀNG F&B. 
 Bạn trò chuyện với nhân viên để:
 1. Tạo order cho khách (cần số bàn)
@@ -900,9 +967,10 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
 
       let parsedResponse: any;
 
-      // Use free models only to avoid credit exhaustion
+      // Model selection: google, openrouter, or nvidia (minimax)
       const isGoogleModel = model === "gemma";
-      
+      const isNvidiaModel = model === "minimax" || model === "minimaxai/minimax-m2.7";
+
       if (isGoogleModel) {
         // Use Google AI directly
         const contents = [
@@ -913,7 +981,7 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           })),
           { role: "user", parts: [{ text: message }] }
         ];
-        
+
         const response = await getGoogleAI().models.generateContent({
           model: GEMMA_MODEL,
           contents,
@@ -921,17 +989,38 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
             responseMimeType: "application/json",
           }
         });
-        
-        const content = response.text();
+
+        const content = response.text;
         if (!content) {
           throw new Error("No response from AI");
         }
-        
+
+        parsedResponse = JSON.parse(content);
+      } else if (isNvidiaModel) {
+        // Use NVIDIA API with Minimax model
+        const response = await getNvidiaAI().chat.completions.create({
+          model: "minimaxai/minimax-m2.7",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...historyMessages,
+            { role: "user", content: message }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 1,
+          top_p: 0.95,
+          max_tokens: 8192,
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error("No response from AI");
+        }
+
         parsedResponse = JSON.parse(content);
       } else {
         // Use free models from OpenRouter
         const freeModel = "meta-llama/llama-3.2-3b-instruct:free";
-      
+
         const response = await getOpenAI().chat.completions.create({
           model: freeModel,
           messages: [
@@ -942,19 +1031,19 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           response_format: { type: "json_object" },
           max_tokens: 1024
         });
-        
+
         const content = response.choices[0]?.message?.content;
         if (!content) {
           throw new Error("No response from AI");
         }
-        
+
         parsedResponse = JSON.parse(content);
       }
 
       if (parsedResponse.action === 'CREATE_ORDER' && parsedResponse.data?.tableNumber && parsedResponse.data?.items?.length > 0) {
         const tableNum = parsedResponse.data.tableNumber;
         const customerName = tableNum === "1" ? "Ban" : `Ban ${tableNum}`;
-        
+
         const result = await storage.createOrder({
           tableNumber: tableNum,
           customerName: parsedResponse.data.customerName || customerName,
@@ -965,20 +1054,20 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           paymentStatus: "Unpaid",
           notes: parsedResponse.data.notes || null,
         });
-        
+
         if ('merged' in result) {
-          broadcast({ type: "ORDER_UPDATED", data: result.order });
+          broadcastEvent("ORDER_UPDATED", result.order);
         } else {
-          broadcast({ type: "ORDER_CREATED", data: result });
+          broadcastEvent("ORDER_CREATED", result);
         }
       } else if (parsedResponse.action === 'ADD_TO_TABLE' && parsedResponse.data?.tableNumber && parsedResponse.data?.items?.length > 0) {
         const tableNum = parsedResponse.data.tableNumber;
         const pendingOrder = await storage.getActiveOrderByTable(tableNum);
-        
+
         if (pendingOrder) {
           const existingItems = pendingOrder.items as any[];
           const newItems = parsedResponse.data.items as any[];
-          
+
           for (const newItem of newItems) {
             const existingIndex = existingItems.findIndex(
               i => i.menuItemId === newItem.menuItemId
@@ -992,10 +1081,10 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
               existingItems.push(newItem);
             }
           }
-          
+
           const newTotal = existingItems.reduce((sum, item: any) => sum + item.price * item.quantity, 0);
           await storage.updateOrder(pendingOrder.id, { items: existingItems, totalAmount: newTotal });
-          broadcast({ type: "ORDER_UPDATED", data: { ...pendingOrder, items: existingItems, totalAmount: newTotal } });
+          broadcastEvent("ORDER_UPDATED", { ...pendingOrder, items: existingItems, totalAmount: newTotal });
         }
       } else if (parsedResponse.action === 'SEND_TO_KITCHEN' && parsedResponse.data?.orderId) {
         await storage.sendToKitchen(parsedResponse.data.orderId);
@@ -1035,13 +1124,127 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
         await storage.unpayOrder(parsedResponse.data.orderId);
       } else if (parsedResponse.action === 'DELETE_ORDER' && parsedResponse.data?.orderId) {
         await storage.deleteOrder(parsedResponse.data.orderId);
-        broadcast({ type: "ORDER_DELETED", data: { id: parsedResponse.data.orderId } });
+        broadcastEvent("ORDER_DELETED", { id: parsedResponse.data.orderId });
       }
 
       res.json(parsedResponse);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Internal error" });
+    }
+  });
+
+  // vMix API Proxy - Route để xử lý vMix commands từ client
+  app.post("/api/vmix/command", requireAuthMiddleware, async (req, res) => {
+    try {
+      const { Function: vmixCommand, ...params } = req.body;
+
+      if (!vmixCommand) {
+        return res.status(400).json({ message: "Missing Function parameter" });
+      }
+
+      // Build query string for vMix
+      const queryParams = new URLSearchParams();
+      queryParams.append("Function", vmixCommand);
+
+      // Add all other parameters
+      for (const [key, value] of Object.entries(params)) {
+        queryParams.append(key, String(value));
+      }
+
+      // Get vMix API config from environment or use defaults
+      const vmixHost = process.env.VMIX_HOST || "localhost";
+      const vmixPort = process.env.VMIX_PORT || "8088";
+      const vmixUrl = `http://${vmixHost}:${vmixPort}/API/?${queryParams.toString()}`;
+
+      console.log("[vMix] Sending command:", vmixUrl);
+
+      const response = await fetch(vmixUrl, { signal: AbortSignal.timeout(5000) });
+      const text = await response.text();
+
+      res.setHeader("Content-Type", "text/xml");
+      res.send(text);
+    } catch (err) {
+      console.error("[vMix] Error:", err);
+      res.status(502).json({ message: "vMix API error", error: String(err) });
+    }
+  });
+
+  // vMix health check endpoint
+  app.get("/api/vmix/status", requireAuthMiddleware, async (req, res) => {
+    try {
+      const vmixHost = process.env.VMIX_HOST || "localhost";
+      const vmixPort = process.env.VMIX_PORT || "8088";
+      const vmixUrl = `http://${vmixHost}:${vmixPort}/API/?Function=GetStatus`;
+
+      console.log("[vMix Health Check] Checking:", vmixUrl);
+
+      const response = await fetch(vmixUrl, { signal: AbortSignal.timeout(3000) });
+      const text = await response.text();
+
+      if (!response.ok) {
+        return res.status(502).json({
+          connected: false,
+          error: `HTTP ${response.status}`,
+          host: vmixHost,
+          port: vmixPort,
+        });
+      }
+
+      // Check if response looks like vMix XML
+      if (text.includes("<vmix>")) {
+        return res.json({
+          connected: true,
+          host: vmixHost,
+          port: vmixPort,
+          responsePreview: text.substring(0, 200),
+        });
+      } else {
+        return res.status(502).json({
+          connected: false,
+          error: "Invalid response format",
+          host: vmixHost,
+          port: vmixPort,
+        });
+      }
+    } catch (err) {
+      console.error("[vMix Health Check] Error:", err);
+      res.status(502).json({
+        connected: false,
+        error: String(err),
+        host: process.env.VMIX_HOST || "localhost",
+        port: process.env.VMIX_PORT || "8088",
+      });
+    }
+  });
+
+  // vMix Proxy endpoint cho client PHP
+  app.get("/api/vmix-proxy", requireAuthMiddleware, async (req, res) => {
+    try {
+      const vmixCommand = req.query.Function as string;
+
+      if (!vmixCommand) {
+        return res.status(400).json({ message: "Missing Function parameter" });
+      }
+
+      // Build query string
+      const queryParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(req.query)) {
+        queryParams.append(key, String(value));
+      }
+
+      // Send request to local vMix API
+      const vmixUrl = `http://localhost:8088/API/?${queryParams.toString()}`;
+      console.log("[vMix Proxy] Request:", vmixUrl);
+
+      const response = await fetch(vmixUrl);
+      const text = await response.text();
+
+      res.setHeader("Content-Type", "text/xml");
+      res.send(text);
+    } catch (err) {
+      console.error("[vMix Proxy] Error:", err);
+      res.status(502).json({ message: "vMix service unavailable", error: String(err) });
     }
   });
 

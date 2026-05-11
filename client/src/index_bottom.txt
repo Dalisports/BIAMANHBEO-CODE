@@ -1,61 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* ============================================
-   BUSINESS THEME - Clean Professional Style
-   Primary: #00adc9 (cyan)
-   Background: white
-   ============================================ */
-
-.theme-business {
-  --background: 0 0% 100%; /* white */
-  --foreground: 210 20% 15%; /* dark slate */
-
-  --card: 0 0% 100%;
-  --card-foreground: 210 20% 15%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 20% 15%;
-
-  --primary: 190 100% 38%; /* #00adc9 cyan */
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 210 20% 96%; /* very light gray */
-  --secondary-foreground: 210 20% 15%;
-
-  --muted: 210 15% 92%;
-  --muted-foreground: 210 10% 45%;
-
-  --accent: 190 100% 38%;
-  --accent-foreground: 0 0% 100%;
-
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 210 15% 85%;
-  --input: 210 15% 90%;
-  --ring: 190 100% 38%;
-
-  --gold-light: 190 100% 55%;
-  --gold-dark: 190 100% 30%;
-  --black: 210 20% 15%;
-
-  /* Table status colors - business theme */
-  --table-empty: 210 15% 55%;
-  --table-empty-text: 210 20% 20%;
-  --table-cooking: 190 100% 45%;
-  --table-cooking-text: 190 100% 15%;
-  --table-ready: 142 60% 50%;
-  --table-ready-text: 142 80% 15%;
-}
-
-.theme-business .dark {
-  --background: 210 20% 8%;
-  --foreground: 0 0% 100%;
-
   --card: 210 20% 12%;
   --card-foreground: 0 0% 100%;
 
@@ -80,14 +22,6 @@
   --border: 210 20% 25%;
   --input: 210 20% 20%;
   --ring: 190 100% 45%;
-
-  /* Table status colors - business dark theme */
-  --table-empty: 210 15% 35%;
-  --table-empty-text: 210 15% 90%;
-  --table-cooking: 190 100% 55%;
-  --table-cooking-text: 190 100% 95%;
-  --table-ready: 142 50% 55%;
-  --table-ready-text: 142 90% 95%;
 }
 
 /* ============================================
@@ -134,14 +68,6 @@
     --gold-light: 45 100% 55%;
     --gold-dark: 45 80% 45%;
     --black: 0 0% 8%;
-
-    /* Table status colors - default theme */
-    --table-empty: 0 0% 60%;
-    --table-empty-text: 0 0% 25%;
-    --table-cooking: 38 92% 50%;
-    --table-cooking-text: 38 80% 20%;
-    --table-ready: 142 71% 45%;
-    --table-ready-text: 142 80% 15%;
   }
 
   .dark {
@@ -172,14 +98,6 @@
     --border: 0 0% 20%;
     --input: 0 0% 18%;
     --ring: 45 100% 50%;
-
-    /* Table status colors - dark mode */
-    --table-empty: 0 0% 40%;
-    --table-empty-text: 0 0% 90%;
-    --table-cooking: 38 80% 55%;
-    --table-cooking-text: 38 90% 95%;
-    --table-ready: 142 60% 55%;
-    --table-ready-text: 142 90% 95%;
   }
 }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, getAuthHeaders } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,38 +25,32 @@ export default function Attendance() {
   const { isOwner } = useAuth();
   const { toast } = useToast();
 
+  const queryClient = useQueryClient();
   const [scanMode, setScanMode] = useState<ScanMode>(null);
   const [loading, setLoading] = useState(false);
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [hourlyRate, setHourlyRate] = useState(50000);
   const [now, setNow] = useState(new Date());
 
-  useEffect(() => {
-    if (!isOwner) {
-      fetchMyAttendance();
-      fetchHourlyRate();
-    }
-  }, [isOwner]);
-
-  const fetchMyAttendance = async () => {
-    try {
+  const { data: records = [] } = useQuery({
+    queryKey: ["/api/attendance/my"],
+    queryFn: async () => {
       const res = await fetch("/api/attendance/my", { headers: getAuthHeaders() });
-      const data = await res.json();
-      setRecords(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Error fetching attendance:", err);
-    }
-  };
+      if (!res.ok) throw new Error("Failed to fetch attendance");
+      return res.json() as Promise<AttendanceRecord[]>;
+    },
+    enabled: !isOwner,
+  });
 
-  const fetchHourlyRate = async () => {
-    try {
+  const { data: hourlyRateData } = useQuery({
+    queryKey: ["/api/attendance/rate"],
+    queryFn: async () => {
       const res = await fetch("/api/attendance/rate", { headers: getAuthHeaders() });
-      const data = await res.json();
-      setHourlyRate(data.hourlyRate || 50000);
-    } catch (err) {
-      console.error("Error fetching hourly rate:", err);
-    }
-  };
+      if (!res.ok) throw new Error("Failed to fetch hourly rate");
+      return res.json();
+    },
+    enabled: !isOwner,
+  });
+
+  const hourlyRate = hourlyRateData?.hourlyRate || 50000;
 
   const todayStatus = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -90,7 +85,7 @@ export default function Attendance() {
           title: mode === "checkin" ? "Check-in thành công" : "Check-out thành công",
           description: mode === "checkin" ? "Bạn đã bắt đầu ca làm việc" : "Bạn đã kết thúc ca làm việc",
         });
-        fetchMyAttendance();
+        queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
       } else {
         toast({
           title: mode === "checkin" ? "Check-in thất bại" : "Check-out thất bại",

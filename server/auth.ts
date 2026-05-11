@@ -38,7 +38,7 @@ function verifyToken(token: string): { userId: number; username: string; role: s
 export interface AuthUser {
   userId: number;
   username: string;
-  role: "owner" | "employee";
+  role: "owner" | "admin" | "employee" | "Admin";
 }
 
 export async function login(
@@ -56,14 +56,14 @@ export async function login(
   
   return {
     token,
-    user: { userId: user.id, username: user.username, role: user.role as "owner" | "employee" }
+    user: { userId: user.id, username: user.username, role: user.role as "owner" | "admin" | "Admin" | "employee" }
   };
 }
 
 export async function register(
   username: string,
   password: string,
-  role: "owner" | "employee" = "employee",
+  role: "owner" | "admin" | "Admin" | "employee" = "employee",
   fullName?: string
 ): Promise<{ token: string; user: AuthUser } | null> {
   console.log("[AUTH] Registering user:", username, "role:", role);
@@ -114,8 +114,8 @@ export function requireAuth(
 }
 
 export function requireOwner(user: AuthUser): void {
-  if (user.role !== "owner") {
-    throw new Error("Forbidden: Owner only");
+  if (!["owner", "admin", "Admin"].includes(user.role)) {
+    throw new Error("Forbidden: Owner/Admin only");
   }
 }
 
