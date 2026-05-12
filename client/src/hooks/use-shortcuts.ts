@@ -67,8 +67,8 @@ export function useShortcuts() {
       const cached = getShortcutCache();
 
       if (currentHour >= 23 && (!cached || cached.date !== today)) {
-        const sortedMenuItems = getSortedByPopularity(menuItems, orders);
-        const newTopIds = sortedMenuItems.slice(0, 7).map(item => item.id);
+        const sortedMenuItems = getSortedByPopularity(menuItems as any[] | undefined, orders as any[] | undefined);
+        const newTopIds = (sortedMenuItems || []).slice(0, 7).map(item => item.id);
         setCachedTopItemIds(newTopIds);
         setShortcutCache(newTopIds);
       } else if (cached) {

@@ -1,5 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { Server } from "http";
+import pg from "pg";
+import url from "url";
 import { z } from "zod";
 import type { WSEventType, WSRoom, WSEvent } from "@shared/websocket";
 import { getRoomsForEvent, generateEventId } from "@shared/websocket";
@@ -36,10 +38,16 @@ const PingMessageSchema = z.object({
   timestamp: z.number(),
 });
 
+const PongMessageSchema = z.object({
+  action: z.literal("pong"),
+  timestamp: z.number(),
+});
+
 const ClientMessageSchema = z.union([
   SubscribeMessageSchema,
   UnsubscribeMessageSchema,
   PingMessageSchema,
+  PongMessageSchema,
 ]);
 
 // ============================================================================
@@ -60,6 +68,7 @@ let wss: WebSocketServer | null = null;
 const clients = new Map<WebSocket, WSClient>();
 const rooms = new Map<WSRoom, Set<WebSocket>>();
 let heartbeatInterval: NodeJS.Timeout | null = null;
+let pgPool: pg.Pool | null = null;
 
 // ============================================================================
 // UTILITIES
@@ -195,15 +204,35 @@ export function initWebSocket(httpServer: Server): void {
     return;
   }
 
-  // Create WebSocket server attached to HTTP server
-  wss = new WebSocketServer({
-    server: httpServer,
-    path: "/ws",
-    // Disable compression for better proxy compatibility (Fly.io, etc.)
+  console.log('[WebSocket] Initializing server with verbose diagnostics...');
+
+  // Create WebSocket server without attaching to httpServer directly first
+  wss = new WebSocketServer({ 
+    noServer: true,
     perMessageDeflate: false,
-    maxPayload: 1024 * 1024, // 1MB max payload
-    // Add client tracking
+    maxPayload: 1024 * 1024,
     clientTracking: true,
+  });
+
+  // Attach manual upgrade listener to httpServer for debugging
+  httpServer.on('upgrade', (request, socket, head) => {
+    const { pathname } = url.parse(request.url || '');
+    
+    console.log(`[HTTP Upgrade] Request Path: ${pathname}`);
+    console.log(`[HTTP Upgrade] Headers: ${JSON.stringify(request.headers)}`);
+
+    if (pathname === '/ws' || pathname === '/ws/') {
+      console.log(`[WebSocket] Path matched /ws, attempting handleUpgrade...`);
+      wss!.handleUpgrade(request, socket, head, (ws) => {
+        console.log('[WebSocket] Upgrade successful, emitting connection event');
+        wss!.emit('connection', ws, request);
+      });
+    } else {
+      // Don't log for Vite HMR (starts with /vite-hmr or similar)
+      if (!pathname?.includes('vite')) {
+        console.log(`[HTTP Upgrade] Ignoring non-ws path: ${pathname}`);
+      }
+    }
   });
 
   // Handle upgrade errors
@@ -211,16 +240,10 @@ export function initWebSocket(httpServer: Server): void {
     console.error("[WebSocket] Server error:", err);
   });
 
-  // Log when server starts listening
   wss.on("listening", () => {
     console.log("[WebSocket] Server is now listening for connections");
   });
   
-  // Handle upgrade events for debugging
-  httpServer.on('upgrade', (request, socket, head) => {
-    console.log(`[HTTP] Upgrade request for: ${request.url}`);
-  });
-
   wss.on("connection", (ws: WebSocket, req: any) => {
     const clientId = generateId();
     const client: WSClient = {
@@ -237,6 +260,7 @@ export function initWebSocket(httpServer: Server): void {
     
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     console.log(`[WebSocket] Client connected: ${clientId} from ${clientIp}`);
+    console.log(`[WebSocket] User-Agent: ${req.headers['user-agent']}`);
     console.log(`[WebSocket] Total clients: ${clients.size}`);
 
     // Auto-subscribe to "all" room
@@ -295,6 +319,9 @@ export function initWebSocket(httpServer: Server): void {
           case "ping":
             handlePing(ws, message.timestamp);
             break;
+          case "pong":
+            handlePong(ws);
+            break;
         }
       } catch (err) {
         console.error("WebSocket message error:", err);
@@ -307,8 +334,13 @@ export function initWebSocket(httpServer: Server): void {
       }
     });
 
+    // Protocol-level pong handler (browser handles this automatically)
     ws.on("pong", () => {
-      handlePong(ws);
+      const client = clients.get(ws);
+      if (client) {
+        client.isAlive = true;
+        client.lastPing = Date.now();
+      }
     });
 
     ws.on("close", (code: number, reason: Buffer) => {
@@ -324,20 +356,48 @@ export function initWebSocket(httpServer: Server): void {
     });
   });
 
-  // Heartbeat with cleanup - use application-level ping
+  // Setup Postgres LISTEN for multi-node synchronization
+  const pgConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+  };
+
+  pgPool = new pg.Pool(pgConfig);
+  
+  const pgClient = new pg.Client(pgConfig);
+  pgClient.connect().then(() => {
+    console.log("[WebSocket] Connected to Postgres for event synchronization (LISTEN ws_events)");
+    pgClient.query("LISTEN ws_events");
+    
+    pgClient.on("notification", (msg) => {
+      if (msg.channel === "ws_events" && msg.payload) {
+        try {
+          const { event, targetRooms } = JSON.parse(msg.payload);
+          console.log(`[WebSocket] Cross-node event received: ${event.type}`);
+          // Broadcast to LOCAL clients only (other nodes will do the same)
+          broadcastLocally(event, targetRooms);
+        } catch (err) {
+          console.error("[WebSocket] Failed to parse cross-node notification:", err);
+        }
+      }
+    });
+
+    pgClient.on("error", (err) => {
+      console.error("[WebSocket] Postgres client error during sync:", err);
+      // Attempt to reconnect after a delay
+      setTimeout(() => initWebSocket(httpServer), 5000);
+    });
+  }).catch(err => {
+    console.error("[WebSocket] Failed to connect to Postgres for sync:", err);
+  });
+
+  // Heartbeat with cleanup - use protocol-level ping
   heartbeatInterval = setInterval(() => {
     const now = Date.now();
-    const clientCount = clients.size;
-    
-    if (clientCount > 0) {
-      console.log(`[WebSocket] Heartbeat check: ${clientCount} clients, ${Array.from(clients.values()).filter(c => !c.isAlive).length} pending pong`);
-    }
-    
     clients.forEach((client, ws) => {
-      // Check if client hasn't responded to ping
       if (!client.isAlive) {
         if (now - client.lastPing > HEARTBEAT_TIMEOUT) {
-          console.log(`[WebSocket] Terminating inactive client: ${client.id} (last ping: ${now - client.lastPing}ms ago)`);
+          console.log(`[WebSocket] Terminating inactive client: ${client.id} (no pong for ${now - client.lastPing}ms)`);
           ws.terminate();
           removeClient(ws);
         }
@@ -346,8 +406,14 @@ export function initWebSocket(httpServer: Server): void {
 
       client.isAlive = false;
       try {
-        // Send application-level ping that client expects
-        sendApplicationPing(ws);
+        ws.ping(); // Protocol-level ping
+        // Also send application-level ping for older browsers/proxies
+        sendToClient(ws, {
+          type: "PING",
+          data: { serverTimestamp: Date.now() },
+          timestamp: Date.now(),
+          id: generateId(),
+        } as any);
       } catch (err) {
         console.error(`[WebSocket] Failed to ping client ${client.id}:`, err);
         ws.terminate();
@@ -384,13 +450,12 @@ export function sendToClient(ws: WebSocket, event: WSEvent): boolean {
   }
 }
 
-export function broadcast(event: WSEvent, targetRooms?: WSRoom[]): void {
+// Local broadcast within this specific server instance
+function broadcastLocally(event: WSEvent, targetRooms?: WSRoom[]): void {
   if (!wss) return;
 
   const message = JSON.stringify(event);
   const targetRoomList = targetRooms || getRoomForEvent(event.type);
-
-  // Collect all target clients (using Set to avoid duplicates)
   const targetClients = new Set<WebSocket>();
   
   targetRoomList.forEach(room => {
@@ -399,21 +464,40 @@ export function broadcast(event: WSEvent, targetRooms?: WSRoom[]): void {
     });
   });
 
-  // Send to all collected clients
+  if (targetClients.size > 0) {
+    console.log(`[WebSocket] Local broadcast: "${event.type}" to ${targetClients.size} clients`);
+  }
+
   targetClients.forEach(ws => {
     if (ws.readyState === WebSocket.OPEN) {
       try {
         ws.send(message);
       } catch (err) {
-        console.error("Failed to broadcast message:", err);
+        console.error("[WebSocket] Send failed:", err);
         removeClient(ws);
       }
     }
   });
 }
 
+// Global broadcast across all server instances using Postgres NOTIFY
+export function broadcast(event: WSEvent, targetRooms?: WSRoom[]): void {
+  // 1. Send to local clients immediately
+  broadcastLocally(event, targetRooms);
+
+  // 2. Notify other nodes via Postgres if pool is available
+  if (pgPool) {
+    const payload = JSON.stringify({ event, targetRooms });
+    pgPool.query("SELECT pg_notify('ws_events', $1)", [payload])
+      .catch(err => console.error("[WebSocket] Global notify failed:", err));
+  } else {
+    console.warn("[WebSocket] Skipping global notify: pgPool not initialized");
+  }
+}
+
 // Helper function for easy event broadcasting (auto-generates timestamp and id)
 export function broadcastEvent<T>(type: WSEventType, data: T, targetRooms?: WSRoom[]): void {
+  console.log(`[WebSocket] Triggering broadcastEvent: ${type}`);
   const event: WSEvent<T> = {
     type,
     data,
