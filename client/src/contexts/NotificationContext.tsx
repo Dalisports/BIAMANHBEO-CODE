@@ -9,7 +9,7 @@ const NotificationContext = createContext<ReturnType<typeof useBatchNotification
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
   const batchNotification = useBatchNotification({
-    debounceMs: 5000,
+    debounceMs: 1500,
     maxEvents: 10,
   });
 
