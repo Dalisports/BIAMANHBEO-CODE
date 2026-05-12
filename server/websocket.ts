@@ -455,7 +455,8 @@ function broadcastLocally(event: WSEvent, targetRooms?: WSRoom[]): void {
   if (!wss) return;
 
   const message = JSON.stringify(event);
-  const targetRoomList = targetRooms || getRoomForEvent(event.type);
+  const baseRooms = targetRooms || getRoomForEvent(event.type);
+  const targetRoomList = [...new Set([...baseRooms, "all"])];
   const targetClients = new Set<WebSocket>();
   
   targetRoomList.forEach(room => {
