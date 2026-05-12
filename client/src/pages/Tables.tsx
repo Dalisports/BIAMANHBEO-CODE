@@ -5,9 +5,10 @@ import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSetti
 import { useMenuItems } from "@/hooks/use-menu";
 import { useTableNames } from "@/hooks/use-table-names";
 import { getAuthHeaders } from "@/hooks/use-auth";
-import { Loader2, Settings, X, LayoutGrid } from "lucide-react";
+import { Loader2, Settings, X, LayoutGrid, DollarSign, Clock, TrendingUp } from "lucide-react";
 import { Receipt } from "@/components/Receipt";
 
+import { cn, formatCurrency } from "@/lib/utils";
 import { TableGrid } from "@/components/tables/TableGrid";
 import { TableDetailModal } from "@/components/tables/TableDetailModal";
 import { PaymentModal } from "@/components/tables/PaymentModal";
@@ -59,6 +60,19 @@ export default function Tables() {
 
   const selectedOrder = selectedTable ? getActiveOrder(selectedTable) : undefined;
   const currentStatus = !selectedOrder ? "empty" : selectedOrder.status === "Ready" ? "ready" : "cooking";
+
+  // Stats: tinh trong ngay hom nay
+  const todayStr = new Date().toDateString();
+  const todayOrders = (orders || []).filter(o => {
+    if (!o.createdAt) return false;
+    return new Date(o.createdAt).toDateString() === todayStr;
+  });
+  const paidOrders = todayOrders.filter(o => o.paymentStatus === "Paid");
+  const unpaidOrders = todayOrders.filter(o => o.paymentStatus !== "Paid");
+  const paidCount = paidOrders.length;
+  const paidTotal = paidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const unpaidCount = unpaidOrders.length;
+  const unpaidTotal = unpaidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   const doneItemNames = useMemo(() => {
     if (!selectedOrder || !kitchenOrders) return new Set<string>();
@@ -264,6 +278,47 @@ export default function Tables() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Stats bar */}
+      <div className="grid grid-cols-3 gap-2 px-3 py-3 flex-shrink-0">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-3 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <DollarSign className="w-5 h-5 opacity-80" />
+          </div>
+          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Đã TT</p>
+          <p className="text-base font-bold">{paidCount} bàn</p>
+          <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal)}</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl p-3 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <Clock className="w-5 h-5 opacity-80" />
+          </div>
+          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Chưa TT</p>
+          <p className="text-base font-bold">{unpaidCount} bàn</p>
+          <p className="text-xs font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-3 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <TrendingUp className="w-5 h-5 opacity-80" />
+          </div>
+          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Tất Cả</p>
+          <p className="text-base font-bold">{paidCount + unpaidCount} bàn</p>
+          <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
+        </motion.div>
+      </div>
       {/* Table grid */}
       <div className="flex-1 overflow-y-auto">
         <TableGrid
@@ -283,6 +338,7 @@ export default function Tables() {
       {/* Table Detail Modal */}
       {selectedTable && (
         <TableDetailModal
+          orders={orders}
           selectedTable={selectedTable}
           tableNames={tableNames}
           activeOrder={selectedOrder}
