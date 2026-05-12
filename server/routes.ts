@@ -486,6 +486,7 @@ export async function registerRoutes(
     try {
       const input = api.orders.update.input.parse(req.body);
       const ord = await storage.updateOrder(Number(req.params.id), input);
+      broadcastEvent("ORDER_UPDATED", ord);
       res.json(ord);
     } catch (err) {
       res.status(400).json({ message: "Error updating" });
