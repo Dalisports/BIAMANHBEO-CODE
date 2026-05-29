@@ -5,17 +5,203 @@ import { useOrders, useCreateOrder, useUpdateOrder, usePayOrder, usePaymentSetti
 import { useMenuItems } from "@/hooks/use-menu";
 import { useTableNames } from "@/hooks/use-table-names";
 import { getAuthHeaders } from "@/hooks/use-auth";
-import { Loader2, Settings, X, LayoutGrid, DollarSign, Clock, TrendingUp } from "lucide-react";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { Loader2, Settings, X, LayoutGrid, DollarSign, Clock, TrendingUp, Search, Minus, Plus, CheckCircle2, UtensilsCrossed } from "lucide-react";
 import { Receipt } from "@/components/Receipt";
-
 import { cn, formatCurrency } from "@/lib/utils";
 import { TableGrid } from "@/components/tables/TableGrid";
 import { TableDetailModal } from "@/components/tables/TableDetailModal";
 import { PaymentModal } from "@/components/tables/PaymentModal";
 import { MoveTableModal } from "@/components/tables/MoveTableModal";
 import { ConfirmDeleteModal } from "@/components/tables/ConfirmDeleteModal";
+import { MenuSection } from "@/components/tables/MenuSection";
+import { OrderPanelDesktop } from "@/components/tables/OrderPanelDesktop";
+import { SearchMenuModal } from "@/components/tables/SearchMenuModal";
 
 const MAX_TABLES = 15;
+
+// Mobile Order View Component
+interface MobileOrderViewProps {
+  selectedTable: number;
+  tableNames: Record<number, string>;
+  activeOrder: Order | undefined;
+  currentStatus: string;
+  doneItemNames?: Set<string>;
+  menuItems: any[];
+  onShowPayModal: () => void;
+  onShowMoveModal: () => void;
+  onRemoveItem: (index: number) => void;
+  onUpdateQuantity: (index: number, delta: number) => void;
+  onSearchClick: () => void;
+  onClose: () => void;
+}
+
+function MobileOrderView({
+  selectedTable,
+  tableNames,
+  activeOrder,
+  currentStatus,
+  doneItemNames,
+  menuItems,
+  onShowPayModal,
+  onShowMoveModal,
+  onRemoveItem,
+  onUpdateQuantity,
+  onSearchClick,
+  onClose,
+}: MobileOrderViewProps) {
+  const tableName = tableNames[selectedTable] || `Bàn ${selectedTable}`;
+
+  const isKitchenHidden = (menuItemId?: number) => {
+    if (!menuItemId) return false;
+    const item = menuItems.find((m: any) => m.id === menuItemId);
+    return item?.isHidden === true || item?.is_hidden === true;
+  };
+
+  const orderWithStatus = activeOrder ? {
+    ...activeOrder,
+    items: activeOrder.items.map(item => ({
+      ...item,
+      cookingStatus: doneItemNames?.has(item.name) ? "done" as const : item.cookingStatus,
+    })),
+  } : undefined;
+
+  const statusLabel = currentStatus === "empty" ? "Trống" : currentStatus === "cooking" ? "Đang phục vụ" : "Sẵn sàng";
+  const isReady = currentStatus === "ready";
+  const totalItems = activeOrder?.items.length || 0;
+
+  return (
+    <div className="flex flex-col h-screen bg-white overflow-hidden">
+      {/* Table header - full bleed */}
+      <div className="flex-shrink-0 bg-white border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <div className="flex items-center gap-3">
+            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-lg", isReady ? "bg-green-500 shadow-green-500/30" : "bg-amber-400 shadow-amber-400/30")}>
+              <UtensilsCrossed className="w-6 h-6 text-black" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg text-gray-900">{tableName}</h2>
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <span className={cn("w-2 h-2 rounded-full animate-pulse", isReady ? "bg-green-500" : "bg-amber-500")} />
+                {statusLabel}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-xl font-black text-amber-600">
+                {formatCurrency(activeOrder?.totalAmount || 0)}
+              </span>
+              <p className="text-xs text-gray-500">{totalItems} món</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Thêm món button - above items */}
+      {activeOrder && (
+        <div className="px-4 py-2 bg-white border-b border-gray-100 flex-shrink-0">
+          <button
+            onClick={onSearchClick}
+            className="w-full py-2.5 bg-amber-50 border-2 border-amber-200 rounded-xl font-bold text-amber-700 hover:bg-amber-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Thêm món
+          </button>
+        </div>
+      )}
+
+      {/* Order items list - scrollable, constrained height */}
+      <div className="min-h-0 flex-1 overflow-y-auto py-2 bg-gray-50">
+        {activeOrder ? (
+          <div className="space-y-2">
+            {orderWithStatus?.items.map((item, idx) => {
+              const isDone = item.cookingStatus === "done";
+              const autoGreen = isDone || isKitchenHidden(item.menuItemId);
+              return (
+                <div
+                  key={`${item.menuItemId}-${idx}`}
+                  className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                  <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", autoGreen ? "bg-green-500" : "bg-gray-400")} />
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-gray-900">{item.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {formatCurrency(item.price)} × {item.quantity}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-amber-50 rounded-xl p-1 border border-amber-200">
+                    <button
+                      onClick={() => onUpdateQuantity(idx, -1)}
+                      className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm"
+                    >
+                      <Minus className="w-4 h-4 text-gray-900" />
+                    </button>
+                    <span className="font-bold text-sm min-w-[2rem] text-center text-gray-900">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => onUpdateQuantity(idx, 1)}
+                      className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm"
+                    >
+                      <Plus className="w-4 h-4 text-gray-900" />
+                    </button>
+                  </div>
+                </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center h-full py-10">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <UtensilsCrossed className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-700 font-medium mb-1">Chưa có món nào</p>
+            <p className="text-xs text-gray-400 mb-4">Bắt đầu đặt món cho {tableName}</p>
+            <button
+              onClick={onSearchClick}
+              className="px-6 py-3 bg-amber-500 text-white rounded-2xl font-bold shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-95 transition-all flex items-center gap-3 text-base"
+            >
+              <Search className="w-5 h-5" />
+              Bắt đầu đặt món
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Action buttons - sticky bottom, full width */}
+      {activeOrder && (
+        <div className="px-4 pb-4 pt-2 bg-white space-y-2 flex-shrink-0">
+          <div className="flex gap-3">
+            <button
+              onClick={onShowMoveModal}
+              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 active:scale-[0.98] transition-all"
+            >
+              Đổi Bàn
+            </button>
+            <button
+              onClick={onShowPayModal}
+              className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-[0.98] transition-all"
+            >
+              Thanh Toán
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Tables() {
   const queryClient = useQueryClient();
@@ -28,6 +214,7 @@ export default function Tables() {
   const sendToKitchen = useSendToKitchen();
   const payOrder = usePayOrder();
   const removeKitchenItem = useRemoveKitchenItem();
+  const { playBeep } = useNotificationSound();
 
   const { tableNames, saveTableNames } = useTableNames();
 
@@ -54,6 +241,7 @@ export default function Tables() {
   const updatePaymentSetting = useUpdatePaymentSetting();
   const [showReceipt, setShowReceipt] = useState<Order | null>(null);
   const [activeTab, setActiveTab] = useState<"order" | "history">("order");
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const getActiveOrder = (tableNum: number): Order | undefined =>
     orders?.find(o => o.tableNumber === tableNum.toString() && o.status !== "Complete");
@@ -90,6 +278,11 @@ export default function Tables() {
     if (!selectedTable) return;
     const newItem: OrderItem = { menuItemId: menuItem.id, name: menuItem.name, quantity, price: menuItem.price };
 
+    const triggerSuccess = () => {
+      try { navigator.vibrate?.(50); } catch {}
+      playBeep();
+    };
+
     if (selectedOrder) {
       const items = [...selectedOrder.items];
       const idx = items.findIndex(i => i.menuItemId === menuItem.id);
@@ -97,7 +290,7 @@ export default function Tables() {
       else items.push(newItem);
       const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
       updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total }, {
-        onSuccess: () => sendToKitchen.mutate(selectedOrder.id)
+        onSuccess: () => { sendToKitchen.mutate(selectedOrder.id); triggerSuccess(); }
       });
     } else {
       createOrder.mutate({
@@ -105,7 +298,7 @@ export default function Tables() {
         items: [newItem],
         totalAmount: menuItem.price * quantity
       }, {
-        onSuccess: (data) => sendToKitchen.mutate(data.id)
+        onSuccess: (data) => { sendToKitchen.mutate(data.id); triggerSuccess(); }
       });
     }
   };
@@ -279,85 +472,120 @@ export default function Tables() {
   return (
     <div className="h-full flex flex-col">
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-2 px-3 py-3 flex-shrink-0">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-3 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <DollarSign className="w-5 h-5 opacity-80" />
-          </div>
-          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Đã TT</p>
-          <p className="text-base font-bold">{paidCount} bàn</p>
-          <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal)}</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl p-3 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <Clock className="w-5 h-5 opacity-80" />
-          </div>
-          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Chưa TT</p>
-          <p className="text-base font-bold">{unpaidCount} bàn</p>
-          <p className="text-xs font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-3 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <TrendingUp className="w-5 h-5 opacity-80" />
-          </div>
-          <p className="text-[10px] opacity-80 mb-1 whitespace-nowrap">Tất Cả</p>
-          <p className="text-base font-bold">{paidCount + unpaidCount} bàn</p>
-          <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
-        </motion.div>
-      </div>
-      {/* Table grid */}
-      <div className="flex-1 overflow-y-auto">
-        <TableGrid
-          maxTables={MAX_TABLES}
-          tableNames={tableNames}
-          getActiveOrder={getActiveOrder}
-          selectedTable={selectedTable}
-          renamingTable={renamingTable}
-          renameValue={renameValue}
-          setRenameValue={setRenameValue}
-          onSelectTable={setSelectedTable}
-          onStartRename={(num, e) => { e.stopPropagation(); handleRenameStart(num); }}
-          onCommitRename={handleRenameCommit}
-        />
+      {/* Stats bar - only show when no table selected */}
+      {!selectedTable && (
+        <div className="grid grid-cols-3 gap-2 px-3 py-3 flex-shrink-0">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-3 text-white shadow-lg"
+          >
+            <div className="flex flex-row-reverse items-center justify-between mb-1">
+              <DollarSign className="w-5 h-5 opacity-80" />
+              <p className="text-[10px] opacity-80 whitespace-nowrap">Đã TT</p>
+            </div>
+            <p className="text-base font-bold">{paidCount} bàn</p>
+            <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal)}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl p-3 text-white shadow-lg"
+          >
+            <div className="flex flex-row-reverse items-center justify-between mb-1">
+              <Clock className="w-5 h-5 opacity-80" />
+              <p className="text-[10px] opacity-80 whitespace-nowrap">Chưa TT</p>
+            </div>
+            <p className="text-base font-bold">{unpaidCount} bàn</p>
+            <p className="text-xs font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-3 text-white shadow-lg"
+          >
+            <div className="flex flex-row-reverse items-center justify-between mb-1">
+              <TrendingUp className="w-5 h-5 opacity-80" />
+              <p className="text-[10px] opacity-80 whitespace-nowrap">Tất Cả</p>
+            </div>
+            <p className="text-base font-bold">{paidCount + unpaidCount} bàn</p>
+            <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
+          </motion.div>
+        </div>
+      )}
+      {/* Table grid / Desktop split layout */}
+      <div className="flex-1 overflow-hidden">
+        {selectedTable ? (
+          <>
+            {/* Desktop split layout - hidden on mobile */}
+            <div className="hidden md:flex h-full">
+              <div className="flex-1 overflow-hidden">
+                <MenuSection
+                  menuItems={menuItems || []}
+                  activeOrder={selectedOrder}
+                  onAddItem={(item) => handleAddItem(item)}
+                  onUpdateQuantity={handleUpdateQuantity}
+                />
+              </div>
+              <OrderPanelDesktop
+                selectedTable={selectedTable}
+                tableNames={tableNames}
+                activeOrder={selectedOrder}
+                currentStatus={currentStatus}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
+                onShowPayModal={() => selectedOrder && setShowPayModal(selectedOrder.id)}
+                onShowMoveModal={() => selectedOrder && setShowMoveModal(selectedOrder.id)}
+                onClose={() => setSelectedTable(null)}
+                doneItemNames={doneItemNames}
+                menuItems={menuItems || []}
+                onSearchClick={() => setShowSearchModal(true)}
+              />
+            </div>
+
+            {/* Mobile order view - shown on mobile, full screen */}
+            <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col overflow-hidden">
+              <MobileOrderView
+                selectedTable={selectedTable}
+                tableNames={tableNames}
+                activeOrder={selectedOrder}
+                currentStatus={currentStatus}
+                doneItemNames={doneItemNames}
+                menuItems={menuItems || []}
+                onShowPayModal={() => selectedOrder && setShowPayModal(selectedOrder.id)}
+                onShowMoveModal={() => selectedOrder && setShowMoveModal(selectedOrder.id)}
+                onRemoveItem={handleRemoveItem}
+                onUpdateQuantity={handleUpdateQuantity}
+                onSearchClick={() => setShowSearchModal(true)}
+                onClose={() => setSelectedTable(null)}
+              />
+            </div>
+          </>
+        ) : (
+          <TableGrid
+            maxTables={MAX_TABLES}
+            tableNames={tableNames}
+            getActiveOrder={getActiveOrder}
+            selectedTable={selectedTable}
+            renamingTable={renamingTable}
+            renameValue={renameValue}
+            setRenameValue={setRenameValue}
+            onSelectTable={setSelectedTable}
+            onStartRename={(num, e) => { e.stopPropagation(); handleRenameStart(num); }}
+            onCommitRename={handleRenameCommit}
+          />
+        )}
       </div>
 
-      {/* Table Detail Modal */}
-      {selectedTable && (
-        <TableDetailModal
-          orders={orders}
-          selectedTable={selectedTable}
-          tableNames={tableNames}
-          activeOrder={selectedOrder}
-          currentStatus={currentStatus}
-          activeTab={activeTab}
-          menuItems={menuItems || []}
-          searchMenu={searchMenu}
-          setSearchMenu={setSearchMenu}
-          onClose={() => { setSelectedTable(null); setActiveTab("order"); }}
-          onTabChange={setActiveTab}
-          onAddItem={handleAddItem}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearTable={handleClearTable}
-          onShowPayModal={() => selectedOrder && setShowPayModal(selectedOrder.id)}
-          onShowMoveModal={() => selectedOrder && setShowMoveModal(selectedOrder.id)}
-          doneItemNames={doneItemNames}
-        />
-      )}
+      {/* Mobile only: Search modal */}
+      <SearchMenuModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        menuItems={menuItems || []}
+        onAddItem={(item) => handleAddItem(item)}
+      />
 
        {/* Payment Modal */}
        <PaymentModal

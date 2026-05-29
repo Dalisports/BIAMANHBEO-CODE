@@ -19,7 +19,7 @@ export type MenuItem = {
 };
 
 export function useMenuItems() {
-  return useQuery({
+  return useQuery<MenuItem[]>({
     queryKey: ["/api/products"],
     queryFn: async () => {
       const res = await fetch("/api/products", { credentials: "include", headers: getAuthHeaders() });
@@ -31,6 +31,10 @@ export function useMenuItems() {
         searchName: normalizeSearchText(item.name),
       }));
     },
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 

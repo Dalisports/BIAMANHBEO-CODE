@@ -56,6 +56,8 @@ export function useWebSocket(optionsOrCallback?: UseWebSocketOptions | (() => vo
     ws.onopen = (event) => {
       console.log("[WebSocket] Connection established", event);
       reconnectAttempts.current = 0;
+      // Subscribe to all relevant rooms for real-time updates
+      ws.send(JSON.stringify({ action: "subscribe", rooms: ["orders", "kitchen", "products", "tables", "attendance", "payments", "all"] }));
     };
 
     ws.onmessage = (event) => {

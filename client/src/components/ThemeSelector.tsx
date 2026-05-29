@@ -13,12 +13,6 @@ export function ThemeSelector() {
       colors: ["#f59e0b", "#000000", "#ffffff"]
     },
     { 
-      id: "business" as const, 
-      name: "Business", 
-      description: "Giao diện cyan/trắng chuyên nghiệp",
-      colors: ["#00adc9", "#ffffff", "#f0f0f0"]
-    },
-    { 
       id: "lumina" as const, 
       name: "Lumina POS", 
       description: "Material Design 3 với Epilogue & Work Sans",

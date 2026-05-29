@@ -1,4 +1,8 @@
-import "dotenv/config";
+import { config as dotenv } from "dotenv";
+
+const envFile = process.env.NODE_ENV === "development" ? ".env.development" : ".env";
+dotenv({ filePath: envFile, override: true });
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./server/routes";
 // import { registerGauAssistantRoutes } from "./server/gau_assistant";
@@ -36,7 +40,8 @@ export function log(message: string, source = "express") {
 (async () => {
   try {
     log("Starting server initialization...");
-    log(`DEBUG: DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
+    log(`DEBUG: Using env file: ${envFile}`);
+    log(`DEBUG: DATABASE_URL: ${process.env.DATABASE_URL?.replace(/\/\/.*:.*@/, "//***:***@")}`);
     log(`DEBUG: NODE_ENV: ${process.env.NODE_ENV}`);
 
     const port = parseInt(process.env.PORT || "5000", 10);

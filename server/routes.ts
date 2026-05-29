@@ -40,6 +40,17 @@ function getGoogleAI(): GoogleGenAI {
   return _googleAI;
 }
 
+let _groqAI: OpenAI | null = null;
+function getGroqAI(): OpenAI {
+  if (!_groqAI) {
+    _groqAI = new OpenAI({
+      apiKey: process.env.GROQ_API_KEY || "",
+      baseURL: "https://api.groq.com/openai/v1",
+    });
+  }
+  return _groqAI;
+}
+
 const GEMMA_MODEL = "gemini-2.0-flash";
 
 export async function registerRoutes(
@@ -335,19 +346,19 @@ export async function registerRoutes(
 
   app.get(api.products.list.path, requireAuthMiddleware, async (req, res) => {
     const prods = await storage.getMenuItems();
-    // Sắp xếp: Món ghim (isSticky) lên đầu, sau đó đến món ưu tiên (isPriority), 
-    // cuối cùng sắp xếp theo tên ABC.
+    // Sắp xếp: Món ghim (isSticky) lên đầu, sau đó ưu tiên (isPriority),
+    // cuối cùng sắp xếp theo giá (nhỏ -> lớn).
     const sorted = [...(prods || [])].sort((a: any, b: any) => {
       // 1. Kiểm tra isSticky
       if (a.isSticky && !b.isSticky) return -1;
       if (!a.isSticky && b.isSticky) return 1;
-      
+
       // 2. Kiểm tra isPriority (nếu cả hai cùng sticky hoặc cùng không sticky)
       if (a.isPriority && !b.isPriority) return -1;
       if (!a.isPriority && b.isPriority) return 1;
-      
-      // 3. Sắp xếp theo tên
-      return a.name.localeCompare(b.name, 'vi');
+
+      // 3. Sắp xếp theo giá (nhỏ -> lớn)
+      return a.price - b.price;
     });
     res.json(sorted);
   });
@@ -968,9 +979,11 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
 
       let parsedResponse: any;
 
-      // Model selection: google, openrouter, or nvidia (minimax)
+      // Model selection: google, openrouter, groq, or nvidia (minimax)
       const isGoogleModel = model === "gemma";
       const isNvidiaModel = model === "minimax" || model === "minimaxai/minimax-m2.7";
+      const isGroqModel = model === "llama-3.1-8b-instruct";
+      const isGemmaFreeModel = model === "gemma-free";
 
       if (isGoogleModel) {
         // Use Google AI directly
@@ -1010,6 +1023,45 @@ Giá tiền mặc định là VND. Khách hỏi giá thì đọc giá từ menu.
           temperature: 1,
           top_p: 0.95,
           max_tokens: 8192,
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error("No response from AI");
+        }
+
+        parsedResponse = JSON.parse(content);
+      } else if (isGroqModel) {
+        // Use Groq API with Llama model
+        const response = await getGroqAI().chat.completions.create({
+          model: "llama-3.1-8b-instruct",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...historyMessages,
+            { role: "user", content: message }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 1,
+          max_tokens: 4096,
+        });
+
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error("No response from AI");
+        }
+
+        parsedResponse = JSON.parse(content);
+      } else if (isGemmaFreeModel) {
+        // Use OpenRouter with Gemma free model
+        const response = await getOpenAI().chat.completions.create({
+          model: "google/gemma-2b-instruct:free",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...historyMessages,
+            { role: "user", content: message }
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 1024
         });
 
         const content = response.choices[0]?.message?.content;

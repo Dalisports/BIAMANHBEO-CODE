@@ -1,41 +1,30 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
 export function useNotificationSound() {
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  const playNotificationSound = useCallback(() => {
+  const playBeep = useCallback(() => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-      const ctx = audioContextRef.current;
-      
-      const playBeep = (frequency: number, startTime: number, duration: number) => {
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        
-        oscillator.frequency.value = frequency;
-        oscillator.type = "sine";
-        
-        gainNode.gain.setValueAtTime(0.3, startTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-        
-        oscillator.start(startTime);
-        oscillator.stop(startTime + duration);
+      const playTone = (frequency: number, startTime: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = frequency;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration);
       };
 
-      const now = ctx.currentTime;
-      playBeep(880, now, 0.1);
-      playBeep(1100, now + 0.15, 0.1);
-      playBeep(1320, now + 0.3, 0.15);
-    } catch (err) {
-      console.error("Failed to play notification sound:", err);
+      playTone(880, 0, 0.15);
+      playTone(1100, 0.15, 0.15);
+      playTone(1320, 0.30, 0.15);
+    } catch (e) {
+      console.warn("Beep sound not available:", e);
     }
   }, []);
 
-  return playNotificationSound;
+  return { playBeep };
 }

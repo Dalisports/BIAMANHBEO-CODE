@@ -33,7 +33,7 @@ export function ShortcutBar({ menuItems, cachedTopItemIds, shortcuts, onAddItem 
             <button
               key={idx}
               data-testid={`shortcut-${idx}`}
-              onClick={() => item && onAddItem(item, 1)}
+              onClick={() => { try { navigator.vibrate?.(50); } catch {} item && onAddItem(item, 1); }}
               disabled={!item}
               className={cn(
                 "p-3 rounded-lg border-2 text-center flex flex-col items-center justify-center min-h-[70px]",

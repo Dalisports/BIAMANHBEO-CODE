@@ -399,7 +399,7 @@ async deleteMenuItem(id: number) {
         try {
           await this.sendToKitchen(pendingOrder.id);
         } catch (err) {
-          console.log("[Storage] Could not send new items to kitchen:", err.message);
+          console.log("[Storage] Could not send new items to kitchen:", err instanceof Error ? err.message : String(err));
           // Continue anyway - order was updated successfully
         }
       }

@@ -270,9 +270,9 @@ export default function MenuTv() {
                       <motion.div
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
-                        className={`flex-shrink-0 w-[6vw] h-[6vw] rounded-xl flex flex-col items-center justify-center text-black shadow-lg ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}
+                        className={`flex-shrink-0 w-[9vw] h-[9vw] rounded-xl flex flex-col items-center justify-center text-black shadow-lg ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}
                       >
-                        <span className="text-[1.8vw] font-black leading-none">
+                        <span className="text-[2vw] font-black leading-none whitespace-nowrap">
                           BÀN {item.tableNumber}
                         </span>
                       </motion.div>

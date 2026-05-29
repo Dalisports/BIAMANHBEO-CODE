@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 
 const isDev = () => {
+  if (import.meta.env.VITE_HIDE_DEV_TOOLBAR === "true") return false;
+  if (import.meta.env.PROD) return false;
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   const isProd = hostname.includes("prod") || hostname.includes("production");
   return (hostname.includes("fly.dev") || hostname.includes("localhost")) && !isProd;

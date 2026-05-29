@@ -1,5 +1,7 @@
-export { luminaLight } from "./lumina-light";
-export { luminaDark } from "./lumina-dark";
+import { luminaLight } from "./lumina-light";
+import { luminaDark } from "./lumina-dark";
+
+export { luminaLight, luminaDark };
 
 export type ThemeConfig = {
   name: string;

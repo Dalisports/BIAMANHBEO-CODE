@@ -290,19 +290,19 @@ export default function Kitchen() {
   };
 
   return (
-    <div className="h-full pb-4">
+    <div className="h-full pb-4 bg-card border border-border rounded-xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-        <h2 className="text-2xl font-bold text-foreground">BẾP</h2>
+        <h2 className="text-2xl font-bold text-amber-500">BẾP</h2>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-600 font-bold text-sm border border-orange-500/30">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-amber-300 font-bold text-sm border border-orange-200 dark:border-orange-500/40">
             <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 1, repeat: Infinity }}>
-              <Flame className="w-4 h-4 text-orange-500" />
+              <Flame className="w-4 h-4 text-orange-500 dark:text-orange-400" />
             </motion.div>
             <span>ĐANG NẤU: {cookingItems.length}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 text-green-600 font-bold text-sm border border-green-500/30">
-            <CheckCircle2 className="w-4 h-4 text-green-500" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 font-bold text-sm border border-green-200 dark:border-green-500/40">
+            <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" />
             <span>ĐÃ XONG: {doneOrdersCount}</span>
           </div>
         </div>
@@ -310,21 +310,21 @@ export default function Kitchen() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {/* ĐANG NẤU — full width, 1 column, mobile-first */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <h3 className="text-sm font-bold text-orange-600">
+              <Flame className="w-4 h-4 text-orange-400" />
+              <h3 className="text-sm font-bold text-orange-400">
                 ĐANG NẤU ({cookingItems.length})
               </h3>
               {manualOrder && (
                 <button
                   onClick={() => { applyManualOrder(null); saveKitchenOrder(null); }}
-                  className="ml-auto text-xs text-slate-400 underline"
+                  className="ml-auto text-xs text-muted-foreground hover:text-amber-500 underline transition-colors"
                 >
                   Reset thứ tự
                 </button>
@@ -332,7 +332,7 @@ export default function Kitchen() {
             </div>
             <div className="space-y-2">
               {cookingQueue.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground bg-card rounded-2xl border border-dashed text-sm">
+                <div className="text-center py-8 text-muted-foreground bg-secondary/50 rounded-xl border border-dashed border-border text-sm">
                   Không có món nào đang nấu
                 </div>
               ) : (
@@ -350,8 +350,8 @@ export default function Kitchen() {
                         className={cn(
                           "rounded-xl border-2 p-3",
                           isPri
-                            ? "bg-red-50 border-red-400"
-                            : "bg-orange-50 border-orange-300",
+                            ? "bg-red-900/30 border-red-500/50"
+                            : "bg-amber-50 dark:bg-amber-500/20 border-amber-300/50",
                         )}
                       >
                         <div className="flex items-start gap-2">
@@ -361,7 +361,7 @@ export default function Kitchen() {
                               onClick={() => moveItem(idx, -1)}
                               disabled={idx === 0}
                               className={cn(
-                                "w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors",
+                                "w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary active:bg-secondary transition-colors",
                                 idx === 0 && "opacity-20 cursor-not-allowed",
                               )}
                             >
@@ -371,7 +371,7 @@ export default function Kitchen() {
                               onClick={() => moveItem(idx, 1)}
                               disabled={idx === cookingQueue.length - 1}
                               className={cn(
-                                "w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors",
+                                "w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary active:bg-secondary transition-colors",
                                 idx === cookingQueue.length - 1 && "opacity-20 cursor-not-allowed",
                               )}
                             >
@@ -384,8 +384,8 @@ export default function Kitchen() {
                             className={cn(
                               "flex-shrink-0 w-11 h-11 rounded-xl flex flex-col items-center justify-center font-black shadow-sm",
                               isPri
-                                ? "bg-red-500 text-white"
-                                : "bg-orange-400 text-white",
+                                ? "bg-red-600 text-white"
+                                : "bg-orange-500 text-white",
                             )}
                           >
                             <span className="text-[9px] leading-none opacity-80">BÀN</span>
@@ -396,22 +396,22 @@ export default function Kitchen() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start gap-1 flex-wrap">
                               {isPri && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-[10px] font-bold flex-shrink-0">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-600/80 text-white text-[10px] font-bold flex-shrink-0">
                                   <Zap className="w-2.5 h-2.5" />
                                   NHANH
                                 </span>
                               )}
-                              <p className="font-bold text-base text-orange-900 leading-snug break-words">
+                              <p className="font-bold text-base text-amber-300 leading-snug break-words">
                                 {item.name}
                               </p>
                             </div>
                             {item.sentAt && (
-                              <p className="text-xs text-orange-500 mt-0.5">
+                              <p className="text-xs text-orange-400 mt-0.5">
                                 Đã gọi {formatElapsed(item.sentAt)}
                               </p>
                             )}
                             {item.notes && (
-                              <p className="text-xs text-orange-600 mt-0.5">
+                              <p className="text-xs text-orange-300/70 mt-0.5">
                                 Ghi chú: {item.notes}
                               </p>
                             )}
@@ -419,13 +419,13 @@ export default function Kitchen() {
 
                           {/* Qty + Done button */}
                           <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
-                            <span className="text-xl font-black text-orange-700 leading-none">
+                            <span className="text-xl font-black text-amber-400 leading-none">
                               x{item.quantity}
                             </span>
                             <button
                               onClick={() => handleCompleteItem(item)}
                               disabled={completeItem.isPending}
-                              className="px-3 py-1 rounded-lg text-xs font-bold bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors disabled:opacity-50"
+                              className="px-3 py-1 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-500 active:bg-green-700 transition-colors disabled:opacity-50"
                             >
                               XONG ✓
                             </button>
@@ -442,14 +442,14 @@ export default function Kitchen() {
           {/* THEO BÀN — collapsed list below */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <UtensilsCrossed className="w-4 h-4 text-blue-500" />
-              <h3 className="text-sm font-bold text-blue-600">
+              <UtensilsCrossed className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-amber-400">
                 THEO BÀN ({ordersByTable.length})
               </h3>
             </div>
             <div className="space-y-2">
               {ordersByTable.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground bg-card rounded-2xl border border-dashed text-sm">
+                <div className="text-center py-8 text-muted-foreground bg-secondary/50 rounded-xl border border-dashed border-border text-sm">
                   Không có order nào
                 </div>
               ) : (
@@ -463,79 +463,67 @@ export default function Kitchen() {
                       className={cn(
                         "rounded-xl border-2 p-3",
                         allDone
-                          ? "bg-gray-50 border-gray-200 opacity-60"
-                          : "bg-blue-50 border-blue-200",
+                          ? "bg-amber-50/50 border-amber-300/30 opacity-60"
+                          : "bg-amber-50 dark:bg-amber-500/20 border-amber-300/50",
                       )}
                     >
                       <div
                         className={cn(
-                          "flex items-center gap-2 mb-2 pb-1.5 border-b",
-                          allDone ? "border-gray-200" : "border-blue-200",
+                          "flex items-center justify-between mb-2 pb-1.5 border-b",
+                          allDone ? "border-amber-300/30" : "border-amber-500/30",
                         )}
                       >
                         <span
                           className={cn(
-                            "text-base font-black",
-                            allDone ? "text-gray-500" : "text-blue-700",
-                          )}
-                        >
-                          BÀN {group.tableNumber}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-xs",
-                            allDone ? "text-gray-400" : "text-blue-500",
+                            "text-xs font-bold",
+                            allDone ? "text-muted-foreground" : "text-amber-500",
                           )}
                         >
                           {group.items.length} món{allDone && " ✓"}
                         </span>
+                        {allDone && (
+                          <span className="text-[10px] text-green-500 font-medium">HOÀN THÀNH</span>
+                        )}
                       </div>
                       <div className="space-y-1.5">
                         {group.items.map((item, idx) => {
                           const isDone = isItemDone(item);
+                          const isPri = priorityNames.has(item.item.name);
+                          const elapsed = formatElapsed(item.sentAt);
                           return (
                             <div
                               key={idx}
                               className={cn(
-                                "flex items-center gap-2",
+                                "flex items-center gap-2 text-xs",
                                 isDone && "opacity-40",
                               )}
                             >
+                              <span className="font-bold text-amber-600 dark:text-amber-400 flex-shrink-0 w-12">
+                                B{group.tableNumber}
+                              </span>
+                              <span className="flex-1 font-medium text-black">
+                                {item.item.name}
+                              </span>
+                              <span className="text-black font-bold">
+                                x{item.item.quantity}
+                              </span>
                               {isDone ? (
                                 <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
                               ) : (
-                                <span
-                                  className={cn(
-                                    "w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0",
-                                    item.item.cookingStatus === "cooking"
-                                      ? "bg-orange-500 text-white"
-                                      : "bg-yellow-500 text-white",
-                                  )}
-                                >
-                                  {item.item.cookingStatus === "cooking" ? "🔥" : "⏳"}
+                                <span className="text-muted-foreground flex-shrink-0">
+                                  {elapsed}
                                 </span>
                               )}
-                              <span
-                                className={cn(
-                                  "font-medium text-sm flex-1",
-                                  isDone && "line-through text-gray-500",
-                                )}
-                              >
-                                {item.item.name}
-                              </span>
-                              <span
-                                className={cn(
-                                  "font-bold text-sm flex-shrink-0",
-                                  isDone ? "text-gray-400" : "text-gray-700",
-                                )}
-                              >
-                                x{item.item.quantity}
-                              </span>
-                              {(item.item.cookingStatus === "pending" || !item.item.cookingStatus) && !isDone && (
+                              {isPri && (
+                                <span className="px-1.5 py-0.5 rounded bg-red-500 text-white text-[9px] font-bold flex-shrink-0">
+                                  NHANH
+                                </span>
+                              )}
+                              {!isDone && (item.item.cookingStatus === "pending" || !item.item.cookingStatus) && (
                                 <button
                                   onClick={() => handleStartItem(item)}
                                   disabled={startItem.isPending}
-                                  className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors flex-shrink-0"
+                                  className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-black hover:bg-amber-400 transition-colors flex-shrink-0"
                                 >
                                   BẮT ĐẦU
                                 </button>

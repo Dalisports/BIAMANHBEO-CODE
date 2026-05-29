@@ -114,7 +114,7 @@ export function requireAuth(
 }
 
 export function requireOwner(user: AuthUser): void {
-  if (!["owner", "admin", "Admin"].includes(user.role)) {
+  if (!["owner", "admin"].includes(user.role)) {
     throw new Error("Forbidden: Owner/Admin only");
   }
 }

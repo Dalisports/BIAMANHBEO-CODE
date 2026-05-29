@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export type Theme = "default" | "business" | "lumina" | "original";
+export type Theme = "default" | "lumina";
 
 const STORAGE_KEY = "app-theme";
 
@@ -16,12 +16,10 @@ function applyTheme(theme: Theme) {
   
   // Remove old themes
   html.removeAttribute("data-theme");
-  html.classList.remove("theme-business", "dark");
+  html.classList.remove("dark");
     
   // Apply new theme
-  if (theme === "business") {
-    html.classList.add("theme-business");
-  } else if (theme === "lumina") {
+  if (theme === "lumina") {
     html.setAttribute("data-theme", "lumina");
     // Check dark mode preference
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -48,11 +46,9 @@ export function useTheme() {
   }
 
   function toggleTheme() {
-    // Cycle: default -> business -> lumina -> default
-    // We treat "original" as synonymous with "default" for cycling
-    const themes: Theme[] = ["default", "business", "lumina"];
-    const currentBaseTheme = theme === "original" ? "default" : theme;
-    const currentIndex = themes.indexOf(currentBaseTheme as any);
+    // Cycle: default -> lumina -> default
+    const themes: Theme[] = ["default", "lumina"];
+    const currentIndex = themes.indexOf(theme as any);
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);
   }

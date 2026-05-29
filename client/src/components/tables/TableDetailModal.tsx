@@ -115,18 +115,16 @@ export function TableDetailModal({
           {/* Status color strip at top */}
           <div className={cn("h-1.5 w-full", statusInfo.bg)} />
           {/* Header with tabs inline */}
-          <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-border/50 bg-[#00000080] backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-3">
               {/* Status badge */}
               <motion.div
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-sm font-bold border flex items-center gap-1.5 whitespace-nowrap",
-                  statusInfo.bg,
-                  statusInfo.border,
-                  statusInfo.text
+                  "px-3 py-1.5 rounded-full text-sm font-bold border flex items-center gap-1.5 whitespace-nowrap bg-[#00000080]"
                 )}
+                style={{ color: "#9d9372", borderColor: "#9d9372" }}
               >
                 {currentStatus === "cooking" && <ChefHat className="w-3.5 h-3.5" />}
                 {currentStatus === "ready" && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -135,32 +133,38 @@ export function TableDetailModal({
               </motion.div>
 
               {/* Tab buttons - side by side */}
-              <div className="flex flex-row gap-2 ml-2">
+              <div className="flex flex-row gap-2 ml-2 flex-shrink-0">
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onTabChange("order")}
                   className={cn(
-                    "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all",
-                    activeTab === "order"
-                      ? cn(statusInfo.bg, statusInfo.text, "shadow-md")
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                    "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
                   )}
+                  style={{
+                    backgroundColor: activeTab === "order" ? "#9d9372" : "#00000080",
+                    color: activeTab === "order" ? "#000000" : "#9d9372",
+                    borderColor: "#9d9372",
+                    borderWidth: "1px",
+                  }}
                 >
-                  <Plus className="w-4 h-4" />
-                  Đặt Món
+                  <Plus className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-shrink-0">Đặt Món</span>
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onTabChange("history")}
                   className={cn(
-                    "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all",
-                    activeTab === "history"
-                      ? cn(statusInfo.bg, statusInfo.text, "shadow-md")
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                    "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
                   )}
+                  style={{
+                    backgroundColor: activeTab === "history" ? "#9d9372" : "#00000080",
+                    color: activeTab === "history" ? "#000000" : "#9d9372",
+                    borderColor: "#9d9372",
+                    borderWidth: "1px",
+                  }}
                 >
-                  <History className="w-4 h-4" />
-                  Lịch Sử
+                  <History className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-shrink-0">Lịch Sử</span>
                 </motion.button>
               </div>
             </div>
@@ -175,21 +179,25 @@ export function TableDetailModal({
             </motion.button>
           </div>
 
+          {/* Sticky search box */}
+          {activeTab === "order" && (
+            <div className="sticky top-[73px] z-10 px-4 py-3 bg-muted border-b border-border/50">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  value={searchMenu}
+                  onChange={e => setSearchMenu(e.target.value)}
+                  placeholder="Tìm món nhanh (Ko dấu)..."
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-border bg-background text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-4 py-3 bg-background">
             {activeTab === "order" && (
               <div className="space-y-4">
-                {/* Search menu - Fuzzy Search */}
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    value={searchMenu}
-                    onChange={e => setSearchMenu(e.target.value)}
-                    placeholder="Tìm món nhanh (Ko dấu)..."
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-border text-base focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                  />
-                </div>
-
                 {/* Category filter hint */}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>Thực đơn</span>
@@ -198,14 +206,14 @@ export function TableDetailModal({
                 </div>
 
                 {/* Menu items grid - Scrollable */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   {availableItems.map((item, index) => (
                     <motion.button
                       key={item.id}
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => { onAddItem(item); setSearchMenu(""); }}
-                      className="group relative flex flex-col rounded-2xl overflow-hidden bg-white border-2 border-border hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 active:scale-95"
+                      onClick={() => { try { navigator.vibrate?.(50); } catch {} onAddItem(item); setSearchMenu(""); }}
+                      className="group relative flex flex-col rounded-2xl overflow-hidden bg-background border-2 border-border hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 active:scale-95"
                     >
                       {/* Image container */}
                       <div className="relative aspect-square overflow-hidden bg-muted">
@@ -221,21 +229,26 @@ export function TableDetailModal({
                           const orderItem = activeOrder?.items?.find(i => i.name === item.name);
                           if (!orderItem) return null;
                           return (
-                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full min-w-[1.5rem] text-center">
-                              {orderItem.quantity}
+                            <div
+                              className="absolute top-0 right-0 w-[65px] h-[65px] flex items-center justify-end z-10"
+                              style={{
+                                background: '#dc2626',
+                                clipPath: 'polygon(100% 0, 0 0, 100% 100%)',
+                              }}
+                            >
+                              <span className="text-base font-black text-white leading-none mr-3 mt-1">
+                                {orderItem.quantity}
+                              </span>
                             </div>
                           );
                         })()}
                       </div>
 
-                      {/* Content - name and price on same row */}
-                      <div className="p-3 flex flex-row items-center justify-between gap-2">
-                        <h4 className="font-semibold text-base text-foreground line-clamp-2 leading-tight flex-1 text-left">
+                      {/* Content - name only, center, uppercase */}
+                      <div className="p-2 text-center">
+                        <h4 className="font-semibold text-xs text-foreground uppercase text-center leading-tight">
                           {item.name}
                         </h4>
-                        <span className="font-bold text-primary text-base whitespace-nowrap">
-                          {formatCurrency(item.price)}
-                        </span>
                       </div>
                     </motion.button>
                   ))}
@@ -259,22 +272,25 @@ export function TableDetailModal({
                     onClick={() => setIsOrderExpanded(!isOrderExpanded)}
                     className="w-full px-4 py-3 flex items-center justify-between bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold uppercase">Đơn hàng hiện tại:</span>
-                      {orderWithDoneStatus && (
-                        <span className="text-lg font-black uppercase text-white">
-                          {formatCurrency(orderWithDoneStatus.totalAmount)}
-                        </span>
-                      )}
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span className="font-bold uppercase text-black">Đơn hàng hiện tại:</span>
+                      <span className="text-xs text-gray-600 self-end">
+                        {orderWithDoneStatus.items.reduce((sum, i) => sum + i.quantity, 0)} món
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs opacity-80">Click xem chi tiết</span>
-                      <motion.div
-                        animate={{ rotate: isOrderExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-lg font-black uppercase text-black">
+                        {formatCurrency(orderWithDoneStatus.totalAmount)}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-600">chi tiết</span>
+                        <motion.div
+                          animate={{ rotate: isOrderExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ChevronDown className="w-4 h-4 text-gray-600" />
+                        </motion.div>
+                      </div>
                     </div>
                   </button>
 

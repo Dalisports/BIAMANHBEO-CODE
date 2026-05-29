@@ -59,8 +59,8 @@ export function TableGrid({
             whileTap={{ scale: 0.98 }}
             className={cn(
               "relative bg-card rounded-2xl border-2 p-3 text-left transition-all duration-300 cursor-pointer overflow-hidden group",
-              isSelected 
-                ? "border-primary shadow-xl shadow-primary/20 ring-4 ring-primary/10" 
+              isSelected
+                ? "border-primary shadow-xl shadow-primary/20 ring-4 ring-primary/10"
                 : "border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
             )}
           >
@@ -109,23 +109,23 @@ export function TableGrid({
                     </div>
                     <div>
                       {/* Smaller table name */}
-                      <p className="font-bold text-foreground text-sm leading-tight">{tableName}</p>
-                      <p className="text-[10px] text-muted-foreground">#{tableNum}</p>
+
+                      <p className={cn("text-[15px] font-black", sc.text)}>#{tableNum}</p>
                     </div>
                   </div>
-                  
-                  {/* Edit button */}
+
+                  {/* Edit button - hidden on mobile */}
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={(e) => onStartRename(tableNum, e)}
-                    className="p-1 rounded-md hover:bg-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="hidden md:block p-1 rounded-md hover:bg-secondary opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Pencil className="w-3 h-3 text-muted-foreground" />
                   </motion.button>
                 </div>
 
                 {/* Content */}
-                {activeOrder ? (
+                {activeOrder && (
                   <div className="space-y-1">
                     {/* Smaller amount */}
                     <div className="flex items-baseline gap-1">
@@ -134,31 +134,12 @@ export function TableGrid({
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      {/* Smaller status badge */}
-                      <span className={cn(
-                        "text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded-full",
-                        sc.bg,
-                        sc.text
-                      )}>
-                        {sc.label}
-                      </span>
                       {activeOrder.items && (
                         <span className="text-[10px] text-muted-foreground">
                           {activeOrder.items.reduce((sum: number, item: any) => sum + item.quantity, 0)} món
                         </span>
                       )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <span className={cn(
-                      "text-[9px] font-bold uppercase tracking-wide px-1 py-0.5 rounded-full",
-                      sc.bg,
-                      sc.text
-                    )}>
-                      {sc.label}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">Sẵn sàng đặt món</span>
                   </div>
                 )}
 

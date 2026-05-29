@@ -66,6 +66,7 @@ export default function Menu() {
     description: "",
     image: "",
   });
+  const [newItemUploading, setNewItemUploading] = useState(false);
   
   const [editForm, setEditForm] = useState({
     name: "",
@@ -76,11 +77,16 @@ export default function Menu() {
     isPriority: false,
     isHidden: false,
   });
+  const [editItemUploading, setEditItemUploading] = useState(false);
 
   const filteredItems = menuItems?.filter(item => {
     const matchesSearch = searchQuery === "" ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch && item.isActive;
+  }).sort((a, b) => {
+    if (a.isSticky && !b.isSticky) return -1;
+    if (!a.isSticky && b.isSticky) return 1;
+    return 0;
   });
 
   const addToCart = (item: any) => {
@@ -141,6 +147,47 @@ export default function Menu() {
 
   const getPlaceholderImage = (index: number) => {
     return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+  };
+
+  const handleImageUpload = async (file: File, type: "new" | "edit") => {
+    if (type === "new") {
+      setNewItemUploading(true);
+    } else {
+      setEditItemUploading(true);
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const uploadUrl = import.meta.env.VITE_UPLOAD_URL || "https://biamanhbeo.top/uploads/upload.php";
+      console.log("[Upload] URL:", uploadUrl);
+      console.log("[Upload] File:", file.name, file.size, file.type);
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        body: formData,
+      });
+      console.log("[Upload] Status:", res.status);
+      const data = await res.json();
+      console.log("[Upload] Response:", data);
+      if (data.status === "success") {
+        if (type === "new") {
+          setNewItem({ ...newItem, image: data.url });
+        } else {
+          setEditForm({ ...editForm, image: data.url });
+        }
+      } else {
+        toast({ title: "Lỗi upload", description: data.message || data.error || "Upload thất bại", variant: "destructive" });
+      }
+    } catch (err) {
+      console.error("[Upload] Error:", err);
+      toast({ title: "Lỗi", description: "Không thể upload ảnh: " + String(err), variant: "destructive" });
+    } finally {
+      if (type === "new") {
+        setNewItemUploading(false);
+      } else {
+        setEditItemUploading(false);
+      }
+    }
   };
 
   const handleOpenEdit = (item: any) => {
@@ -617,15 +664,35 @@ export default function Menu() {
                   
                   <div>
                     <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
-                    <div className="relative">
-                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="url"
-                        value={newItem.image}
-                        onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
-                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
-                        placeholder="Link ảnh..."
-                      />
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold cursor-pointer hover:opacity-90 transition-all">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={newItemUploading}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleImageUpload(e.target.files[0], "new");
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        {newItemUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Upload Ảnh"
+                        )}
+                      </label>
+                      <div className="relative flex-1">
+                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="url"
+                          value={newItem.image}
+                          onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+                          className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-amber-400 transition-all outline-none"
+                          placeholder="Hoặc dán link ảnh..."
+                        />
+                      </div>
                     </div>
                     {newItem.image && (
                       <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">
@@ -723,15 +790,35 @@ export default function Menu() {
                   
                   <div>
                     <label className="block text-sm font-bold mb-1.5">Ảnh món ăn</label>
-                    <div className="relative">
-                      <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <input
-                        type="url"
-                        value={editForm.image}
-                        onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
-                        className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
-                        placeholder="Link ảnh..."
-                      />
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-400 to-blue-600 text-white font-bold cursor-pointer hover:opacity-90 transition-all">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={editItemUploading}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleImageUpload(e.target.files[0], "edit");
+                            }
+                          }}
+                          className="hidden"
+                        />
+                        {editItemUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Upload Ảnh"
+                        )}
+                      </label>
+                      <div className="relative flex-1">
+                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="url"
+                          value={editForm.image}
+                          onChange={(e) => setEditForm({ ...editForm, image: e.target.value })}
+                          className="w-full pl-10 px-4 py-3 rounded-xl bg-background border-2 border-border focus:border-blue-400 transition-all outline-none"
+                          placeholder="Hoặc dán link ảnh..."
+                        />
+                      </div>
                     </div>
                     {editForm.image && (
                       <div className="mt-2 relative aspect-video rounded-lg overflow-hidden bg-secondary">

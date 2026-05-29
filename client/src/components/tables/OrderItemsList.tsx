@@ -47,25 +47,25 @@ export function OrderItemsList({ order, onUpdateQuantity, onRemoveItem, menuItem
                       {item.name}
                     </p>
 
-                  <div className="flex items-center gap-1 bg-secondary/50 rounded-xl p-1">
+                  <div className="flex items-center gap-1 bg-amber-500/20 rounded-xl p-1">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onUpdateQuantity(idx, -1)}
-                      className="w-8 h-8 rounded-lg bg-card shadow-sm flex items-center justify-center hover:bg-secondary active:bg-secondary/80 transition-colors"
+                      className="w-8 h-8 rounded-lg bg-amber-500 shadow-sm flex items-center justify-center hover:bg-amber-600 active:bg-amber-700 transition-colors"
                     >
-                      <Minus className="w-3.5 h-3.5 text-foreground" />
+                      <Minus className="w-3.5 h-3.5 text-gray-800" />
                     </motion.button>
 
-                    <span className="min-w-[2rem] text-center text-base font-bold text-primary">
+                    <span className="min-w-[2rem] text-center text-base font-bold text-gray-800">
                       {item.quantity}
                     </span>
 
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onUpdateQuantity(idx, 1)}
-                      className="w-8 h-8 rounded-lg bg-card shadow-sm flex items-center justify-center hover:bg-secondary active:bg-secondary/80 transition-colors"
+                      className="w-8 h-8 rounded-lg bg-amber-500 shadow-sm flex items-center justify-center hover:bg-amber-600 active:bg-amber-700 transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5 text-foreground" />
+                      <Plus className="w-3.5 h-3.5 text-gray-800" />
                     </motion.button>
                   </div>
 

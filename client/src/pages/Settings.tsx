@@ -316,7 +316,7 @@ export default function Settings() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cài đặt</h1>
         {isOwner && (
-          <Badge variant="outline" className={cn("bg-amber-500/10 text-amber-600", theme === "business" && "bg-cyan-500/10 text-cyan-600")}>
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-600">
             Chỉ dành cho Chủ Quán
           </Badge>
         )}
@@ -333,17 +333,17 @@ export default function Settings() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Original Theme Card */}
+            {/* Default Theme Card */}
             <button
-              onClick={() => setTheme("original")}
+              onClick={() => setTheme("default")}
               className={cn(
                 "relative p-4 rounded-xl border-2 transition-all text-left",
-                (theme === "original" || theme === "default")
+                theme === "default"
                   ? "border-amber-500 bg-amber-50 shadow-md"
                   : "border-border hover:border-amber-300"
               )}
             >
-              {(theme === "original" || theme === "default") && (
+              {theme === "default" && (
                 <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
                   <Check className="w-4 h-4 text-black" />
                 </div>
@@ -353,8 +353,8 @@ export default function Settings() {
                   <Beer className="w-6 h-6 text-black" />
                 </div>
                 <div>
-                  <p className="font-bold text-amber-600">Giao diện gốc</p>
-                  <p className="text-xs text-muted-foreground">Bia Mạnh Béo</p>
+                  <p className="font-bold text-amber-600">Bia Mạnh Béo</p>
+                  <p className="text-xs text-muted-foreground">Giao diện mặc định</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -365,37 +365,35 @@ export default function Settings() {
               </div>
             </button>
 
-            {/* Business Theme Card */}
+            {/* Lumina Theme Card */}
             <button
-              onClick={() => setTheme("business")}
+              onClick={() => setTheme("lumina")}
               className={cn(
                 "relative p-4 rounded-xl border-2 transition-all text-left",
-                theme === "business"
-                  ? "border-cyan-500 bg-cyan-50 shadow-md"
-                  : "border-border hover:border-cyan-300"
+                theme === "lumina"
+                  ? "border-amber-500 bg-amber-50 shadow-md"
+                  : "border-border hover:border-amber-300"
               )}
             >
-              {theme === "business" && (
-                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-white" />
+              {theme === "lumina" && (
+                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-black" />
                 </div>
               )}
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                    <path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 2h10v2H7V7zm0 4h10v2H7v-2zm0 4h6v2H7v-2z"/>
-                  </svg>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 flex items-center justify-center">
+                  <Beer className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="font-bold text-cyan-600">Giao diện mới</p>
-                  <p className="text-xs text-muted-foreground">Business Edition</p>
+                  <p className="font-bold text-orange-600">Lumina POS</p>
+                  <p className="text-xs text-muted-foreground">Material Design 3</p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="w-6 h-6 rounded-full bg-cyan-500" />
-                <div className="w-6 h-6 rounded-full bg-white border" />
-                <div className="w-6 h-6 rounded-full bg-slate-700" />
-                <div className="flex items-center text-xs text-muted-foreground ml-1">Cyan + White</div>
+                <div className="w-6 h-6 rounded-full bg-orange-700" />
+                <div className="w-6 h-6 rounded-full bg-orange-400" />
+                <div className="w-6 h-6 rounded-full bg-gray-100" />
+                <div className="flex items-center text-xs text-muted-foreground ml-1">Orange + Light</div>
               </div>
             </button>
           </div>

@@ -6,7 +6,7 @@ import { Receipt } from "@/components/Receipt";
 import { exportReceiptAsPDF } from "@/lib/exportReceipt";
 import { 
   CheckCircle2, Clock, Loader2, Trash2, ChevronDown, 
-  Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy, Edit2, Plus, Minus
+  Send, CreditCard, Users, Phone, StickyNote, AlertCircle, Settings, X, Image, Copy, Edit2, Plus, Minus, ReceiptText
 } from "lucide-react";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -46,6 +46,7 @@ export default function Orders() {
   const updatePaymentSetting = useUpdatePaymentSetting();
   const updateOrder = useUpdateOrder();
   const [filter, setFilter] = useState<string>("All");
+  const [todayOnly, setTodayOnly] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -118,8 +119,9 @@ export default function Orders() {
 
   const filteredOrders = orders?.filter(o => {
     const isTodayOrder = isToday(o.createdAt);
-    if (filter === "All") return isTodayOrder;
-    return isTodayOrder && o.status === filter;
+    if (todayOnly && !isTodayOrder) return false;
+    if (filter === "All") return true;
+    return o.status === filter;
   });
 
   const toggleOrder = (id: number) => {
@@ -190,14 +192,29 @@ export default function Orders() {
   };
 
   const activeOrders = orders?.filter(o => ["Pending", "InKitchen", "Ready"].includes(o.status)) || [];
+  const todayCount = orders?.filter(o => isToday(o.createdAt)).length || 0;
+  const todayActiveCount = orders?.filter(o => isToday(o.createdAt) && ["Pending", "InKitchen", "Ready"].includes(o.status)).length || 0;
 
   return (
     <div className="h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="px-4 py-2 rounded-xl bg-orange-100 text-orange-700 font-semibold">
             <span className="text-2xl">{activeOrders.length}</span> đơn đang xử lý
+            <span className="text-sm ml-1">(hôm nay: {todayActiveCount})</span>
           </div>
+          
+          <button
+            onClick={() => setTodayOnly(!todayOnly)}
+            className={cn(
+              "px-4 py-2 rounded-xl text-sm font-semibold transition-all",
+              todayOnly 
+                ? "bg-green-500 text-white" 
+                : "bg-secondary hover:bg-secondary/80"
+            )}
+          >
+            Hôm nay ({todayCount})
+          </button>
         </div>
       </div>
 
@@ -240,7 +257,7 @@ export default function Orders() {
       ) : !filteredOrders?.length ? (
         <div className="flex flex-col items-center justify-center py-24 text-center px-4 bg-card rounded-3xl border border-border border-dashed">
           <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground mb-4">
-             <ReceiptIcon className="w-8 h-8" />
+             <ReceiptText className="w-8 h-8" />
           </div>
           <h3 className="text-xl font-bold text-foreground mb-2">Chưa có đơn hàng nào</h3>
           <p className="text-muted-foreground max-w-sm">Sử dụng trợ lý AI: "Order bàn 5: 2 bia, 1 đầu lợn"</p>

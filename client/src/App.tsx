@@ -5,14 +5,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Notifications from "@/pages/Notifications";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { NotificationDetailProvider } from "@/contexts/NotificationDetailContext";
-import { NotificationDetailModal } from "@/components/NotificationDetailModal";
-import { useNotificationDetail } from "@/contexts/NotificationDetailContext";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
 import Menu from "@/pages/Menu";
@@ -27,6 +22,7 @@ import Login from "@/pages/Login";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Attendance from "@/pages/Attendance";
+import Users from "@/pages/Users";
 import { DebugToolbar } from "@/components/DebugToolbar";
 import { Loader2 } from "lucide-react";
 
@@ -84,14 +80,14 @@ function Router() {
             <Route path="/tables"><ProtectedRoute component={Tables} /></Route>
             <Route path="/home"><ProtectedRoute component={Home} /></Route>
             <Route path="/settings"><ProtectedRoute component={Settings} /></Route>
-            <Route path="/notifications"><ProtectedRoute component={Notifications} /></Route>
             <Route path="/profile"><ProtectedRoute component={Profile} /></Route>
             <Route path="/attendance"><ProtectedRoute component={Attendance} /></Route>
+            <Route path="/users"><ProtectedRoute component={Users} requireOwner /></Route>
             <Route component={NotFound} />
           </Switch>
         </Layout>
       )}
-      
+
       {/* Fallback for cases not caught above */}
       <Route component={NotFound} />
     </Switch>
@@ -100,19 +96,10 @@ function Router() {
 
 function AppContent() {
   const [location] = useLocation();
-  const { isDetailModalVisible, selectedNotification, hideNotificationDetail } = useNotificationDetail();
 
   return (
     <>
       <Router />
-      {/* Global Notification Detail Modal */}
-      <NotificationDetailModal
-        isVisible={isDetailModalVisible}
-        notification={selectedNotification}
-        onClose={hideNotificationDetail}
-      />
-      {/* Ẩn bong bóng chat Gấu Assistant */}
-      {/* {location !== "/menu-tv" && location !== "/menutv" && <FloatingChatBubble />} */}
       <DebugToolbar />
     </>
   );
@@ -126,11 +113,7 @@ function App() {
         <PWAInstallPrompt />
         <PWAUpdatePrompt />
         <AuthProvider>
-          <NotificationProvider>
-            <NotificationDetailProvider>
-              <AppContent />
-            </NotificationDetailProvider>
-          </NotificationProvider>
+          <AppContent />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

@@ -357,9 +357,11 @@ export function initWebSocket(httpServer: Server): void {
   });
 
   // Setup Postgres LISTEN for multi-node synchronization
+  const dbUrl = new URL(process.env.DATABASE_URL || "");
+  const isLocalDb = dbUrl.hostname === "127.0.0.1" || dbUrl.hostname === "localhost";
   const pgConfig = {
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+    ssl: isLocalDb ? false : { rejectUnauthorized: false }
   };
 
   pgPool = new pg.Pool(pgConfig);
@@ -456,7 +458,7 @@ function broadcastLocally(event: WSEvent, targetRooms?: WSRoom[]): void {
 
   const message = JSON.stringify(event);
   const baseRooms = targetRooms || getRoomForEvent(event.type);
-  const targetRoomList = [...new Set([...baseRooms, "all"])];
+  const targetRoomList = [...new Set([...baseRooms, "all"])] as WSRoom[];
   const targetClients = new Set<WebSocket>();
   
   targetRoomList.forEach(room => {

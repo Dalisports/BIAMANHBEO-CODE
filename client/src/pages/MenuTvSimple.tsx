@@ -27,7 +27,7 @@ export default function MenuTvSimple() {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
       queryClient.invalidateQueries({ queryKey: ["/api/menu"] });
-    }, 15000);
+    }, 180000);
     return () => clearInterval(interval);
   }, [queryClient]);
 
@@ -43,10 +43,10 @@ export default function MenuTvSimple() {
             setKitchenOrder(null);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     };
     fetchOrder();
-    const interval = setInterval(fetchOrder, 15000);
+    const interval = setInterval(fetchOrder, 180000);
     return () => clearInterval(interval);
   }, []);
 
@@ -155,8 +155,8 @@ export default function MenuTvSimple() {
                     className={`flex items-center gap-[1vw] rounded-xl px-[1.2vw] py-[1.2vh] border ${isPri ? "bg-red-900/60 border-red-400/60" : "bg-slate-800/70 border-orange-500/40"}`}
                   >
                     {isPri && <span className="text-[1.2vw] flex-shrink-0">⚡</span>}
-                    <div className={`flex-shrink-0 w-[6vw] h-[6vw] rounded-xl flex flex-col items-center justify-center text-black ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}>
-                      <span className="text-[1.8vw] font-black leading-none">BÀN {item.tableNumber}</span>
+                    <div className={`flex-shrink-0 w-[9vw] h-[5vw] rounded-xl flex flex-col items-center justify-center text-black ${isPri ? "bg-gradient-to-br from-red-400 to-orange-500" : "bg-gradient-to-br from-yellow-400 to-orange-500"}`}>
+                      <span className="text-[2.5vw] font-black leading-none whitespace-nowrap">BÀN {item.tableNumber}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-[0.6vw] flex-wrap">
@@ -185,7 +185,7 @@ export default function MenuTvSimple() {
             alt={currentItem?.name || "Menu"}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          
+
           {/* Info overlay - top right */}
           <div className="absolute inset-x-0 top-0 p-[1.5vw] bg-gradient-to-b from-black/80 via-black/40 to-transparent z-10">
             <div className="flex items-start justify-between gap-[1vw]">
@@ -202,7 +202,7 @@ export default function MenuTvSimple() {
               </p>
             )}
           </div>
-          
+
           {/* Slide indicator */}
           {slideCount > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
