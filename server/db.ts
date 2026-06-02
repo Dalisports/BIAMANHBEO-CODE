@@ -17,9 +17,10 @@ export function getDb() {
     console.log("[DB] Initializing connection pool...");
     console.log("[DB] Connection string host:", connectionString.match(/@([^:]+):/)?.[1] || "unknown");
     
+    const isLocalDb = connectionString.includes('127.0.0.1') || connectionString.includes('localhost');
     _pool = new Pool({ 
       connectionString,
-      ssl: connectionString.includes('neon.tech') ? { rejectUnauthorized: false } : undefined,
+      ssl: isLocalDb ? false : { rejectUnauthorized: false },
     });
     
     _pool.on('error', (err) => {
