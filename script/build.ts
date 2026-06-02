@@ -64,6 +64,24 @@ async function buildAll() {
 }
 
 buildAll().catch((err) => {
-  console.error(err);
+  console.error("=== BUILD FAILED ===");
+  if (err && typeof err === "object") {
+    // Print clean properties and truncate huge arrays like watchFiles
+    const cleanErr: any = {};
+    for (const key of Object.keys(err)) {
+      const val = (err as any)[key];
+      if (Array.isArray(val) && val.length > 10) {
+        cleanErr[key] = `[Truncated Array: ${val.length} items]`;
+      } else {
+        cleanErr[key] = val;
+      }
+    }
+    console.error(cleanErr);
+    if (err.stack) {
+      console.error(err.stack);
+    }
+  } else {
+    console.error(err);
+  }
   process.exit(1);
 });
