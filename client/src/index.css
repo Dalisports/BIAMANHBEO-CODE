@@ -146,6 +146,10 @@
   animation: pulse-ring 2s infinite;
 }
 
+body.hide-agent-bubble .agent-bubble {
+  display: none !important;
+}
+
 /* Receipt Styles - 80mm thermal printer format */
 .receipt-container {
   display: flex;

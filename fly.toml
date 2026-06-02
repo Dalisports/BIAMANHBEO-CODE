@@ -21,7 +21,7 @@ app = "biamanhbeo-prod"
     handlers = ["tls", "http"]
 
   [services.concurrency]
-    type = "connection"
+    type = "requests"
     hard_limit = 1000
     soft_limit = 100
 

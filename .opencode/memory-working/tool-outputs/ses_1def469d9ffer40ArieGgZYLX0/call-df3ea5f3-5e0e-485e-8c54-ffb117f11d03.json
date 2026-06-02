@@ -1,0 +1,7 @@
+{
+  "callID": "call-df3ea5f3-5e0e-485e-8c54-ffb117f11d03",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO-clone\\server\\storage.ts</path>\n<type>file</type>\n<content>\n705:       kitchenActive\n706:     };\n707:   }\n708: \n709:   async getBestSellers() {\n710:     const today = new Date();\n711:     const start = startOfDay(today);\n712:     const end = endOfDay(today);\n713: \n714:     // Get all orders and filter to those paid today\n715:     const allOrders = await db.select().from(orders);\n716:     \n717:     const itemCounts: Record<string, number> = {};\n718:     \n719:     // Only count orders that were paid TODAY\n720:     allOrders.forEach(order => {\n721:       if (order.paymentStatus !== \"Paid\" || !order.paidAt) return;\n722:       const paidAt = new Date(order.paidAt);\n723:       if (paidAt < start || paidAt > end) return;\n724:       \n725:       const items = order.items as any[];\n726:       items.forEach(item => {\n727:         if (!itemCounts[item.name]) {\n728:           itemCounts[item.name] = 0;\n729:         }\n730:         itemCounts[item.name] += item.quantity;\n731:       });\n732:     });\n733: \n734:     return Object.entries(itemCounts)\n\n(Showing lines 705-734 of 790. Use offset=735 to continue.)\n</content>",
+  "timestamp": 1778688589950
+}

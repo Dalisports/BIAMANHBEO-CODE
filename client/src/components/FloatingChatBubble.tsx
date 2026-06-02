@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, Loader2, X, Minimize2, Maximize2, ChevronDown, Brain, Trash2, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpeech } from "@/hooks/use-speech";
+import { getAuthHeaders } from "@/hooks/use-auth";
+import { queryClient } from "@/lib/queryClient";
 
 interface Message {
   id: string;
@@ -83,28 +85,29 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
   // Load models on mount
   useEffect(() => {
     (async () => {
-      const defaultModel = await fetchModels();
-      const savedModel = localStorage.getItem("gau_selected_model");
-      const validModels = ["openrouter/gemma-3-5b", "ollama/gemma4:fast", "google/gemini-2.0-flash", "minimax"];
-      if (savedModel && validModels.includes(savedModel)) {
-        setSelectedModel(savedModel);
-      } else {
-        setSelectedModel(defaultModel);
+      try {
+        const res = await fetch("/api/gau-assistant/models", {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        const loadedModels = data.models || [];
+        setModels(loadedModels.filter((m: AIModel) => !m.hidden));
+        
+        const defaultModel = data.defaultModel || (loadedModels.length > 0 ? loadedModels[0].id : "step-3.5-flash");
+        const savedModel = localStorage.getItem("gau_selected_model");
+        
+        const validModelIds = loadedModels.map((m: AIModel) => m.id);
+        
+        if (savedModel && validModelIds.includes(savedModel)) {
+          setSelectedModel(savedModel);
+        } else {
+          setSelectedModel(defaultModel);
+        }
+      } catch (err) {
+        console.error("Failed to fetch models:", err);
       }
     })();
   }, []);
-
-  const fetchModels = async () => {
-    try {
-      const res = await fetch("/api/gau-assistant/models");
-      const data = await res.json();
-      setModels(data.models.filter((m: AIModel) => !m.hidden));
-      return data.defaultModel;
-    } catch (err) {
-      console.error("Failed to fetch models:", err);
-      return "openrouter/gemma-4-26b-4ab";
-    }
-  };
 
   // Save to localStorage
   useEffect(() => {
@@ -186,11 +189,11 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
     try {
       const response = await fetch("/api/gau-assistant/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           message: text,
           history: conversationHistory,
-          // memory: userMemory || undefined, // Tắt memory tạm
+          memory: userMemory || undefined,
           model: selectedModel === "auto" ? undefined : selectedModel,
         }),
       });
@@ -199,26 +202,28 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
 
       let content = "";
 
-      if (data.action === "EXECUTE" && data.apiPath && data.apiMethod) {
+      if (data.action === "OPEN_CHECKOUT") {
+      } else if (data.action === "EXECUTE" || data.action === "CONFIRM") {
         try {
           const executeRes = await fetch("/api/gau-assistant/execute", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...getAuthHeaders() },
             body: JSON.stringify(data),
           });
           const executeData = await executeRes.json();
 
           if (executeData.success) {
-            if (executeData.action === "ORDER_CREATED") {
+            queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+            
+            if (data.confirmText) {
+              content = `✅ ${data.confirmText}`;
+            } else if (executeData.action === "ORDER_CREATED") {
               content = `✅ Đã tạo đơn cho bàn ${executeData.data.tableNumber}`;
-            } else if (executeData.action === "ORDER_PAID") {
-              content = `✅ Đã thanh toán cho bàn ${executeData.data.tableNumber}`;
             } else if (executeData.action === "ORDER_MOVED") {
               content = `✅ Đã chuyển bàn ${executeData.data.tableNumber}`;
             } else if (executeData.action === "SENT_TO_KITCHEN") {
               content = `✅ Đã gửi bếp cho đơn`;
-            } else if (executeData.action === "PRODUCT_CREATED") {
-              content = `✅ Đã thêm "${executeData.data.name}" vào menu`;
             } else {
               content = "✅ Thực hiện thành công!";
             }
@@ -313,7 +318,7 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed z-50 rounded-full",
+          "agent-bubble fixed z-50 rounded-full",
           "bg-gradient-to-br from-amber-400 to-yellow-500",
           "shadow-lg shadow-amber-500/40",
           "flex items-center justify-center",
@@ -338,7 +343,7 @@ export function FloatingChatBubble({ position = "bottom-right", className }: Flo
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 flex flex-col bg-background border border-border rounded-3xl shadow-2xl",
+              "agent-bubble fixed z-50 flex flex-col bg-background border border-border rounded-3xl shadow-2xl",
               "w-[calc(100vw-32px)] max-w-[380px] h-[calc(100vh-120px)] max-h-[520px]",
               "bottom-20 right-4 sm:bottom-24 sm:right-6",
               "left-4 right-4 sm:left-auto sm:right-6 sm:w-[380px] sm:h-[520px]",

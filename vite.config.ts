@@ -10,6 +10,10 @@ export default defineConfig({
     runtimeErrorOverlay(),
     VitePWA({
       registerType: "autoUpdate",
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
       includeAssets: ["favicon.png", "icon-192.png", "icon-512.png"],
       manifest: {
         name: "Bia Mạnh Béo - Quản lý nhà hàng",

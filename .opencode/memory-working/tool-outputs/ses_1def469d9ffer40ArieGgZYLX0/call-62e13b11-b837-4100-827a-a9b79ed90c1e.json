@@ -1,0 +1,7 @@
+{
+  "callID": "call-62e13b11-b837-4100-827a-a9b79ed90c1e",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableDetailModal.tsx</path>\n<type>file</type>\n<content>\n220:                         {(() => {\n221:                           const orderItem = activeOrder?.items?.find(i => i.name === item.name);\n222:                           if (!orderItem) return null;\n223:                           return (\n224:                             <div\n225:                               className=\"absolute top-0 right-0 w-[65px] h-[65px] flex items-center justify-center\"\n226:                               style={{\n227:                                 background: '#dc2626',\n228:                                 clipPath: 'polygon(100% 0, 0 0, 100% 100%)',\n229:                               }}\n230:                             >\n231:                               <span className=\"text-base font-black text-white leading-none\">\n232:                                 {orderItem.quantity}\n233:                               </span>\n234:                             </div>\n235:                           );\n236:                         })()}\n237:                       </div>\n238: \n239:                       {/* Content - name only, center, uppercase */}\n\n(Showing lines 220-239 of 355. Use offset=240 to continue.)\n</content>",
+  "timestamp": 1778708158220
+}

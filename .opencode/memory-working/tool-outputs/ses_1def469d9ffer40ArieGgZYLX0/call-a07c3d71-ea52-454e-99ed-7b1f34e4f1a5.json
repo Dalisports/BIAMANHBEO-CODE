@@ -1,0 +1,7 @@
+{
+  "callID": "call-a07c3d71-ea52-454e-99ed-7b1f34e4f1a5",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 10 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableDetailModal.tsx:\n  Line 46:   onAddItem: (menuItem: any, quantity?: number) => void;\r\n\n  Line 66:   onAddItem,\r\n\n  Line 207:                       onClick={() => { onAddItem(item); setSearchMenu(\"\"); }}\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\pages\\Tables.tsx:\n  Line 89:   const handleAddItem = (menuItem: any, quantity: number = 1) => {\r\n\n  Line 356:           onAddItem={handleAddItem}\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\pages\\Menu.tsx:\n  Line 130:   const handleAddItem = (e: React.FormEvent) => {\r\n\n  Line 631:                 <form id=\"add-item-form\" onSubmit={handleAddItem} className=\"space-y-4 pb-2\">\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\ShortcutBar.tsx:\n  Line 8:   onAddItem: (menuItem: any, quantity?: number) => void;\r\n\n  Line 11: export function ShortcutBar({ menuItems, cachedTopItemIds, shortcuts, onAddItem }: ShortcutBarProps) {\r\n\n  Line 36:               onClick={() => item && onAddItem(item, 1)}\r\n",
+  "timestamp": 1778731857905
+}

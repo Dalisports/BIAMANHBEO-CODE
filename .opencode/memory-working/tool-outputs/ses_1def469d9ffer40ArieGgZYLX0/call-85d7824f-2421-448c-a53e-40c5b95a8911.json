@@ -1,0 +1,7 @@
+{
+  "callID": "call-85d7824f-2421-448c-a53e-40c5b95a8911",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 1 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\server\\routes.ts:\n  Line 871:   app.get(\"/api/reports/best-sellers\", requireOwnerMiddleware, async (req, res) => {\n",
+  "timestamp": 1778688416767
+}

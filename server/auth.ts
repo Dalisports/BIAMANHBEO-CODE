@@ -38,7 +38,7 @@ function verifyToken(token: string): { userId: number; username: string; role: s
 export interface AuthUser {
   userId: number;
   username: string;
-  role: "owner" | "admin" | "employee" | "Admin";
+  role: "owner" | "admin" | "employee";
 }
 
 export async function login(
@@ -56,14 +56,14 @@ export async function login(
   
   return {
     token,
-    user: { userId: user.id, username: user.username, role: user.role as "owner" | "admin" | "Admin" | "employee" }
+    user: { userId: user.id, username: user.username, role: user.role as "owner" | "admin" | "employee" }
   };
 }
 
 export async function register(
   username: string,
   password: string,
-  role: "owner" | "admin" | "Admin" | "employee" = "employee",
+  role: "owner" | "admin" | "employee" = "employee",
   fullName?: string
 ): Promise<{ token: string; user: AuthUser } | null> {
   console.log("[AUTH] Registering user:", username, "role:", role);
@@ -91,7 +91,7 @@ export async function register(
     const token = generateToken(created.id, created.username, created.role);
     return {
       token,
-      user: { userId: created.id, username: created.username, role: created.role as "owner" | "employee" }
+      user: { userId: created.id, username: created.username, role: created.role as "owner" | "admin" | "employee" }
     };
   } catch (err) {
     console.error("[AUTH] Insert error:", err);

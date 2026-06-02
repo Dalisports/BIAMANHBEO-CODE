@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGridIcon, LogOut, User, Menu, CreditCard, Users, ClipboardList } from "lucide-react";
+import { UtensilsCrossed, ChefHat, BarChart3, Beer, History, LayoutGridIcon, LogOut, User, Menu, CreditCard, Users, ClipboardList, Bot } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
@@ -30,6 +30,7 @@ const OWNER_NAV_ITEMS = [
   { href: "/reports", label: "Báo Cáo", icon: BarChart3 },
   { href: "/history", label: "Lịch Sử", icon: History },
   { href: "/users", label: "Quản Lý User", icon: Users },
+  { href: "/gau", label: "Gấu Assistant", icon: Bot },
   { href: "/settings", label: "Cài đặt", icon: Settings },
 ];
 

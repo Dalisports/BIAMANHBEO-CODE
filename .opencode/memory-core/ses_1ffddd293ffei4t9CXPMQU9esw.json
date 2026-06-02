@@ -1,0 +1,21 @@
+{
+  "sessionID": "ses_1ffddd293ffei4t9CXPMQU9esw",
+  "blocks": {
+    "goal": {
+      "value": "Fix WebSocket reconnection issues and deploy notification system",
+      "charLimit": 1000,
+      "lastModified": "2026-05-07T06:47:05.902Z"
+    },
+    "progress": {
+      "value": "## Task: Complete UI for Profile/Settings + Menu Grid 3 columns\n\n### Completed:\n- ✅ Notification bell icon with dropdown in header (Layout.tsx)\n- ✅ Removed \"Thông Báo\" from sidebar menu\n- ✅ Table number styling: darker bg, white text, shadow (table-types.ts, TableGrid.tsx)\n- ✅ Status text: smaller, uppercase, nowrap\n- ✅ TableDetailModal menu items redesigned:\n  - Desktop: 3 columns, larger images, professional card style\n  - Mobile: 2-3 columns, name/price on same row\n  - Name: yellow bg 60%, Price: black bg 60%\n- ✅ Fixed AnimatePresence closing tag issue\n- ✅ Deleted vmix-api files\n- ✅ Hidden \"Mẫu câu lệnh\" box in sidebar\n\n### Current Task (in progress):\n1. **Profile.tsx improvements:**\n   - Add avatar with icon\n   - Add role badge (Chủ Quán / Nhân viên)\n   - Add join date\n   - Add statistics (total orders, hours worked this month)\n   - Better layout with Cards\n\n2. **Settings.tsx improvements:**\n   - For employee: add notification settings tab\n   - Add quick actions for employee\n\n3. **Menu grid already updated to 3 columns** (done earlier)\n\n### Next Steps:\n1. Update Profile.tsx with avatar, role badge, join date, statistics\n2. Update Settings.tsx to show \"Cá Nhân\" tab for owner as well (not just employee)\n3. Add notification settings to Settings\n4. Build and deploy dev\n\n### Key Files:\n- client/src/pages/Profile.tsx\n- client/src/pages/Settings.tsx\n- client/src/components/tables/TableDetailModal.tsx (menu items grid - DONE)",
+      "charLimit": 2000,
+      "lastModified": "2026-05-08T00:07:58.316Z"
+    },
+    "context": {
+      "value": "",
+      "charLimit": 1500,
+      "lastModified": "2026-05-07T01:53:25.173Z"
+    }
+  },
+  "updatedAt": "2026-05-08T00:07:58.316Z"
+}

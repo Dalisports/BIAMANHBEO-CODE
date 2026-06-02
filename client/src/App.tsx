@@ -1,5 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
-import { useLocation } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { FloatingChatBubble } from "@/components/FloatingChatBubble";
 import { Layout } from "@/components/Layout";
 import Home from "@/pages/Home";
 import Menu from "@/pages/Menu";
@@ -23,7 +23,10 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Attendance from "@/pages/Attendance";
 import Users from "@/pages/Users";
+import Agent from "@/pages/Agent";
+import GauAssistant from "@/pages/GauAssistant";
 import { DebugToolbar } from "@/components/DebugToolbar";
+import { AgentBubble } from "@/components/AgentBubble";
 import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({ component: Component, requireOwner = false }: { component: any; requireOwner?: boolean }) {
@@ -83,6 +86,8 @@ function Router() {
             <Route path="/profile"><ProtectedRoute component={Profile} /></Route>
             <Route path="/attendance"><ProtectedRoute component={Attendance} /></Route>
             <Route path="/users"><ProtectedRoute component={Users} requireOwner /></Route>
+            <Route path="/agent"><ProtectedRoute component={Agent} requireOwner /></Route>
+            <Route path="/gau"><ProtectedRoute component={GauAssistant} requireOwner /></Route>
             <Route component={NotFound} />
           </Switch>
         </Layout>
@@ -96,10 +101,12 @@ function Router() {
 
 function AppContent() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   return (
     <>
       <Router />
+      {user && location !== "/agent" && location !== "/gau" && <FloatingChatBubble />}
       <DebugToolbar />
     </>
   );

@@ -1,0 +1,7 @@
+{
+  "callID": "call-70b483e3-176d-438b-9776-e36749a152f7",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 3 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableDetailModal.tsx:\n  Line 5: import { Plus, History, X, Search, ChefHat, Clock, CheckCircle2, ArrowRight, ChevronDown } from \"lucide-react\";\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableHistory.tsx:\n  Line 7: import { ChevronDown, ChevronLeft, ChevronRight, Calendar, Receipt, Clock, CreditCard } from \"lucide-react\";\n\n  Line 187:                           <ChevronDown className={cn(\n",
+  "timestamp": 1778707353026
+}

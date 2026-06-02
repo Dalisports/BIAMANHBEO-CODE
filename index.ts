@@ -1,16 +1,18 @@
 import { config as dotenv } from "dotenv";
 
 const envFile = process.env.NODE_ENV === "development" ? ".env.development" : ".env";
-dotenv({ filePath: envFile, override: true });
+dotenv({ path: envFile, override: true });
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./server/routes";
-// import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { serveStatic } from "./server/static";
 import { createServer } from "http";
 import { createServer as createHttpsServer } from "https";
 import { initWebSocket } from "./server/websocket";
 import { storage } from "./server/storage";
+import { chatStorage } from "./server/replit_integrations/chat";
+import { registerAIRoutes, agentStorage, brain } from "./server/ai";
+import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { readFileSync } from "fs";
 import { startOfTomorrow } from "date-fns";
 
@@ -65,8 +67,11 @@ export function log(message: string, source = "express") {
     await registerRoutes(mainServer, app);
     log("[ROUTES] API routes registered");
 
-    // registerGauAssistantRoutes(app);
-    // log("[GAU] Gau Assistant routes registered");
+    registerAIRoutes(app, agentStorage, chatStorage, brain);
+    log("[SÓI AI] Agent routes registered");
+
+    registerGauAssistantRoutes(app);
+    log("[GAU] Gau Assistant routes registered");
 
     await storage.runMigrations();
     log("[STORAGE] Migrations finished");
@@ -79,11 +84,11 @@ export function log(message: string, source = "express") {
     }
 
     if (useHttps) {
-      (mainServer as import("https").Server).listen(port, "0.0.0.0", () => {
+      (mainServer as import("https").Server).listen(port, () => {
         log(`HTTPS Server is listening on port ${port}`);
       });
     } else {
-      (mainServer as import("http").Server).listen(port, "0.0.0.0", () => {
+      (mainServer as import("http").Server).listen(port, () => {
         log(`Server is listening on port ${port}`);
       });
     }

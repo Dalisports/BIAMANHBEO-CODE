@@ -1,0 +1,7 @@
+{
+  "callID": "call-823cedb6-79c4-4665-95f3-39301108d13d",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 3 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\server\\storage.ts:\n  Line 83:   getBestSellers(): Promise<{ name: string; totalQuantity: number }[]>;\r\n\n  Line 709:   async getBestSellers() {\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\server\\routes.ts:\n  Line 873:       const report = await storage.getBestSellers();\n",
+  "timestamp": 1778688583772
+}

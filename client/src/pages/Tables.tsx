@@ -219,6 +219,33 @@ export default function Tables() {
   const { tableNames, saveTableNames } = useTableNames();
 
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
+
+  // Hide agent bubble when table is selected
+  useEffect(() => {
+    if (selectedTable !== null) {
+      document.body.classList.add("hide-agent-bubble");
+    } else {
+      document.body.classList.remove("hide-agent-bubble");
+    }
+    return () => document.body.classList.remove("hide-agent-bubble");
+  }, [selectedTable]);
+
+  useEffect(() => {
+    const handleOpenCheckout = (e: CustomEvent) => {
+      const tableNumber = e.detail?.tableNumber;
+      if (tableNumber && orders) {
+        const activeOrder = orders.find(
+          (o) => o.tableNumber === String(tableNumber) && o.paymentStatus !== "Paid"
+        );
+        if (activeOrder) {
+          setShowPayModal(activeOrder.id);
+        }
+      }
+    };
+    window.addEventListener("open-checkout-modal", handleOpenCheckout as EventListener);
+    return () => window.removeEventListener("open-checkout-modal", handleOpenCheckout as EventListener);
+  }, [orders]);
+
   const [searchMenu, setSearchMenu] = useState("");
   const [showPayModal, setShowPayModal] = useState<number | null>(null);
   const [payMethod, setPayMethod] = useState("cash");
@@ -249,14 +276,20 @@ export default function Tables() {
   const selectedOrder = selectedTable ? getActiveOrder(selectedTable) : undefined;
   const currentStatus = !selectedOrder ? "empty" : selectedOrder.status === "Ready" ? "ready" : "cooking";
 
-  // Stats: tinh trong ngay hom nay
-  const todayStr = new Date().toDateString();
-  const todayOrders = (orders || []).filter(o => {
-    if (!o.createdAt) return false;
-    return new Date(o.createdAt).toDateString() === todayStr;
+  // Stats: tính trong ngày hôm nay
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const paidOrders = (orders || []).filter(o => {
+    if (o.paymentStatus !== "Paid" || !o.paidAt) return false;
+    const paidDate = new Date(o.paidAt);
+    return paidDate >= todayStart && paidDate <= todayEnd;
   });
-  const paidOrders = todayOrders.filter(o => o.paymentStatus === "Paid");
-  const unpaidOrders = todayOrders.filter(o => o.paymentStatus !== "Paid");
+
+  const unpaidOrders = (orders || []).filter(o => o.status !== "Complete");
+
   const paidCount = paidOrders.length;
   const paidTotal = paidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const unpaidCount = unpaidOrders.length;
@@ -474,50 +507,71 @@ export default function Tables() {
       {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-2 px-3 py-3 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-1.5 px-2 py-2 flex-shrink-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-3 text-white shadow-lg"
+            className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-2 text-white shadow"
           >
-            <div className="flex flex-row-reverse items-center justify-between mb-1">
-              <DollarSign className="w-5 h-5 opacity-80" />
-              <p className="text-[10px] opacity-80 whitespace-nowrap">Đã TT</p>
+            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
+              <DollarSign className="w-4 h-4 opacity-80" />
+              <p className="text-[9px] opacity-80 whitespace-nowrap">Đã TT</p>
             </div>
-            <p className="text-base font-bold">{paidCount} bàn</p>
-            <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal)}</p>
+            <div className="flex items-baseline justify-between">
+              <p className="text-sm font-bold">{paidCount} bàn</p>
+              <p className="text-[10px] font-bold opacity-90">{formatCurrency(paidTotal)}</p>
+            </div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl p-3 text-white shadow-lg"
+            className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl p-2 text-white shadow"
           >
-            <div className="flex flex-row-reverse items-center justify-between mb-1">
-              <Clock className="w-5 h-5 opacity-80" />
-              <p className="text-[10px] opacity-80 whitespace-nowrap">Chưa TT</p>
+            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
+              <Clock className="w-4 h-4 opacity-80" />
+              <p className="text-[9px] opacity-80 whitespace-nowrap">Chưa TT</p>
             </div>
-            <p className="text-base font-bold">{unpaidCount} bàn</p>
-            <p className="text-xs font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
+            <div className="flex items-baseline justify-between">
+              <p className="text-sm font-bold">{unpaidCount} bàn</p>
+              <p className="text-[10px] font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
+            </div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl p-3 text-white shadow-lg"
+            className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl p-2 text-white shadow"
           >
-            <div className="flex flex-row-reverse items-center justify-between mb-1">
-              <TrendingUp className="w-5 h-5 opacity-80" />
-              <p className="text-[10px] opacity-80 whitespace-nowrap">Tất Cả</p>
+            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
+              <TrendingUp className="w-4 h-4 opacity-80" />
+              <p className="text-[9px] opacity-80 whitespace-nowrap">Tất Cả</p>
             </div>
-            <p className="text-base font-bold">{paidCount + unpaidCount} bàn</p>
-            <p className="text-xs font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
+            <div className="flex items-baseline justify-between">
+              <p className="text-sm font-bold">{paidCount + unpaidCount} bàn</p>
+              <p className="text-[10px] font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
+            </div>
           </motion.div>
         </div>
       )}
       {/* Table grid / Desktop split layout */}
-      <div className="flex-1 overflow-hidden">
-        {selectedTable ? (
+      <div className="flex-1 min-h-0">
+        <div className={selectedTable ? "hidden" : "block h-full"}>
+          <TableGrid
+            maxTables={MAX_TABLES}
+            tableNames={tableNames}
+            getActiveOrder={getActiveOrder}
+            selectedTable={selectedTable}
+            renamingTable={renamingTable}
+            renameValue={renameValue}
+            setRenameValue={setRenameValue}
+            onSelectTable={setSelectedTable}
+            onStartRename={(num, e) => { e.stopPropagation(); handleRenameStart(num); }}
+            onCommitRename={handleRenameCommit}
+          />
+        </div>
+
+        {selectedTable && (
           <>
             {/* Desktop split layout - hidden on mobile */}
             <div className="hidden md:flex h-full">
@@ -563,19 +617,6 @@ export default function Tables() {
               />
             </div>
           </>
-        ) : (
-          <TableGrid
-            maxTables={MAX_TABLES}
-            tableNames={tableNames}
-            getActiveOrder={getActiveOrder}
-            selectedTable={selectedTable}
-            renamingTable={renamingTable}
-            renameValue={renameValue}
-            setRenameValue={setRenameValue}
-            onSelectTable={setSelectedTable}
-            onStartRename={(num, e) => { e.stopPropagation(); handleRenameStart(num); }}
-            onCommitRename={handleRenameCommit}
-          />
         )}
       </div>
 

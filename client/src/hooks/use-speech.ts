@@ -30,6 +30,7 @@ export function useSpeech(onResult: (text: string) => void): UseSpeechReturn {
   const activeRef = useRef(false);
   const onResultRef = useRef(onResult);
   const finalTextRef = useRef("");
+  const lastProcessedIndexRef = useRef<number>(0);
 
   useEffect(() => {
     onResultRef.current = onResult;
@@ -79,6 +80,7 @@ export function useSpeech(onResult: (text: string) => void): UseSpeechReturn {
       recognition.onstart = () => {
         setIsListening(true);
         setError(null);
+        // lastProcessedIndexRef.current = 0; // Not resetting here because onend might restart the same session
       };
 
       recognition.onresult = (event: any) => {
@@ -90,18 +92,19 @@ export function useSpeech(onResult: (text: string) => void): UseSpeechReturn {
           const transcript = result[0].transcript;
 
           if (result.isFinal) {
-            final += transcript;
+            // Only process if we haven't seen this index yet
+            if (i >= lastProcessedIndexRef.current) {
+              final += transcript;
+              lastProcessedIndexRef.current = i + 1;
+            }
           } else {
             interim += transcript;
           }
         }
 
-        if (interim) {
-          setInterimText(interim);
-        }
+        setInterimText(interim);
 
         if (final.trim()) {
-          setInterimText("");
           setFinalText(final.trim());
           finalTextRef.current = final.trim();
           onResultRef.current(final.trim());
@@ -154,6 +157,7 @@ export function useSpeech(onResult: (text: string) => void): UseSpeechReturn {
     setInterimText("");
     setFinalText("");
     finalTextRef.current = "";
+    lastProcessedIndexRef.current = 0; // Reset index when starting a new listen session
     try {
       recognitionRef.current.start();
     } catch (e) {

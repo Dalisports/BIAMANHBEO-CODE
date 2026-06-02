@@ -160,6 +160,49 @@ export const insertCategorySchema = createInsertSchema(categories).omit({ id: tr
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
 
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  price: integer("price").notNull(),
+});
+
+export const insertProductSchema = createInsertSchema(products).omit({ id: true });
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+
+export const instructions = pgTable("instructions", {
+  id: serial("id").primaryKey(),
+  trigger: text("trigger").notNull(),
+  instruction: text("instruction").notNull(),
+  example: text("example"),
+  enabled: boolean("enabled").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertInstructionSchema = createInsertSchema(instructions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type Instruction = typeof instructions.$inferSelect;
+export type InsertInstruction = z.infer<typeof insertInstructionSchema>;
+
+export const memory = pgTable("memory", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  summary: text("summary").notNull(),
+  keyInfo: text("key_info"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMemorySchema = createInsertSchema(memory).omit({
+  id: true,
+  createdAt: true,
+});
+export type Memory = typeof memory.$inferSelect;
+export type InsertMemory = z.infer<typeof insertMemorySchema>;
+
 export const loginSchema = z.object({
   username: z.string().min(1),
   password: z.string().min(1),

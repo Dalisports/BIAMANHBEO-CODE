@@ -1,0 +1,7 @@
+{
+  "callID": "call-8dfed779-59a5-4c42-bfa0-5b3d0a2eff04",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableDetailModal.tsx</path>\n<type>file</type>\n<content>\n195:                   <span>Thực đơn</span>\n196:                   <ArrowRight className=\"w-4 h-4\" />\n197:                   <span className=\"font-medium text-foreground\">{availableItems.length} món</span>\n198:                 </div>\n199: \n200:                 {/* Menu items grid - Scrollable */}\n201:                 <div className=\"grid grid-cols-3 gap-3\">\n202:                   {availableItems.map((item, index) => (\n203:                     <motion.button\n204:                       key={item.id}\n205:                       whileHover={{ scale: 1.02, y: -2 }}\n206:                       whileTap={{ scale: 0.98 }}\n207:                       onClick={() => { onAddItem(item); setSearchMenu(\"\"); }}\n208:                       className=\"group relative flex flex-col rounded-2xl overflow-hidden bg-white border-2 border-border hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 active:scale-95\"\n209:                     >\n\n(Showing lines 195-209 of 352. Use offset=210 to continue.)\n</content>",
+  "timestamp": 1778706934623
+}

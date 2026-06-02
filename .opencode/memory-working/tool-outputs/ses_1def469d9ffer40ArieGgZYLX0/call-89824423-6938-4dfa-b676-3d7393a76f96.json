@@ -1,0 +1,7 @@
+{
+  "callID": "call-89824423-6938-4dfa-b676-3d7393a76f96",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "read",
+  "fullOutput": "<path>C:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableGrid.tsx</path>\n<type>file</type>\n<content>\n95:               <div className=\"absolute bottom-2 right-2\">\n96:                 <span className={cn(\"text-lg font-black\", sc.text)}>\n97:                   {formatCurrency(activeOrder.totalAmount)}\n98:                 </span>\n99:               </div>\n100:             )}\n101:           </motion.div>\n102:         );\n103:       })}\n104:     </div>\n105:   );\n106:       })}\n107:     </div>\n108:   );\n109: }\n110: \n111: function getActiveStatus(order: any): \"cooking\" | \"ready\" {\n112:   if (order.status === \"Ready\") return \"ready\";\n113:   return \"cooking\";\n114: }\n\n(End of file - total 114 lines)\n</content>",
+  "timestamp": 1778688711396
+}

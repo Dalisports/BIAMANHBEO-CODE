@@ -1,5 +1,5 @@
 import { db } from "../../db";
-import { conversations, messages } from "@shared/schema";
+import { conversations, messages, memory } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 export interface IChatStorage {
@@ -9,6 +9,8 @@ export interface IChatStorage {
   deleteConversation(id: number): Promise<void>;
   getMessagesByConversation(conversationId: number): Promise<(typeof messages.$inferSelect)[]>;
   createMessage(conversationId: number, role: string, content: string): Promise<typeof messages.$inferSelect>;
+  getRecentMemories(limit: number): Promise<{ summary: string; keyInfo?: string | null }[]>;
+  createMemory(conversationId: number, summary: string, keyInfo?: string): Promise<typeof memory.$inferSelect>;
 }
 
 export const chatStorage: IChatStorage = {
@@ -38,6 +40,19 @@ export const chatStorage: IChatStorage = {
   async createMessage(conversationId: number, role: string, content: string) {
     const [message] = await db.insert(messages).values({ conversationId, role, content }).returning();
     return message;
+  },
+
+  async getRecentMemories(limit: number) {
+    const recent = await db.select({
+      summary: memory.summary,
+      keyInfo: memory.keyInfo,
+    }).from(memory).orderBy(desc(memory.createdAt)).limit(limit);
+    return recent;
+  },
+
+  async createMemory(conversationId: number, summary: string, keyInfo?: string) {
+    const [created] = await db.insert(memory).values({ conversationId, summary, keyInfo: keyInfo || null }).returning();
+    return created;
   },
 };
 

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, Loader2, RefreshCw, Trash2, ChevronDown, Mic, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
+import { getAuthHeaders } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Message {
   id: string;
@@ -33,6 +35,7 @@ interface AIModel {
 }
 
 export default function GauAssistant() {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const saved = localStorage.getItem("gau_chat_history");
@@ -50,7 +53,7 @@ export default function GauAssistant() {
   const [context, setContext] = useState<ContextData | null>(null);
   const [showContext, setShowContext] = useState(false);
   const [models, setModels] = useState<AIModel[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>("auto");
+  const [selectedModel, setSelectedModel] = useState<string>("step-3.5-flash");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [voiceInput, setVoiceInput] = useState("");
@@ -99,9 +102,12 @@ export default function GauAssistant() {
 
   const fetchModels = async () => {
     try {
-      const res = await fetch("/api/gau-assistant/models");
+      const res = await fetch("/api/gau-assistant/models", {
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      setModels(data.models);
+      setModels(data.models ?? []);
     } catch (err) {
       console.error("Failed to fetch models:", err);
     }
@@ -124,7 +130,10 @@ export default function GauAssistant() {
 
   const fetchContext = async () => {
     try {
-      const res = await fetch("/api/gau-assistant/context");
+      const res = await fetch("/api/gau-assistant/context", {
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setContext(data);
     } catch (err) {
@@ -138,8 +147,9 @@ export default function GauAssistant() {
       setIsVoiceMode(false);
       if (voiceInput.trim() && !isLoading) {
         setInput(voiceInput.trim());
+        const textToSend = voiceInput.trim();
         setVoiceInput("");
-        sendMessage();
+        sendMessage(textToSend);
       }
     } else {
       if (!recognitionRef.current) {
@@ -171,7 +181,10 @@ export default function GauAssistant() {
     try {
       const res = await fetch("/api/gau-assistant/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           message: messageText,
           model: selectedModel === "auto" ? undefined : selectedModel,
@@ -197,7 +210,10 @@ export default function GauAssistant() {
         try {
           const executeRes = await fetch("/api/gau-assistant/execute", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              ...getAuthHeaders()
+            },
             body: JSON.stringify(data),
           });
           const executeData = await executeRes.json();
@@ -259,6 +275,84 @@ export default function GauAssistant() {
     }
   };
 
+  const handleConfirmAction = async (msgId: string, action: any) => {
+    setIsLoading(true);
+    try {
+      const executeRes = await fetch("/api/gau-assistant/execute", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(action),
+      });
+      const executeData = await executeRes.json();
+
+      let assistantMessage: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+      };
+
+      if (executeData.success) {
+        assistantMessage = {
+          ...assistantMessage,
+          content: executeData.action === "ORDER_CREATED" 
+            ? `✅ Đã tạo đơn cho ${executeData.data.tableNumber}`
+            : executeData.action === "ORDER_PAID"
+            ? `✅ Đã thanh toán cho bàn ${executeData.data.tableNumber}`
+            : executeData.action === "ORDER_MOVED"
+            ? `✅ Đã chuyển bàn ${executeData.data.tableNumber}`
+            : executeData.action === "SENT_TO_KITCHEN"
+            ? `✅ Đã gửi bếp cho đơn ${action.apiPath.split("/")[2]}`
+            : "✅ Thực hiện thành công!",
+          action: { type: "SUCCESS", ...executeData },
+        };
+        fetchContext();
+        try {
+          queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
+        } catch (e) {
+          console.error("Query invalidation error:", e);
+        }
+      } else {
+        assistantMessage = {
+          ...assistantMessage,
+          content: "❌ Thực hiện thất bại",
+          action: { type: "ERROR", message: "Execution failed" },
+        };
+      }
+
+      setMessages(prev => 
+        prev.map(m => m.id === msgId ? { ...m, action: undefined } : m)
+          .concat(assistantMessage)
+      );
+    } catch (execErr) {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "❌ Lỗi khi thực hiện lệnh",
+        timestamp: new Date(),
+        action: { type: "ERROR", message: "Execution error" },
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelAction = (msgId: string) => {
+    setMessages(prev => 
+      prev.map(m => m.id === msgId ? { ...m, action: undefined } : m)
+        .concat({
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "❌ Đã hủy bỏ thao tác.",
+          timestamp: new Date(),
+        })
+    );
+  };
+
   const quickActions = [
     { label: "Order bàn mới", example: "Tạo order bàn 5: 2 gà rán, 1 cocacola" },
     { label: "Thanh toán", example: "Thanh toán bàn 3" },
@@ -293,7 +387,7 @@ export default function GauAssistant() {
                 className="px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 bg-secondary hover:bg-secondary/80 border border-border"
               >
                 <Bot className="w-4 h-4 text-amber-500" />
-                {models.find(m => m.id === selectedModel)?.name || "Tự động"}
+                {models?.find(m => m.id === selectedModel)?.name || "Tự động"}
                 <ChevronDown className="w-4 h-4" />
               </button>
               <AnimatePresence>
@@ -304,7 +398,7 @@ export default function GauAssistant() {
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute right-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
                   >
-                    {models.map((model) => (
+                    {(models ?? []).map((model) => (
                       <button
                         key={model.id}
                         onClick={() => {
@@ -464,6 +558,26 @@ export default function GauAssistant() {
                     : "bg-secondary rounded-tl-none"
                 )}>
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  
+                  {msg.role === "assistant" && msg.action?.type === "CONFIRM" && (
+                    <div className="mt-3 flex gap-2 border-t border-border/50 pt-3">
+                      <button
+                        onClick={() => handleConfirmAction(msg.id, msg.action)}
+                        disabled={isLoading}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                      >
+                        Đồng ý
+                      </button>
+                      <button
+                        onClick={() => handleCancelAction(msg.id)}
+                        disabled={isLoading}
+                        className="px-3 py-1.5 rounded-lg bg-red-100 text-red-600 font-bold text-xs hover:bg-red-200 transition-colors disabled:opacity-50"
+                      >
+                        Hủy bỏ
+                      </button>
+                    </div>
+                  )}
+
                   <p className={cn(
                     "text-xs mt-1",
                     msg.role === "user" ? "text-primary-foreground/70" : "text-muted-foreground"

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Search, X } from "lucide-react";
@@ -27,6 +27,15 @@ interface SearchMenuModalProps {
 export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: SearchMenuModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const menuListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && menuListRef.current) {
+      setTimeout(() => {
+        menuListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [isOpen]);
 
   // Group items by categoryId
   const { categories, groupedItems } = useMemo(() => {
@@ -91,15 +100,15 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center"
+          className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-2 pb-10"
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: "100%" }}
+            initial={{ y: "-100%" }}
             animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            exit={{ y: "-100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="bg-background w-full max-w-lg max-h-[85vh] rounded-t-3xl flex flex-col overflow-hidden"
+            className="bg-background w-full max-w-lg rounded-b-3xl flex flex-col overflow-hidden max-h-[50dvh]"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -157,7 +166,7 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
             </div>
 
             {/* Menu Items */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div ref={menuListRef} className="flex-1 overflow-y-auto p-4">
               <div className="grid grid-cols-3 gap-2">
                 {filteredItems.map((item, index) => (
                   <motion.button
