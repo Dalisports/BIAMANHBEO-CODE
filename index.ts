@@ -84,12 +84,12 @@ export function log(message: string, source = "express") {
     }
 
     if (useHttps) {
-      (mainServer as import("https").Server).listen(port, () => {
-        log(`HTTPS Server is listening on port ${port}`);
+      (mainServer as import("https").Server).listen(port, "0.0.0.0", () => {
+        log(`HTTPS Server is listening on port ${port} (0.0.0.0)`);
       });
     } else {
-      (mainServer as import("http").Server).listen(port, () => {
-        log(`Server is listening on port ${port}`);
+      (mainServer as import("http").Server).listen(port, "0.0.0.0", () => {
+        log(`Server is listening on port ${port} (0.0.0.0)`);
       });
     }
   } catch (error: any) {

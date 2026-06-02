@@ -3,7 +3,7 @@ services:
     name: biamanhbeo-web
     env: node
     plan: free # Change this to starter or standard if you need more power and no cold starts
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run db:push && npm run build
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
