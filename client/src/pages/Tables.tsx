@@ -526,7 +526,7 @@ export default function Tables() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl p-2 text-white shadow"
+            className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl p-2 text-white shadow"
           >
             <div className="flex flex-row-reverse items-center justify-between mb-0.5">
               <Clock className="w-4 h-4 opacity-80" />
@@ -574,7 +574,7 @@ export default function Tables() {
         {selectedTable && (
           <>
             {/* Desktop split layout - hidden on mobile */}
-            <div className="hidden md:flex h-full">
+            <div className="hidden md:flex h-full gap-4 bg-[#f5f6f8] p-4">
               <div className="flex-1 overflow-hidden">
                 <MenuSection
                   menuItems={menuItems || []}

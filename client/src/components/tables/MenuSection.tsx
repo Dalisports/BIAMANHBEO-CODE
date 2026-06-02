@@ -87,7 +87,7 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
   };
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-low">
+    <div className="flex flex-col h-full bg-white md:rounded-[24px] md:shadow-sm md:border md:border-gray-100 overflow-hidden">
       {/* Search Bar */}
       <div className="px-4 py-3 border-b border-outline-variant bg-surface-container">
         <div className="relative">
@@ -96,7 +96,7 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Tìm món..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-outline bg-white text-sm placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-outline bg-white text-sm placeholder:text-secondary/60 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all shadow-sm"
           />
         </div>
       </div>
@@ -106,10 +106,10 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
         <button
           onClick={() => setSelectedCategory("all")}
           className={cn(
-            "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all flex-shrink-0",
+            "px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all flex-shrink-0",
             selectedCategory === "all"
-              ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-white border border-outline text-secondary hover:bg-surface-variant"
+              ? "border border-orange-500 text-orange-600 bg-orange-50/40 shadow-sm"
+              : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
           )}
         >
           Tất cả
@@ -119,10 +119,10 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
             className={cn(
-              "px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all flex-shrink-0",
+              "px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all flex-shrink-0",
               selectedCategory === cat.id
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-white border border-outline text-secondary hover:bg-surface-variant"
+                ? "border border-orange-500 text-orange-600 bg-orange-50/40 shadow-sm"
+                : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
             )}
           >
             {cat.name}
@@ -132,48 +132,47 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
 
       {/* Menu Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item, index) => {
             const orderQty = getOrderQuantity(item.name);
             return (
               <motion.button
                 key={item.id}
-                whileHover={{ scale: 1.02, y: -3 }}
+                whileHover={{ scale: 1.03, y: -4 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { try { navigator.vibrate?.(30); } catch {} onAddItem(item); }}
-                className="relative flex flex-col rounded-2xl overflow-hidden bg-white border border-outline-variant shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-200"
+                className="relative flex flex-col rounded-[24px] bg-white border border-gray-100 p-4 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300"
               >
-                {/* Image */}
-                <div className="relative aspect-square overflow-hidden bg-surface-container">
+                {/* Image Wrap as Circle Plate */}
+                <div className="w-28 h-28 rounded-full overflow-hidden mx-auto mb-3 shadow-md border border-gray-50 flex-shrink-0 bg-surface-container relative">
                   <img
                     src={item.image || getPlaceholderImage(index)}
                     alt={item.name}
-                    className="w-full h-full object-cover transition-transform duration-300"
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     onError={e => { (e.target as HTMLImageElement).src = getPlaceholderImage(index); }}
                   />
-                  {/* Order quantity badge */}
-                  {orderQty > 0 && (
-                    <div
-                      className="absolute top-0 right-0 w-8 h-8 bg-error flex items-center justify-end pr-1.5"
-                      style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-                    >
-                      <span className="text-xs font-black text-white leading-none">{orderQty}</span>
-                    </div>
-                  )}
-                  {/* Priority badge */}
-                  {item.isPriority && (
-                    <div className="absolute top-2 left-2 bg-amber-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">
-                      PHỔ BIẾN
-                    </div>
-                  )}
                 </div>
 
+                {/* Order quantity badge */}
+                {orderQty > 0 && (
+                  <div className="absolute top-3 right-3 bg-orange-500 text-white font-black text-xs w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-200">
+                    {orderQty}
+                  </div>
+                )}
+
+                {/* Priority badge */}
+                {item.isPriority && (
+                  <div className="absolute top-3 left-3 bg-orange-100 text-orange-700 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                    🔥 PHỔ BIẾN
+                  </div>
+                )}
+
                 {/* Content */}
-                <div className="p-3 flex flex-col flex-1 bg-white">
-                  <h4 className="font-semibold text-sm text-on-surface text-left leading-tight line-clamp-2 mb-auto">
+                <div className="flex flex-col flex-1 w-full mt-1">
+                  <h4 className="font-bold text-sm text-gray-800 text-center line-clamp-2 h-10 flex items-center justify-center w-full leading-snug">
                     {item.name}
                   </h4>
-                  <p className="font-bold text-primary text-base mt-2 text-left">
+                  <p className="font-black text-orange-500 text-sm mt-1.5 text-center">
                     {formatCurrency(item.price)}
                   </p>
                 </div>

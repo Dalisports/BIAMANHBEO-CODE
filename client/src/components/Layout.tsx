@@ -50,13 +50,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className={cn("flex items-center gap-3 px-2 mb-12")}>
           <div className={cn(
             "w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg",
-            "bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 shadow-amber-500/30"
+            "bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/20"
           )}>
-            <Beer className="w-8 h-8 text-black" />
+            <Beer className="w-8 h-8 text-white" />
           </div>
           <div>
             <h1 className={cn("text-2xl leading-none font-extrabold tracking-tight")}>
-              <span className="text-amber-500">BIA MANH BEO</span>
+              <span className="text-orange-600">BIA MANH BEO</span>
             </h1>
             <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-muted-foreground">
               Restaurant
@@ -74,11 +74,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group",
                   isActive
-                    ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/20"
+                    ? "border border-orange-500 bg-orange-50/50 text-orange-600 shadow-sm"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110")} />
+                <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive ? "text-orange-500 scale-110" : "group-hover:scale-110")} />
                 <span className="text-sm font-bold">{item.label}</span>
               </Link>
             );
@@ -88,10 +88,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="mt-auto pt-6 border-t border-border/50">
           <div className="mt-4 flex items-center justify-between pt-4 border-t border-border/50">
             <div className="flex items-center gap-2 text-sm">
-              <User className="w-4 h-4 text-amber-500" />
+              <User className="w-4 h-4 text-orange-500" />
               <span className="font-medium">{user?.username || "Guest"}</span>
               {user && isOwner && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500 text-black">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-orange-500 text-white">
                   Chủ Quán
                 </span>
               )}
@@ -122,13 +122,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center shadow-md",
-              "bg-gradient-to-br from-amber-400 to-yellow-500 shadow-amber-500/30"
+              "bg-gradient-to-br from-orange-400 to-orange-500 shadow-orange-500/20"
             )}>
-              <Beer className="w-6 h-6 text-black" />
+              <Beer className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-xl leading-none font-extrabold">
-                <span className="text-amber-500">BIA MANH BEO</span>
+                <span className="text-orange-600">BIA MANH BEO</span>
               </h1>
               <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">
                 Restaurant
