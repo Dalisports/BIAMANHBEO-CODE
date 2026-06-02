@@ -507,49 +507,54 @@ export default function Tables() {
       {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-1.5 px-2 py-2 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-[#f5f6f8] flex-shrink-0">
+          {/* Card Đã TT */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-2 text-white shadow"
+            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
           >
-            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
-              <DollarSign className="w-4 h-4 opacity-80" />
-              <p className="text-[9px] opacity-80 whitespace-nowrap">Đã TT</p>
+            <div>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Đã Thanh Toán</p>
+              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount} bàn</h3>
+              <p className="text-xs font-bold text-emerald-600 mt-0.5">{formatCurrency(paidTotal)}</p>
             </div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-bold">{paidCount} bàn</p>
-              <p className="text-[10px] font-bold opacity-90">{formatCurrency(paidTotal)}</p>
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
+              <DollarSign className="w-4 h-4" />
             </div>
           </motion.div>
+
+          {/* Card Chưa TT */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+          >
+            <div>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Chưa Thanh Toán</p>
+              <h3 className="text-base font-black text-gray-800 mt-0.5">{unpaidCount} bàn</h3>
+              <p className="text-xs font-bold text-orange-500 mt-0.5">{formatCurrency(unpaidTotal)}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+          </motion.div>
+
+          {/* Card Tất Cả */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl p-2 text-white shadow"
+            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
           >
-            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
-              <Clock className="w-4 h-4 opacity-80" />
-              <p className="text-[9px] opacity-80 whitespace-nowrap">Chưa TT</p>
+            <div>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Tổng doanh số</p>
+              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount + unpaidCount} bàn</h3>
+              <p className="text-xs font-bold text-blue-600 mt-0.5">{formatCurrency(paidTotal + unpaidTotal)}</p>
             </div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-bold">{unpaidCount} bàn</p>
-              <p className="text-[10px] font-bold opacity-90">{formatCurrency(unpaidTotal)}</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl p-2 text-white shadow"
-          >
-            <div className="flex flex-row-reverse items-center justify-between mb-0.5">
-              <TrendingUp className="w-4 h-4 opacity-80" />
-              <p className="text-[9px] opacity-80 whitespace-nowrap">Tất Cả</p>
-            </div>
-            <div className="flex items-baseline justify-between">
-              <p className="text-sm font-bold">{paidCount + unpaidCount} bàn</p>
-              <p className="text-[10px] font-bold opacity-90">{formatCurrency(paidTotal + unpaidTotal)}</p>
+            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </motion.div>
         </div>
