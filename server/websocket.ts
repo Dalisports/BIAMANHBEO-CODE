@@ -357,41 +357,49 @@ export function initWebSocket(httpServer: Server): void {
   });
 
   // Setup Postgres LISTEN for multi-node synchronization
-  const dbUrl = new URL(process.env.DATABASE_URL || "");
-  const isLocalDb = dbUrl.hostname === "127.0.0.1" || dbUrl.hostname === "localhost";
-  const pgConfig = {
-    connectionString: process.env.DATABASE_URL,
-    ssl: isLocalDb ? false : { rejectUnauthorized: false }
-  };
+  if (process.env.DATABASE_URL) {
+    try {
+      const dbUrl = new URL(process.env.DATABASE_URL);
+      const isLocalDb = dbUrl.hostname === "127.0.0.1" || dbUrl.hostname === "localhost";
+      const pgConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: isLocalDb ? false : { rejectUnauthorized: false }
+      };
 
-  pgPool = new pg.Pool(pgConfig);
-  
-  const pgClient = new pg.Client(pgConfig);
-  pgClient.connect().then(() => {
-    console.log("[WebSocket] Connected to Postgres for event synchronization (LISTEN ws_events)");
-    pgClient.query("LISTEN ws_events");
-    
-    pgClient.on("notification", (msg) => {
-      if (msg.channel === "ws_events" && msg.payload) {
-        try {
-          const { event, targetRooms } = JSON.parse(msg.payload);
-          console.log(`[WebSocket] Cross-node event received: ${event.type}`);
-          // Broadcast to LOCAL clients only (other nodes will do the same)
-          broadcastLocally(event, targetRooms);
-        } catch (err) {
-          console.error("[WebSocket] Failed to parse cross-node notification:", err);
-        }
-      }
-    });
+      pgPool = new pg.Pool(pgConfig);
+      
+      const pgClient = new pg.Client(pgConfig);
+      pgClient.connect().then(() => {
+        console.log("[WebSocket] Connected to Postgres for event synchronization (LISTEN ws_events)");
+        pgClient.query("LISTEN ws_events");
+        
+        pgClient.on("notification", (msg) => {
+          if (msg.channel === "ws_events" && msg.payload) {
+            try {
+              const { event, targetRooms } = JSON.parse(msg.payload);
+              console.log(`[WebSocket] Cross-node event received: ${event.type}`);
+              // Broadcast to LOCAL clients only (other nodes will do the same)
+              broadcastLocally(event, targetRooms);
+            } catch (err) {
+              console.error("[WebSocket] Failed to parse cross-node notification:", err);
+            }
+          }
+        });
 
-    pgClient.on("error", (err) => {
-      console.error("[WebSocket] Postgres client error during sync:", err);
-      // Attempt to reconnect after a delay
-      setTimeout(() => initWebSocket(httpServer), 5000);
-    });
-  }).catch(err => {
-    console.error("[WebSocket] Failed to connect to Postgres for sync:", err);
-  });
+        pgClient.on("error", (err) => {
+          console.error("[WebSocket] Postgres client error during sync:", err);
+          // Attempt to reconnect after a delay
+          setTimeout(() => initWebSocket(httpServer), 5000);
+        });
+      }).catch(err => {
+        console.error("[WebSocket] Failed to connect to Postgres for sync:", err);
+      });
+    } catch (err) {
+      console.error("[WebSocket] Invalid DATABASE_URL format for Postgres sync:", err);
+    }
+  } else {
+    console.warn("[WebSocket] DATABASE_URL is not set. Postgres sync for WebSockets is disabled.");
+  }
 
   // Heartbeat with cleanup - use protocol-level ping
   heartbeatInterval = setInterval(() => {
