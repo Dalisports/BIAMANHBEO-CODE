@@ -45,6 +45,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        globDirectory: path.resolve(import.meta.dirname, "dist/public"),
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         globIgnores: ["**/node_modules/**/*"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
