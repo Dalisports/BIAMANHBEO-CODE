@@ -66,9 +66,9 @@ export function OrderPanelDesktop({
   const isReady = currentStatus === "ready";
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 shadow-2xl flex flex-col z-40">
+    <div className="relative h-full w-80 bg-white border-l border-gray-200 shadow-2xl flex flex-col z-10 flex-shrink-0">
       {/* Header */}
-      <div className="pt-16 pb-4 px-4 bg-white border-b border-gray-200">
+      <div className="pt-4 pb-4 px-4 bg-white border-b border-gray-200">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-lg", isReady ? "bg-green-500 shadow-green-500/30" : "bg-amber-400 shadow-amber-400/30")}>
