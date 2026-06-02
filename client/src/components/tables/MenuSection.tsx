@@ -143,8 +143,8 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
                 onClick={() => { try { navigator.vibrate?.(30); } catch {} onAddItem(item); }}
                 className="relative flex flex-col rounded-[24px] bg-white border border-gray-100 p-4 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300"
               >
-                {/* Image Wrap as Circle Plate */}
-                <div className="w-28 h-28 rounded-full overflow-hidden mx-auto mb-3 shadow-md border border-gray-50 flex-shrink-0 bg-surface-container relative">
+                {/* Image Wrap as Circle Plate (Enlarged) */}
+                <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden mx-auto mb-4 shadow-md border border-gray-50 flex-shrink-0 bg-surface-container relative">
                   <img
                     src={item.image || getPlaceholderImage(index)}
                     alt={item.name}
@@ -167,14 +167,17 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
                   </div>
                 )}
 
-                {/* Content */}
-                <div className="flex flex-col flex-1 w-full mt-1">
-                  <h4 className="font-bold text-sm text-gray-800 text-center line-clamp-2 h-10 flex items-center justify-center w-full leading-snug">
-                    {item.name}
-                  </h4>
-                  <p className="font-black text-orange-500 text-sm mt-1.5 text-center">
-                    {formatCurrency(item.price)}
-                  </p>
+                {/* Content: Price (Align Left) - Name (Uppercase, Bold) on same row */}
+                <div className="flex flex-col w-full mt-auto">
+                  <div className="flex items-center gap-1.5 w-full justify-start border-t border-gray-50 pt-2.5">
+                    <span className="font-black text-orange-500 text-base whitespace-nowrap flex-shrink-0">
+                      {formatCurrency(item.price)}
+                    </span>
+                    <span className="text-gray-300 font-bold flex-shrink-0">-</span>
+                    <h4 className="font-black text-base text-gray-800 uppercase truncate flex-1 text-left" title={item.name.toUpperCase()}>
+                      {item.name}
+                    </h4>
+                  </div>
                 </div>
               </motion.button>
             );
