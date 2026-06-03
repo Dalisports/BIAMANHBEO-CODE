@@ -21,6 +21,9 @@ export function getDb() {
     _pool = new Pool({ 
       connectionString,
       ssl: isLocalDb ? false : { rejectUnauthorized: false },
+      max: 20, // Increase max connection pool size for concurrent request handling
+      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+      connectionTimeoutMillis: 2000, // Return error if connection fails within 2 seconds instead of hanging
     });
     
     _pool.on('error', (err) => {
