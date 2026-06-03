@@ -31,7 +31,7 @@ export function TableGrid({
   const allTables = Array.from({ length: maxTables }, (_, i) => i + 1);
 
   return (
-    <div className="grid grid-cols-3 auto-rows-fr gap-2 p-2 w-full h-full">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 auto-rows-fr gap-3.5 p-2 w-full h-full">
       {allTables.map((tableNum, index) => {
         const activeOrder = getActiveOrder(tableNum);
         const status: TableStatus = activeOrder

@@ -132,7 +132,7 @@ function MobileOrderView({
                   <div className="flex items-center gap-3">
                     <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm", autoGreen ? "bg-green-500 shadow-green-500/20" : "bg-gray-300")} />
                     <div className="flex-1">
-                      <p className="font-extrabold text-sm text-gray-900 tracking-wide">{item.name}</p>
+                      <p className="font-extrabold text-xs text-gray-900 tracking-wide break-words">{item.name}</p>
                       <p className="text-xs font-bold text-gray-400 mt-1">
                         {formatCurrency(item.price)} × {item.quantity}
                       </p>

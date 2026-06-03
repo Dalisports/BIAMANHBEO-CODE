@@ -355,7 +355,7 @@ export default function Home() {
       </div>
 
       {/* 4 Cards Thống kê kiểu Pro Max */}
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <div className="bg-white dark:bg-card rounded-2xl p-3 border border-orange-100 dark:border-orange-950 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
           <div className="w-7 h-7 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center mb-1">
             <UtensilsCrossed className="w-3.5 h-3.5" />
@@ -555,7 +555,7 @@ export default function Home() {
 
       {/* Phím tắt nhanh */}
       <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-2.5 border border-amber-200/50 dark:border-amber-950/40 shrink-0 mt-2">
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {[
             { label: "Order bàn", cmd: "order bàn 5" },
             { label: "Gửi bếp", cmd: "gửi bếp bàn" },
