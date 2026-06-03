@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useWebSocket();
 
   return (
-    <div className={cn("min-h-screen flex flex-col md:flex-row", "bg-background")}>
+    <div className={cn("h-screen flex flex-col md:flex-row md:overflow-hidden", "bg-background")}>
       <aside className={cn(
         "hidden md:flex w-72 flex-col backdrop-blur-xl sticky top-0 h-screen p-6",
         "border-r border-border bg-card/50"
@@ -114,7 +114,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col relative">
+      <main className="flex-1 flex flex-col relative h-full min-h-0 md:overflow-hidden">
         <header className={cn(
           "flex items-center justify-between p-4 sticky top-0 z-40 border-b backdrop-blur-md",
           "bg-background/80 border-border/50"
@@ -176,7 +176,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
+        <div className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full min-h-0 flex flex-col">
           {children}
         </div>
       </main>

@@ -561,7 +561,7 @@ export default function Tables() {
       )}
       {/* Table grid / Desktop split layout */}
       <div className="flex-1 min-h-0">
-        <div className={selectedTable ? "hidden" : "block h-full"}>
+        <div className={selectedTable ? "hidden" : "block h-full overflow-y-auto"}>
           <TableGrid
             maxTables={MAX_TABLES}
             tableNames={tableNames}

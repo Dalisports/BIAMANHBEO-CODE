@@ -164,7 +164,7 @@ export function OrderPanelDesktop({
                                 {item.quantity}
                               </span>
                               <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", autoGreen ? "bg-green-500 animate-pulse" : "bg-gray-300")} />
-                              <span className={cn("font-bold text-sm text-gray-800 leading-tight transition-colors", isExpanded && "text-orange-600")}>
+                              <span className={cn("font-bold text-xs text-gray-800 leading-tight transition-colors break-words", isExpanded && "text-orange-600")}>
                                 {item.name}
                               </span>
                             </div>
