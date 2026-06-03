@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, jsonb, timestamp, boolean, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -29,7 +29,10 @@ export const menuItems = pgTable("menu_items", {
   isPriority: boolean("is_priority").default(false),
   isHidden: boolean("is_hidden").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("menu_items_category_id_idx").on(table.categoryId),
+  index("menu_items_is_active_idx").on(table.isActive),
+]);
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
@@ -45,7 +48,13 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
   paidAt: timestamp("paid_at"),
-});
+}, (table) => [
+  index("orders_table_number_idx").on(table.tableNumber),
+  index("orders_status_idx").on(table.status),
+  index("orders_payment_status_idx").on(table.paymentStatus),
+  index("orders_paid_at_idx").on(table.paidAt),
+  index("orders_created_at_idx").on(table.createdAt),
+]);
 
 export const kitchenOrders = pgTable("kitchen_orders", {
   id: serial("id").primaryKey(),
@@ -58,7 +67,11 @@ export const kitchenOrders = pgTable("kitchen_orders", {
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   notes: text("notes"),
-});
+}, (table) => [
+  index("kitchen_orders_order_id_idx").on(table.orderId),
+  index("kitchen_orders_status_idx").on(table.status),
+  index("kitchen_orders_sent_at_idx").on(table.sentAt),
+]);
 
 export const paymentSettings = pgTable("payment_settings", {
   id: serial("id").primaryKey(),
@@ -115,7 +128,10 @@ export const messages = pgTable("messages", {
   role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("messages_conversation_id_idx").on(table.conversationId),
+  index("messages_created_at_idx").on(table.createdAt),
+]);
 
 export const attendanceRecords = pgTable("attendance_records", {
   id: serial("id").primaryKey(),
@@ -127,7 +143,10 @@ export const attendanceRecords = pgTable("attendance_records", {
   totalHours: integer("total_hours"),
   status: text("status").notNull().default("checked_in"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("attendance_records_user_id_idx").on(table.userId),
+  index("attendance_records_date_idx").on(table.date),
+]);
 
 export const shortcuts = pgTable("shortcuts", {
   id: serial("id").primaryKey(),
@@ -135,7 +154,9 @@ export const shortcuts = pgTable("shortcuts", {
   menuItemId: integer("menu_item_id").references(() => menuItems.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("shortcuts_menu_item_id_idx").on(table.menuItemId),
+]);
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = typeof categories.$inferInsert;
@@ -194,7 +215,9 @@ export const memory = pgTable("memory", {
   summary: text("summary").notNull(),
   keyInfo: text("key_info"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("memory_conversation_id_idx").on(table.conversationId),
+]);
 
 export const insertMemorySchema = createInsertSchema(memory).omit({
   id: true,

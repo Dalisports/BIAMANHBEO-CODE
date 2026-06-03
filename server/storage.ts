@@ -24,7 +24,7 @@ import {
   type DailyQRCode,
   type AttendanceRecord
 } from "@shared/schema";
-import { eq, inArray, and, desc, lt, ne } from "drizzle-orm";
+import { eq, inArray, and, desc, lt, ne, gte, lte, count } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
 export interface IStorage {
@@ -91,6 +91,8 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private menuItemsCache: typeof menuItems.$inferSelect[] | null = null;
+  private categoriesCache: typeof categories.$inferSelect[] | null = null;
   async getUsers() {
     return await db.select().from(users).where(eq(users.isActive, true));
   }
@@ -254,7 +256,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategories() {
-    return await db.select().from(categories).orderBy(categories.displayOrder);
+    if (this.categoriesCache) {
+      return this.categoriesCache;
+    }
+    const cats = await db.select().from(categories).orderBy(categories.displayOrder);
+    this.categoriesCache = cats;
+    return cats;
   }
 
   async getSetting(key: string) {
@@ -278,11 +285,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCategory(category: InsertCategory) {
+    this.categoriesCache = null;
     const [created] = await db.insert(categories).values(category).returning();
     return created;
   }
 
   async updateCategory(id: number, data: Partial<InsertCategory>) {
+    this.categoriesCache = null;
     const [updated] = await db.update(categories)
       .set(data)
       .where(eq(categories.id, id))
@@ -291,11 +300,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCategory(id: number) {
+    this.categoriesCache = null;
     await db.delete(categories).where(eq(categories.id, id));
   }
 
   async getMenuItems() {
-    return await db.select({
+    if (this.menuItemsCache) {
+      return this.menuItemsCache;
+    }
+    const items = await db.select({
       id: menuItems.id,
       name: menuItems.name,
       price: menuItems.price,
@@ -309,6 +322,9 @@ export class DatabaseStorage implements IStorage {
       isHidden: menuItems.isHidden,
       createdAt: menuItems.createdAt,
     }).from(menuItems).where(eq(menuItems.isActive, true));
+    
+    this.menuItemsCache = items;
+    return items;
   }
 
   async getMenuItem(id: number) {
@@ -317,11 +333,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMenuItem(item: InsertMenuItem) {
+    this.menuItemsCache = null;
     const [created] = await db.insert(menuItems).values(item).returning();
     return created;
   }
 
   async updateMenuItem(id: number, updates: Partial<InsertMenuItem>) {
+    this.menuItemsCache = null;
     const [updated] = await db.update(menuItems)
       .set(updates)
       .where(eq(menuItems.id, id))
@@ -329,7 +347,8 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-async deleteMenuItem(id: number) {
+  async deleteMenuItem(id: number) {
+    this.menuItemsCache = null;
     await db.update(menuItems)
       .set({ isActive: false })
       .where(eq(menuItems.id, id));
@@ -687,15 +706,27 @@ async deleteMenuItem(id: number) {
     const start = startOfDay(today);
     const end = endOfDay(today);
 
-    const todayOrders = await db.select().from(orders);
-    
-    const paidOrders = todayOrders.filter(o => 
-      o.paymentStatus === "Paid" && o.paidAt && new Date(o.paidAt) >= start && new Date(o.paidAt) <= end
-    );
+    // Lọc trực tiếp các hóa đơn đã thanh toán hôm nay trên DB để tính doanh thu
+    const paidOrders = await db.select({ totalAmount: orders.totalAmount })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.paymentStatus, "Paid"),
+          gte(orders.paidAt, start),
+          lte(orders.paidAt, end)
+        )
+      );
+
+    // Đếm số lượng hóa đơn chưa hoàn thành trực tiếp trên DB thay vì lấy toàn bộ về
+    const [pendingCountResult] = await db.select({ count: count() })
+      .from(orders)
+      .where(
+        inArray(orders.status, ["Pending", "InKitchen", "Ready"])
+      );
     
     const todayRevenue = paidOrders.reduce((acc, o) => acc + o.totalAmount, 0);
     const completedOrders = paidOrders.length;
-    const pendingOrders = todayOrders.filter(o => o.status === "Pending" || o.status === "InKitchen" || o.status === "Ready").length;
+    const pendingOrders = Number(pendingCountResult?.count || 0);
     const kitchenActive = (await this.getActiveKitchenOrders()).length;
 
     return {
@@ -711,17 +742,20 @@ async deleteMenuItem(id: number) {
     const start = startOfDay(today);
     const end = endOfDay(today);
 
-    // Get all orders and filter to those paid today
-    const allOrders = await db.select().from(orders);
+    // Chỉ lấy các orders đã thanh toán trong ngày hôm nay từ DB để đếm sản phẩm bán chạy
+    const todayPaidOrders = await db.select({ items: orders.items })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.paymentStatus, "Paid"),
+          gte(orders.paidAt, start),
+          lte(orders.paidAt, end)
+        )
+      );
     
     const itemCounts: Record<string, number> = {};
     
-    // Only count orders that were paid TODAY
-    allOrders.forEach(order => {
-      if (order.paymentStatus !== "Paid" || !order.paidAt) return;
-      const paidAt = new Date(order.paidAt);
-      if (paidAt < start || paidAt > end) return;
-      
+    todayPaidOrders.forEach(order => {
       const items = order.items as any[];
       items.forEach(item => {
         if (!itemCounts[item.name]) {
@@ -776,6 +810,83 @@ async deleteMenuItem(id: number) {
 
   async runMigrations() {
     console.log("[STORAGE] Using Fly Postgres - tables managed via Drizzle");
+    try {
+      await this.cleanupDuplicateMenuItems();
+    } catch (err) {
+      console.error("[STORAGE] Error during duplicate menu items cleanup:", err);
+    }
+  }
+
+  async cleanupDuplicateMenuItems() {
+    console.log("[STORAGE] Starting automatic menu duplicates cleanup...");
+    try {
+      // 1. Get all menu items
+      const allItems = await db.select().from(menuItems);
+      
+      // Group by name
+      const groups: Record<string, typeof menuItems.$inferSelect[]> = {};
+      allItems.forEach(item => {
+        const normalizedName = item.name.trim().toLowerCase();
+        if (!groups[normalizedName]) {
+          groups[normalizedName] = [];
+        }
+        groups[normalizedName].push(item);
+      });
+      
+      let removedCount = 0;
+      let deactivatedCount = 0;
+      this.menuItemsCache = null;
+      
+      for (const [name, items] of Object.entries(groups)) {
+        if (items.length > 1) {
+          // Sort to select best item to keep
+          const sorted = [...items].sort((a, b) => {
+            if (a.isActive && !b.isActive) return -1;
+            if (!a.isActive && b.isActive) return 1;
+            
+            const aHasImage = a.image && a.image.trim().length > 0;
+            const bHasImage = b.image && b.image.trim().length > 0;
+            if (aHasImage && !bHasImage) return -1;
+            if (!aHasImage && bHasImage) return 1;
+            
+            return b.id - a.id; // Larger ID first
+          });
+          
+          const keeper = sorted[0];
+          const duplicates = sorted.slice(1);
+          
+          console.log(`[STORAGE] Duplicates found for "${keeper.name}". Keeping ID ${keeper.id}.`);
+          
+          for (const dup of duplicates) {
+            // Update shortcuts referencing duplicate to keeper
+            try {
+              const { shortcuts } = await import("@shared/schema");
+              await db.update(shortcuts)
+                .set({ menuItemId: keeper.id })
+                .where(eq(shortcuts.menuItemId, dup.id));
+            } catch (e: any) {
+              console.log(`[STORAGE] No shortcuts updated for duplicate ID ${dup.id}: ${e.message}`);
+            }
+            
+            // Delete or deactivate duplicate
+            try {
+              await db.delete(menuItems).where(eq(menuItems.id, dup.id));
+              removedCount++;
+              console.log(`[STORAGE] Deleted duplicate ID ${dup.id}`);
+            } catch (err: any) {
+              await db.update(menuItems)
+                .set({ isActive: false })
+                .where(eq(menuItems.id, dup.id));
+              deactivatedCount++;
+              console.log(`[STORAGE] Marked duplicate ID ${dup.id} as inactive (due to FK constraint)`);
+            }
+          }
+        }
+      }
+      console.log(`[STORAGE] Menu cleanup finished. Deleted: ${removedCount}, Deactivated: ${deactivatedCount}.`);
+    } catch (err: any) {
+      console.error("[STORAGE] Failed to run menu duplicates cleanup:", err.message);
+    }
   }
 
   async addIsStickyColumn() {
