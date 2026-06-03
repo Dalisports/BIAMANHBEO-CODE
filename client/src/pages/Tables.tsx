@@ -312,7 +312,7 @@ export default function Tables() {
     const newItem: OrderItem = { menuItemId: menuItem.id, name: menuItem.name, quantity, price: menuItem.price };
 
     const triggerSuccess = () => {
-      try { navigator.vibrate?.(50); } catch {}
+      try { navigator.vibrate?.(50); } catch { }
       playBeep();
     };
 
@@ -353,29 +353,29 @@ export default function Tables() {
 
   const confirmDeleteItem = () => {
     if (!selectedOrder || deleteItemIndex === null) return;
-    
+
     const deletedItem = selectedOrder.items[deleteItemIndex];
     const items = [...selectedOrder.items];
     items.splice(deleteItemIndex, 1);
-    
-    if (items.length === 0) { 
-      confirmDeleteTable(); 
-      return; 
+
+    if (items.length === 0) {
+      confirmDeleteTable();
+      return;
     }
-    
+
     const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
     updateOrder.mutate({ id: selectedOrder.id, items, totalAmount: total });
-    
+
     // Also remove from kitchen
     const kitchenOrder = kitchenOrders?.find(ko => ko.orderId === selectedOrder.id);
     if (kitchenOrder && deletedItem) {
-      removeKitchenItem.mutate({ 
-        kitchenOrderId: kitchenOrder.id, 
-        itemName: deletedItem.name, 
-        notes: deletedItem.notes 
+      removeKitchenItem.mutate({
+        kitchenOrderId: kitchenOrder.id,
+        itemName: deletedItem.name,
+        notes: deletedItem.notes
       });
     }
-    
+
     setShowDeleteConfirm(null);
     setDeleteItemIndex(null);
   };
@@ -515,7 +515,7 @@ export default function Tables() {
             className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
           >
             <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Đã Thanh Toán</p>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Đã TT</p>
               <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount} bàn</h3>
               <p className="text-xs font-bold text-emerald-600 mt-0.5">{formatCurrency(paidTotal)}</p>
             </div>
@@ -532,7 +532,7 @@ export default function Tables() {
             className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
           >
             <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Chưa Thanh Toán</p>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Chưa TT</p>
               <h3 className="text-base font-black text-gray-800 mt-0.5">{unpaidCount} bàn</h3>
               <p className="text-xs font-bold text-orange-500 mt-0.5">{formatCurrency(unpaidTotal)}</p>
             </div>
@@ -549,7 +549,7 @@ export default function Tables() {
             className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
           >
             <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Tổng doanh số</p>
+              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Tất cả</p>
               <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount + unpaidCount} bàn</h3>
               <p className="text-xs font-bold text-blue-600 mt-0.5">{formatCurrency(paidTotal + unpaidTotal)}</p>
             </div>
@@ -633,30 +633,30 @@ export default function Tables() {
         onAddItem={(item) => handleAddItem(item)}
       />
 
-       {/* Payment Modal */}
-       <PaymentModal
-         showPayModal={!!showPayModal}
-         selectedTable={selectedTable}
-         tableNames={tableNames}
-         orderTotal={selectedOrder ? selectedOrder.totalAmount : 0}
-         paymentSettings={paymentSettings}
-         payMethod={payMethod}
-         setPayMethod={setPayMethod}
-         onClose={() => setShowPayModal(null)}
-         onConfirm={() => showPayModal && handlePay(showPayModal)}
-         isPending={payOrder.isPending}
-         onOpenSettings={() => { setShowPayModal(null); setShowSettingsModal(true); }}
-       />
+      {/* Payment Modal */}
+      <PaymentModal
+        showPayModal={!!showPayModal}
+        selectedTable={selectedTable}
+        tableNames={tableNames}
+        orderTotal={selectedOrder ? selectedOrder.totalAmount : 0}
+        paymentSettings={paymentSettings}
+        payMethod={payMethod}
+        setPayMethod={setPayMethod}
+        onClose={() => setShowPayModal(null)}
+        onConfirm={() => showPayModal && handlePay(showPayModal)}
+        isPending={payOrder.isPending}
+        onOpenSettings={() => { setShowPayModal(null); setShowSettingsModal(true); }}
+      />
 
-       {/* Move Table Modal */}
-       <MoveTableModal
-         showMoveModal={!!showMoveModal}
-         selectedTable={selectedTable}
-         maxTables={MAX_TABLES}
-         orders={orders || []}
-         onClose={() => setShowMoveModal(null)}
-         onConfirm={handleMoveTable}
-       />
+      {/* Move Table Modal */}
+      <MoveTableModal
+        showMoveModal={!!showMoveModal}
+        selectedTable={selectedTable}
+        maxTables={MAX_TABLES}
+        orders={orders || []}
+        onClose={() => setShowMoveModal(null)}
+        onConfirm={handleMoveTable}
+      />
 
       {/* Delete Confirmation Modal - cùng cấp với các modal khác */}
       <ConfirmDeleteModal
@@ -711,11 +711,10 @@ export default function Tables() {
                     <button
                       key={method.id}
                       onClick={() => openSettings(method.id)}
-                      className={`p-4 rounded-xl border-2 transition-all text-left relative ${
-                        editingSetting === method.id
-                          ? "border-amber-500 bg-amber-500/10 dark:bg-amber-950/20 text-amber-600"
-                          : "border-border hover:border-amber-400/60"
-                      }`}
+                      className={`p-4 rounded-xl border-2 transition-all text-left relative ${editingSetting === method.id
+                        ? "border-amber-500 bg-amber-500/10 dark:bg-amber-950/20 text-amber-600"
+                        : "border-border hover:border-amber-400/60"
+                        }`}
                     >
                       <span className="text-2xl">{config.icon}</span>
                       <span className="block font-semibold mt-1">{config.label}</span>
