@@ -15,4 +15,19 @@
 - **Prevention**: Luôn đảm bảo kill sạch node process trước khi restart dev server.
 - **Status**: Fixed
 
+## [2026-06-03 05:00] - Lỗi Trùng Lặp Thực Đơn (Menu Items Duplication)
+
+- **Type**: Integration
+- **Severity**: High
+- **File**: `server/storage.ts`
+- **Agent**: Mi
+- **Root Cause**: Quá trình import dữ liệu (từ SQLite cũ sang Neon hoặc PostgreSQL Render) không dọn dẹp dữ liệu cũ, dẫn đến việc các bản ghi thực đơn trùng tên bị lưu song song với các ID khác nhau, khiến giao diện hiển thị lặp lại nhiều lần.
+- **Error Message**: `N/A (Lỗi hiển thị trùng lặp trên giao diện do dữ liệu trùng)`
+- **Fix Applied**: 
+  1. Viết script `scripts/cleanup-menu.ts` dọn dẹp dữ liệu trùng lặp ở SQLite local, Neon DB cũ/mới và Postgres local.
+  2. Tích hợp hàm tự động dọn dẹp `cleanupDuplicateMenuItems()` vào `server/storage.ts` và chạy nó khi server khởi động (`runMigrations`), giúp tự động dọn dẹp database Render trên production.
+- **Prevention**: Luôn kiểm tra trùng lặp hoặc sử dụng cơ chế gộp/xóa trùng lặp trước khi import dữ liệu mới vào DB.
+- **Status**: Fixed
+
 ---
+

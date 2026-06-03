@@ -313,13 +313,13 @@ export default function Home() {
 
   return (
     <div className="h-full flex flex-col min-h-0">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-3xl font-sans font-bold text-foreground">
+          <h2 className="text-3xl font-black text-gray-900 dark:text-amber-500 tracking-wider">
             Trợ Lý AI
           </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Quản lý nhà hàng F&B của bạn
+          <p className="text-muted-foreground mt-1 text-xs font-semibold">
+            Quản lý nhà hàng F&B của bạn bằng giọng nói và chatbot
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -330,107 +330,117 @@ export default function Home() {
                 setMessages([INTRO_MESSAGE]);
               }
             }}
-            className="p-3 rounded-full bg-secondary text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-all duration-300"
+            className="p-3 rounded-2xl bg-gray-100 hover:bg-red-50 hover:text-red-500 text-gray-600 transition-all duration-300 shadow-sm border border-gray-200/50"
             title="Xóa lịch sử trò chuyện"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
           </button>
           <button
             onClick={() => setAutoSpeak(!autoSpeak)}
             className={cn(
-              "p-3 rounded-full transition-all duration-300",
+              "p-3 rounded-2xl transition-all duration-300 shadow-sm border",
               autoSpeak
-                ? "bg-accent/10 text-accent hover:bg-accent/20"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80",
+                ? "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20"
+                : "bg-gray-100 text-gray-500 border-gray-200/50 hover:bg-gray-200",
             )}
             title={autoSpeak ? "Tắt tự động đọc" : "Bật tự động đọc"}
           >
             {autoSpeak ? (
-              <Volume2 className="w-5 h-5" />
+              <Volume2 className="w-4 h-4" />
             ) : (
-              <VolumeX className="w-5 h-5" />
+              <VolumeX className="w-4 h-4" />
             )}
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 mb-2">
-        <div className="bg-orange-50 rounded-lg p-2 border border-orange-200 text-center">
-          <UtensilsCrossed className="w-3 h-3 text-orange-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-orange-600">
+      {/* 4 Cards Thống kê kiểu Pro Max */}
+      <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="bg-white dark:bg-card rounded-2xl p-3 border border-orange-100 dark:border-orange-950 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md hover:border-orange-300 transition-all duration-300">
+          <div className="w-7 h-7 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center mb-1">
+            <UtensilsCrossed className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-lg font-black text-orange-600">
             {activeOrders}
           </span>
-          <p className="text-[10px] text-orange-600">Đơn đang xử lý</p>
+          <p className="text-[9px] font-extrabold text-orange-500 uppercase tracking-widest mt-0.5">Đơn đang chạy</p>
         </div>
-        <div className="bg-red-50 rounded-lg p-2 border border-red-200 text-center">
-          <ChefHat className="w-3 h-3 text-red-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-red-600">
+        <div className="bg-white dark:bg-card rounded-2xl p-3 border border-red-100 dark:border-red-950 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md hover:border-red-300 transition-all duration-300">
+          <div className="w-7 h-7 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center mb-1">
+            <ChefHat className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-lg font-black text-red-600">
             {kitchenActive}
           </span>
-          <p className="text-[10px] text-red-600">Đang nấu</p>
+          <p className="text-[9px] font-extrabold text-red-500 uppercase tracking-widest mt-0.5">Đang nấu</p>
         </div>
-        <div className="bg-blue-50 rounded-lg p-2 border border-blue-200 text-center">
-          <UtensilsCrossed className="w-3 h-3 text-blue-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-blue-600">
+        <div className="bg-white dark:bg-card rounded-2xl p-3 border border-blue-100 dark:border-blue-950 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300">
+          <div className="w-7 h-7 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-1">
+            <UtensilsCrossed className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-lg font-black text-blue-600">
             {menuItems?.length || 0}
           </span>
-          <p className="text-[10px] text-blue-600">Món trong menu</p>
+          <p className="text-[9px] font-extrabold text-blue-500 uppercase tracking-widest mt-0.5">Thực đơn</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-2 border border-green-200 text-center">
-          <DollarSign className="w-3 h-3 text-green-500 mx-auto mb-1" />
-          <span className="text-lg font-bold text-green-600">
+        <div className="bg-white dark:bg-card rounded-2xl p-3 border border-emerald-100 dark:border-emerald-950 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md hover:border-emerald-300 transition-all duration-300">
+          <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-1">
+            <DollarSign className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-base font-black text-emerald-600 truncate max-w-full">
             {formatCurrency(todayRevenue)}
           </span>
-          <p className="text-[10px] text-green-600">Doanh thu</p>
+          <p className="text-[9px] font-extrabold text-emerald-500 uppercase tracking-widest mt-0.5">Doanh thu</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 pb-2 space-y-2 min-h-0">
+      {/* Chat messages */}
+      <div className="flex-1 overflow-y-auto pr-2 pb-3 space-y-3 min-h-0 scrollbar-thin scrollbar-thumb-gray-200">
         <AnimatePresence initial={false}>
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className={cn(
-                "flex gap-4 max-w-[85%]",
+                "flex gap-3 max-w-[85%]",
                 msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto",
               )}
             >
               <div
                 className={cn(
-                  "flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm",
+                  "flex-shrink-0 w-9 h-9 rounded-2xl flex items-center justify-center shadow-sm",
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border",
+                    ? "bg-amber-500 text-black font-black"
+                    : "bg-white dark:bg-card border border-gray-200/50 dark:border-border",
                 )}
               >
                 {msg.role === "user" ? (
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 ) : (
-                  <Bot className="w-5 h-5 text-primary" />
+                  <Bot className="w-4 h-4 text-amber-500" />
                 )}
               </div>
               <div
                 className={cn(
-                  "p-4 rounded-2xl shadow-sm leading-relaxed",
+                  "p-3.5 rounded-2xl shadow-sm leading-relaxed text-sm",
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-tr-sm"
-                    : "bg-card border border-border text-foreground rounded-tl-sm",
+                    ? "bg-amber-500 text-black rounded-tr-none font-medium"
+                    : "bg-white dark:bg-card border border-gray-100 dark:border-border text-gray-800 dark:text-foreground rounded-tl-none",
                 )}
               >
-                <p>{msg.content}</p>
+                <p className="whitespace-pre-line">{msg.content}</p>
                 {msg.action && (
-                  <div className="mt-3 pt-2 border-t border-border/50">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                      {msg.action.replace(/_/g, " ")}
+                  <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-border/30">
+                    <span className="text-[10px] font-black text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Action: {msg.action.replace(/_/g, " ")}
                     </span>
                   </div>
                 )}
                 <span
                   className={cn(
-                    "text-[10px] font-medium mt-2 block opacity-50",
+                    "text-[9px] font-bold mt-2 block opacity-40 uppercase tracking-widest",
                     msg.role === "user" ? "text-right" : "text-left",
                   )}
                 >
@@ -446,7 +456,7 @@ export default function Home() {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 mt-1 ml-14"
+                    className="flex items-center gap-2 mt-1 ml-12"
                   >
                     <button
                       onClick={handleLikeConfirm}
@@ -454,16 +464,16 @@ export default function Home() {
                         confirmingLike || pendingAction?.messageId !== msg.id
                       }
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+                        "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm",
                         pendingAction?.messageId === msg.id
-                          ? "bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/30"
-                          : "bg-secondary text-muted-foreground",
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-md hover:shadow-emerald-500/20 active:scale-[0.98]"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200",
                       )}
                     >
-                      <ThumbsUp className="w-4 h-4" />
+                      <ThumbsUp className="w-3.5 h-3.5" />
                       {confirmingLike && pendingAction?.messageId === msg.id
-                        ? "Đang xác nhận..."
-                        : "Xác nhận"}
+                        ? "ĐANG LÀM..."
+                        : "XÁC NHẬN CHẠY"}
                     </button>
                   </motion.div>
                 )}
@@ -473,22 +483,22 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex gap-4 max-w-[85%] mr-auto"
+              className="flex gap-3 max-w-[85%] mr-auto"
             >
-              <div className="flex-shrink-0 w-10 h-10 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm">
-                <Bot className="w-5 h-5 text-primary animate-pulse" />
+              <div className="flex-shrink-0 w-9 h-9 rounded-2xl bg-white dark:bg-card border border-gray-200/50 flex items-center justify-center shadow-sm">
+                <Bot className="w-4 h-4 text-amber-500 animate-pulse" />
               </div>
-              <div className="p-4 rounded-2xl bg-card border border-border rounded-tl-sm flex items-center gap-2">
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-card border border-gray-100 dark:border-border rounded-tl-none flex items-center gap-1.5 shadow-sm">
                 <div
-                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 animate-bounce"
                   style={{ animationDelay: "0ms" }}
                 />
                 <div
-                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 animate-bounce"
                   style={{ animationDelay: "150ms" }}
                 />
                 <div
-                  className="w-2 h-2 rounded-full bg-primary/40 animate-bounce"
+                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 animate-bounce"
                   style={{ animationDelay: "300ms" }}
                 />
               </div>
@@ -498,8 +508,9 @@ export default function Home() {
         <div ref={chatEndRef} />
       </div>
 
-      <div className="flex items-end gap-2 relative shrink-0">
-        <div className="flex-1 bg-card border border-border rounded-3xl p-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-300 flex items-end gap-2">
+      {/* Input area */}
+      <div className="flex items-end gap-3 relative shrink-0 pt-2 pb-1">
+        <div className="flex-1 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-[2rem] p-2 shadow-sm focus-within:ring-4 focus-within:ring-amber-500/10 focus-within:border-amber-500 transition-all duration-300 flex items-end gap-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -509,41 +520,42 @@ export default function Home() {
                 handleSend();
               }
             }}
-            placeholder="nói gì ? nói luôn..."
-            className="w-full max-h-32 min-h-[48px] bg-transparent resize-none outline-none py-3 px-4 text-foreground placeholder:text-muted-foreground"
+            placeholder="Nói gì đó hoặc yêu cầu order..."
+            className="w-full max-h-32 min-h-[46px] bg-transparent resize-none outline-none py-3 px-4 text-sm text-foreground placeholder:text-gray-400"
             rows={1}
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || chatMutation.isPending}
-            className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 mb-0.5 mr-0.5"
+            className="flex-shrink-0 w-11 h-11 rounded-2xl bg-amber-500 text-black flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-amber-600 hover:shadow-lg active:scale-95 transition-all duration-200 mb-0.5 mr-0.5"
           >
-            <Send className="w-5 h-5 ml-1" />
+            <Send className="w-4.5 h-4.5 ml-0.5" />
           </button>
         </div>
 
         {supported && (
-          <div className="flex flex-col-reverse items-center gap-2">
+          <div className="flex flex-col-reverse items-center gap-1.5">
             <button
               onClick={handleToggleVoice}
               className={cn(
-                "flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 text-white shadow-lg",
+                "flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 text-black shadow-md",
                 isListening
-                  ? "bg-accent animate-pulse-ring"
-                  : "bg-primary hover:bg-primary/90 hover:shadow-xl hover:-translate-y-1 active:translate-y-0",
+                  ? "bg-amber-500 animate-pulse-ring"
+                  : "bg-amber-400 hover:bg-amber-500 hover:shadow-lg active:scale-95",
               )}
             >
-              <Mic className={cn("w-6 h-6", isListening && "scale-110")} />
+              <Mic className={cn("w-5 h-5", isListening && "scale-110")} />
             </button>
-            <span className="text-xs text-muted-foreground whitespace-nowrap italic">
-              {isListening ? "Đang nghe..." : "Bấm để nói"}
+            <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap uppercase tracking-wider">
+              {isListening ? "ĐANG NGHE" : "BẤM NÓI"}
             </span>
           </div>
         )}
       </div>
 
-      <div className="bg-orange-50 rounded-t-2xl p-2 border-t-2 border-orange-200 shrink-0">
-        <div className="grid grid-cols-3 gap-1">
+      {/* Phím tắt nhanh */}
+      <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-2.5 border border-amber-200/50 dark:border-amber-950/40 shrink-0 mt-2">
+        <div className="grid grid-cols-6 gap-1.5">
           {[
             { label: "Order bàn", cmd: "order bàn 5" },
             { label: "Gửi bếp", cmd: "gửi bếp bàn" },
@@ -556,7 +568,7 @@ export default function Home() {
               key={item.cmd}
               onClick={() => handleSend(item.cmd)}
               disabled={chatMutation.isPending}
-              className="px-2 py-1.5 rounded-lg bg-white hover:bg-orange-100 text-xs font-semibold text-orange-700 hover:text-orange-800 border border-orange-200 transition-colors disabled:opacity-50"
+              className="px-2 py-2 rounded-xl bg-white dark:bg-card hover:bg-amber-500/10 text-[10px] font-black text-amber-800 dark:text-amber-500 border border-amber-200/60 dark:border-border/30 transition-colors shadow-sm hover:border-amber-400 disabled:opacity-50"
             >
               {item.label}
             </button>

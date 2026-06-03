@@ -71,34 +71,34 @@ function MobileOrderView({
   const totalItems = activeOrder?.items.length || 0;
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
       {/* Table header - full bleed */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+      <div className="flex-shrink-0 bg-white border-b border-amber-500/10 shadow-sm z-10">
+        <div className="flex items-center justify-between px-4 pt-3 pb-3">
           <div className="flex items-center gap-3">
-            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-lg", isReady ? "bg-green-500 shadow-green-500/30" : "bg-amber-400 shadow-amber-400/30")}>
-              <UtensilsCrossed className="w-6 h-6 text-black" />
+            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105", isReady ? "bg-green-500 shadow-green-500/20" : "bg-amber-400 shadow-amber-400/20")}>
+              <UtensilsCrossed className="w-5 h-5 text-black" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-gray-900">{tableName}</h2>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <h2 className="font-black text-lg text-gray-900 tracking-wider">{tableName}</h2>
+              <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
                 <span className={cn("w-2 h-2 rounded-full animate-pulse", isReady ? "bg-green-500" : "bg-amber-500")} />
-                {statusLabel}
+                <span className="font-bold">{statusLabel}</span>
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-xl font-black text-amber-600">
+              <span className="text-2xl font-black text-amber-500 tracking-wide">
                 {formatCurrency(activeOrder?.totalAmount || 0)}
               </span>
-              <p className="text-xs text-gray-500">{totalItems} món</p>
+              <p className="text-xs font-bold text-gray-400 mt-0.5">{totalItems} món</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600 transition-all duration-200"
             >
-              <X className="w-5 h-5 text-gray-600" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -106,75 +106,75 @@ function MobileOrderView({
 
       {/* Thêm món button - above items */}
       {activeOrder && (
-        <div className="px-4 py-2 bg-white border-b border-gray-100 flex-shrink-0">
+        <div className="px-4 py-3 bg-white border-b border-gray-100 flex-shrink-0">
           <button
             onClick={onSearchClick}
-            className="w-full py-2.5 bg-amber-50 border-2 border-amber-200 rounded-xl font-bold text-amber-700 hover:bg-amber-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm"
+            className="w-full py-3 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-2xl font-black text-amber-700 hover:from-amber-500/20 hover:to-yellow-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm tracking-widest shadow-sm"
           >
-            <Plus className="w-4 h-4" />
-            Thêm món
+            <Plus className="w-4 h-4 stroke-[3]" />
+            THÊM MÓN
           </button>
         </div>
       )}
 
       {/* Order items list - scrollable, constrained height */}
-      <div className="min-h-0 flex-1 overflow-y-auto py-2 bg-gray-50">
+      <div className="min-h-0 flex-1 overflow-y-auto py-3 px-4 bg-gray-50/50 space-y-3">
         {activeOrder ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {orderWithStatus?.items.map((item, idx) => {
               const isDone = item.cookingStatus === "done";
               const autoGreen = isDone || isKitchenHidden(item.menuItemId);
               return (
                 <div
                   key={`${item.menuItemId}-${idx}`}
-                  className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all"
+                  className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300"
                 >
                   <div className="flex items-center gap-3">
-                  <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", autoGreen ? "bg-green-500" : "bg-gray-400")} />
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {formatCurrency(item.price)} × {item.quantity}
-                    </p>
+                    <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm", autoGreen ? "bg-green-500 shadow-green-500/20" : "bg-gray-300")} />
+                    <div className="flex-1">
+                      <p className="font-extrabold text-sm text-gray-900 tracking-wide">{item.name}</p>
+                      <p className="text-xs font-bold text-gray-400 mt-1">
+                        {formatCurrency(item.price)} × {item.quantity}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 bg-amber-50 rounded-xl p-1 border border-amber-200">
-                    <button
-                      onClick={() => onUpdateQuantity(idx, -1)}
-                      className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm"
-                    >
-                      <Minus className="w-4 h-4 text-gray-900" />
-                    </button>
-                    <span className="font-bold text-sm min-w-[2rem] text-center text-gray-900">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => onUpdateQuantity(idx, 1)}
-                      className="w-9 h-9 rounded-lg bg-amber-400 flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm"
-                    >
-                      <Plus className="w-4 h-4 text-gray-900" />
-                    </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 bg-amber-500/5 rounded-2xl p-1 border border-amber-500/15">
+                      <button
+                        onClick={() => onUpdateQuantity(idx, -1)}
+                        className="w-10 h-10 rounded-xl bg-amber-400 text-black flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm font-bold"
+                      >
+                        <Minus className="w-4 h-4 stroke-[3]" />
+                      </button>
+                      <span className="font-black text-sm min-w-[2.2rem] text-center text-gray-900">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => onUpdateQuantity(idx, 1)}
+                        className="w-10 h-10 rounded-xl bg-amber-400 text-black flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all shadow-sm font-bold"
+                      >
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                      </button>
+                    </div>
                   </div>
-                </div>
                 </div>
               );
             })}
           </div>
         ) : (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center h-full py-10">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <UtensilsCrossed className="w-8 h-8 text-gray-400" />
+          <div className="flex flex-col items-center justify-center h-full py-16">
+            <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mb-5 text-amber-500">
+              <UtensilsCrossed className="w-9 h-9" />
             </div>
-            <p className="text-gray-700 font-medium mb-1">Chưa có món nào</p>
-            <p className="text-xs text-gray-400 mb-4">Bắt đầu đặt món cho {tableName}</p>
+            <p className="text-gray-900 font-black text-lg mb-1 tracking-wide">Chưa có món nào</p>
+            <p className="text-xs font-bold text-gray-400 mb-6 text-center max-w-[200px]">Hãy chọn thêm món ăn từ thực đơn của quán</p>
             <button
               onClick={onSearchClick}
-              className="px-6 py-3 bg-amber-500 text-white rounded-2xl font-bold shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-95 transition-all flex items-center gap-3 text-base"
+              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-400 text-black rounded-2xl font-black shadow-lg shadow-amber-500/20 hover:from-amber-600 hover:to-amber-500 active:scale-95 transition-all flex items-center gap-3 text-sm tracking-wider"
             >
-              <Search className="w-5 h-5" />
-              Bắt đầu đặt món
+              <Search className="w-4.5 h-4.5 stroke-[3]" />
+              ĐẶT MÓN NGAY
             </button>
           </div>
         )}
@@ -182,19 +182,19 @@ function MobileOrderView({
 
       {/* Action buttons - sticky bottom, full width */}
       {activeOrder && (
-        <div className="px-4 pb-4 pt-2 bg-white space-y-2 flex-shrink-0">
+        <div className="px-4 pb-5 pt-3 bg-white border-t border-gray-100 space-y-2 flex-shrink-0 z-10 shadow-[0_-4px_16px_rgba(0,0,0,0.03)]">
           <div className="flex gap-3">
             <button
               onClick={onShowMoveModal}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 active:scale-[0.98] transition-all"
+              className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 active:scale-[0.98] transition-all tracking-wider text-xs"
             >
-              Đổi Bàn
+              ĐỔI BÀN
             </button>
             <button
               onClick={onShowPayModal}
-              className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/30 hover:bg-amber-600 active:scale-[0.98] transition-all"
+              className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 text-black rounded-2xl font-black shadow-lg shadow-amber-500/20 hover:from-amber-600 hover:to-amber-500 active:scale-[0.98] transition-all tracking-wider text-xs"
             >
-              Thanh Toán
+              THANH TOÁN
             </button>
           </div>
         </div>
@@ -695,10 +695,10 @@ export default function Tables() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-blue-500">CÀI ĐẶT THANH TOÁN</h3>
+                <h3 className="text-2xl font-black text-amber-500 tracking-wider">CÀI ĐẶT THANH TOÁN</h3>
                 <button
                   onClick={() => setShowSettingsModal(false)}
-                  className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                  className="p-2.5 rounded-xl hover:bg-secondary text-gray-500 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -713,8 +713,8 @@ export default function Tables() {
                       onClick={() => openSettings(method.id)}
                       className={`p-4 rounded-xl border-2 transition-all text-left relative ${
                         editingSetting === method.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-border hover:border-blue-300"
+                          ? "border-amber-500 bg-amber-500/10 dark:bg-amber-950/20 text-amber-600"
+                          : "border-border hover:border-amber-400/60"
                       }`}
                     >
                       <span className="text-2xl">{config.icon}</span>
@@ -826,7 +826,7 @@ export default function Tables() {
                     <button
                       onClick={saveSettings}
                       disabled={updatePaymentSetting.isPending}
-                      className="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
+                      className="flex-1 px-4 py-3 rounded-xl font-black bg-amber-500 text-black hover:bg-amber-600 transition-colors disabled:opacity-50 tracking-wider"
                     >
                       {updatePaymentSetting.isPending ? "Đang lưu..." : "Lưu"}
                     </button>
