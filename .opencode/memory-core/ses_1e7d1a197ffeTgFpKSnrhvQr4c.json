@@ -1,0 +1,21 @@
+{
+  "sessionID": "ses_1e7d1a197ffeTgFpKSnrhvQr4c",
+  "blocks": {
+    "goal": {
+      "value": "",
+      "charLimit": 1000,
+      "lastModified": "2026-05-11T20:04:32.484Z"
+    },
+    "progress": {
+      "value": "## Bug Fix Progress\n\n### FIXED (12+ errors):\n1. server/routes.ts - timeout → AbortSignal.timeout(), response.text() fix, storage.getUsers()\n2. client/src/hooks/use-websocket.ts - Added onMessage callback support\n3. client/src/hooks/use-auth.tsx - isOwner boolean fix\n4. client/src/hooks/use-speech.ts - Added finalTextRef to interface\n5. client/src/components/FloatingChatBubble.tsx - Added hidden property to AIModel\n6. client/src/components/ShortcutBar.tsx - Added cn import\n7. client/src/components/DebugToolbar.tsx - user?.name → user?.username\n8. client/src/pages/Kitchen.tsx - Set<string> explicit type\n\n### REMAINING (~20 errors):\n- implicit any type errors in Kitchen, Menu, MenuTv, MenuTvSimple\n- Set<unknown> errors in MenuTv, MenuTvSimple\n- Orders.tsx: ReceiptIcon not found\n- themes/index.ts: luminLight/luminaDark not in scope\n- use-shortcuts.ts: Order[] | undefined\n\n### Current Task: Fix all TypeScript errors\n### Status: Paused - can resume after compaction",
+      "charLimit": 2000,
+      "lastModified": "2026-05-11T20:07:36.193Z"
+    },
+    "context": {
+      "value": "",
+      "charLimit": 1500,
+      "lastModified": "2026-05-11T20:04:32.484Z"
+    }
+  },
+  "updatedAt": "2026-05-11T20:07:36.193Z"
+}

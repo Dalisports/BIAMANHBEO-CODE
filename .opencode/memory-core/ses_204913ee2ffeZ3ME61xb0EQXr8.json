@@ -1,0 +1,21 @@
+{
+  "sessionID": "ses_204913ee2ffeZ3ME61xb0EQXr8",
+  "blocks": {
+    "goal": {
+      "value": "Fix notification system: toast hiện đúng nhưng trang /notifications không có danh sách",
+      "charLimit": 1000,
+      "lastModified": "2026-05-07T01:48:26.781Z"
+    },
+    "progress": {
+      "value": "✅ Sửa use-websocket.ts - truyền event data thay vì gọi onNewOrder() không có param\n✅ Toast notification hoạt động đúng (hiện notification khi có order)\n✅ Fix tableNumber undefined fallback thành \"?\"\n\n❌ /notifications page vẫn không hiển thị danh sách\n- Nguyên nhân: useBatchNotification hook lưu notifications trong state, nhưng mỗi component gọi hook sẽ có state riêng\n- Layout và Notifications page dùng cùng hook nhưng KHÔNG share state với nhau\n- Cần dùng React Context để share notification state\n\n⚠️ Blocked: Cần tạo NotificationContext để share state giữa Layout và Notifications page",
+      "charLimit": 2000,
+      "lastModified": "2026-05-07T01:48:44.499Z"
+    },
+    "context": {
+      "value": "Key files:\n- client/src/hooks/use-batch-notification.ts: Hook quản lý notifications (local state - KHÔNG share được giữa các component)\n- client/src/hooks/use-websocket.ts: WebSocket handler, truyền event data đúng cách\n- client/src/components/Layout.tsx: Sử dụng useBatchNotification, nhận WS events\n- client/src/pages/Notifications.tsx: Cần hiển thị list từ useBatchNotification\n- client/src/components/NotificationToast.tsx: Toast popup notification\n\nVấn đề: useBatchNotification dùng useState nên mỗi lần gọi hook = instance mới với state rỗng\nGiải pháp: Tạo NotificationContext để share state globally",
+      "charLimit": 1500,
+      "lastModified": "2026-05-07T01:48:51.589Z"
+    }
+  },
+  "updatedAt": "2026-05-07T01:48:51.589Z"
+}

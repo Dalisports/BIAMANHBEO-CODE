@@ -1,0 +1,332 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   ORIGINAL BIA MANH BEO THEME (default)
+   ============================================ */
+
+@layer base {
+  :root {
+    --font-sans: 'Be Vietnam Pro', sans-serif;
+    --font-display: 'Be Vietnam Pro', sans-serif;
+
+    /* Bia Manh Beo - Golden & Black Theme */
+    --background: 45 30% 96%; /* Warm cream */
+    --foreground: 0 0% 8%; /* Near black */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+    
+    --primary: 45 100% 50%; /* Golden yellow */
+    --primary-foreground: 0 0% 8%;
+    
+    --secondary: 45 20% 90%;
+    --secondary-foreground: 0 0% 8%;
+    
+    --muted: 45 15% 88%;
+    --muted-foreground: 0 0% 40%;
+    
+    --accent: 45 100% 50%; /* Golden */
+    --accent-foreground: 0 0% 8%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 45 20% 85%;
+    --input: 45 20% 88%;
+    --ring: 45 100% 50%;
+
+    --radius: 1rem;
+
+    /* Custom gradient colors */
+    --gold-light: 45 100% 55%;
+    --gold-dark: 45 80% 45%;
+    --black: 0 0% 8%;
+
+    /* Table status colors - default theme */
+    --table-empty: 0 0% 60%;
+    --table-empty-text: 0 0% 25%;
+    --table-cooking: 38 92% 50%;
+    --table-cooking-text: 38 80% 20%;
+    --table-ready: 142 71% 45%;
+    --table-ready-text: 142 80% 15%;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 45 100% 50%;
+    
+    --card: 0 0% 12%;
+    --card-foreground: 45 100% 55%;
+    
+    --popover: 0 0% 12%;
+    --popover-foreground: 45 100% 55%;
+    
+    --primary: 45 100% 50%;
+    --primary-foreground: 0 0% 8%;
+    
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 45 100% 55%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 45 20% 55%;
+    
+    --accent: 45 100% 50%;
+    --accent-foreground: 0 0% 8%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 45 100% 50%;
+
+    /* Table status colors - dark mode */
+    --table-empty: 0 0% 40%;
+    --table-empty-text: 0 0% 90%;
+    --table-cooking: 38 80% 55%;
+    --table-cooking-text: 38 90% 95%;
+    --table-ready: 142 60% 55%;
+    --table-ready-text: 142 90% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground;
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply tracking-tight;
+  }
+}
+
+/* Custom Scrollbar for Chat */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+/* Mic pulse animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}
+
+body.hide-agent-bubble .agent-bubble {
+  display: none !important;
+}
+
+/* Receipt Styles - 80mm thermal printer format */
+.receipt-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.receipt-preview {
+  width: 302px; /* 80mm at 96 DPI */
+  font-family: 'Courier New', 'Lucida Console', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 10px;
+  background: white;
+  color: black;
+}
+
+.receipt-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.receipt-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 0 0 8px 0;
+}
+
+.receipt-address {
+  font-size: 11px;
+  margin: 2px 0;
+}
+
+.receipt-phone {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.receipt-divider {
+  text-align: center;
+  margin: 6px 0;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.receipt-info {
+  margin-bottom: 8px;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 0;
+}
+
+.receipt-items {
+  margin: 8px 0;
+}
+
+.receipt-items-header {
+  display: flex;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.receipt-item {
+  display: flex;
+  padding: 2px 0;
+  font-size: 11px;
+}
+
+.col-stt {
+  width: 25px;
+  flex-shrink: 0;
+}
+
+.col-name {
+  flex: 1;
+  padding-right: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-qty {
+  width: 30px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.col-price {
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+  padding-right: 4px;
+}
+
+.col-total {
+  width: 65px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.receipt-total {
+  margin: 8px 0;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.total-label {
+  font-size: 14px;
+}
+
+.total-amount {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.receipt-payment {
+  margin-top: 8px;
+}
+
+.payment-method {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.receipt-footer {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.thank-you {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 8px 0 4px 0;
+}
+
+.receipt-note {
+  font-size: 11px;
+  margin: 2px 0;
+}
+
+.receipt-export-btn {
+  width: 302px;
+}
+
+.export-pdf-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(to right, #f59e0b, #eab308);
+  color: black;
+  font-weight: 900;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.export-pdf-btn:hover {
+  background: linear-gradient(to right, #d97706, #ca8a04);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5);
+  transform: translateY(-1px);
+}
+
+.export-pdf-btn:active {
+  transform: translateY(0);
+}

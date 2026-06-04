@@ -1,0 +1,7 @@
+{
+  "callID": "call-93cadb07-5e3c-449a-8845-604e8edbfab0",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "bash",
+  "fullOutput": "At line:1 char:35\r\n+ cd C:\\Users\\DELL\\BIAMANHBEO-clone && npm run build 2>&1\r\n+                                   ~~\r\nThe token '&&' is not a valid statement separator in this version.\r\n    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException\r\n    + FullyQualifiedErrorId : InvalidEndOfLine\r\n \r\n",
+  "timestamp": 1778731662662
+}

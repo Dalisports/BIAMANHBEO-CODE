@@ -1,0 +1,13 @@
+{
+  "apps": [{
+    "name": "biamanhbeo",
+    "script": "node",
+    "args": "-r dotenv/config dist/index.cjs",
+    "cwd": "D:\\BIAMANHBEO",
+    "watch": false,
+    "autorestart": true,
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }]
+}

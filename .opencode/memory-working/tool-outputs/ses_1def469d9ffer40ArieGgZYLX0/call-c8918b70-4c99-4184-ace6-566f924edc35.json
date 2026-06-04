@@ -1,0 +1,7 @@
+{
+  "callID": "call-c8918b70-4c99-4184-ace6-566f924edc35",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "bash",
+  "fullOutput": "warning: in the working copy of 'client/src/components/Layout.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'client/src/components/tables/TableDetailModal.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'client/src/components/tables/TableGrid.tsx', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'client/src/hooks/use-orders.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'client/src/themes/index.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'server/routes.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'server/websocket.ts', LF will be replaced by CRLF the next time Git touches it\nclient/src/App.tsx\nclient/src/components/Layout.tsx\nclient/src/components/tables/TableDetailModal.tsx\nclient/src/components/tables/TableGrid.tsx\nclient/src/hooks/use-menu.ts\nclient/src/hooks/use-orders.ts\nclient/src/pages/Menu.tsx\nclient/src/pages/MenuTv.tsx\nclient/src/pages/MenuTvSimple.tsx\nclient/src/pages/Orders.tsx\nclient/src/pages/Reports.tsx\nclient/src/pages/Tables.tsx\nclient/src/themes/index.ts\nserver/auth.ts\nserver/routes.ts\nserver/storage.ts\nserver/websocket.ts\ntsconfig.json\n",
+  "timestamp": 1778688948885
+}

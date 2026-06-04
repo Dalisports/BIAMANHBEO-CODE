@@ -1,0 +1,7 @@
+{
+  "callID": "call-e7758d33-c477-45ac-9722-6aab7cbcd39c",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 3 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\server\\routes.ts:\n  Line 355:   app.get(\"/api/products/:id\", requireAuthMiddleware, async (req, res) => {\n\n  Line 382:   app.patch(\"/api/products/:id\", requireOwnerMiddleware, async (req, res) => {\n\n  Line 427:   app.delete(\"/api/products/:id\", requireOwnerMiddleware, async (req, res) => {\n",
+  "timestamp": 1778671439856
+}

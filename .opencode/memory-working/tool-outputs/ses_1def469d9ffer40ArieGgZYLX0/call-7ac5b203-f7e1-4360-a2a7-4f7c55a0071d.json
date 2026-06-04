@@ -1,0 +1,7 @@
+{
+  "callID": "call-7ac5b203-f7e1-4360-a2a7-4f7c55a0071d",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "bash",
+  "fullOutput": "==> Verifying app config\nValidating fly.toml\n\u001b[32m✓\u001b[0m Configuration is valid\n--> Verified app config\n==> Building image\nWaiting for depot builder...\n\n\n\n<shell_metadata>\nUser aborted the command\n</shell_metadata>",
+  "timestamp": 1778679982627
+}

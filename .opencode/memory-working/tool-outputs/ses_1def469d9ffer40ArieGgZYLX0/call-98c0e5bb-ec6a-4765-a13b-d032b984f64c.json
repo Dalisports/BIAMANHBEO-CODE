@@ -1,0 +1,7 @@
+{
+  "callID": "call-98c0e5bb-ec6a-4765-a13b-d032b984f64c",
+  "sessionID": "ses_1def469d9ffer40ArieGgZYLX0",
+  "tool": "grep",
+  "fullOutput": "Found 3 matches\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\ShortcutBar.tsx:\n  Line 36:               onClick={() => { if (navigator.vibrate) navigator.vibrate(30); item && onAddItem(item, 1); }}\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\components\\tables\\TableDetailModal.tsx:\n  Line 207:                       onClick={() => { if (navigator.vibrate) navigator.vibrate(30); onAddItem(item); setSearchMenu(\"\"); }}\r\n\n\nC:\\Users\\DELL\\BIAMANHBEO-clone\\client\\src\\pages\\Tables.tsx:\n  Line 94:       if (navigator.vibrate) navigator.vibrate(30);\r\n",
+  "timestamp": 1778737977820
+}

@@ -1,0 +1,227 @@
+/* ===========================================
+   LUMINA POS THEME - Light Mode
+   Material Design 3 Inspired
+   =========================================== */
+
+[data-theme="lumina"] {
+  /* Font families */
+  --font-display: 'Epilogue', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+  
+  /* Surface colors */
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f3f4f5;
+  --surface-container: #edeeef;
+  --surface-container-high: #e7e8e9;
+  --surface-container-highest: #e1e3e4;
+  --surface-dim: #d9dadb;
+  --surface: #f8f9fa;
+  --surface-bright: #f8f9fa;
+  --surface-tint: #8c5000;
+  
+  /* Primary colors */
+  --primary: #8c5000;
+  --primary-fixed: #ffdcbf;
+  --primary-fixed-dim: #ffb874;
+  --on-primary: #ffffff;
+  --on-primary-container: #643700;
+  --primary-container: #ff9500;
+  --inverse-primary: #ffb874;
+  --on-primary-fixed: #2d1600;
+  --on-primary-fixed-variant: #6a3b00;
+  
+  /* Secondary colors */
+  --secondary: #5f5e5e;
+  --secondary-fixed: #e5e2e1;
+  --secondary-fixed-dim: #c8c6c5;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #636262;
+  --secondary-container: #e2dfde;
+  --on-secondary-fixed: #1c1b1b;
+  --on-secondary-fixed-variant: #474746;
+  
+  /* Tertiary colors */
+  --tertiary: #005ac1;
+  --tertiary-fixed: #d8e2ff;
+  --tertiary-fixed-dim: #adc6ff;
+  --on-tertiary: #ffffff;
+  --on-tertiary-container: #003f8b;
+  --tertiary-container: #86aeff;
+  --on-tertiary-fixed: #001a41;
+  --on-tertiary-fixed-variant: #004494;
+  
+  /* Error colors */
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+  --on-error: #ffffff;
+  --on-error-container: #93000a;
+  
+  /* Background & surface variants */
+  --background: #f8f9fa;
+  --on-background: #191c1d;
+  --surface-variant: #e1e3e4;
+  --on-surface: #191c1d;
+  --on-surface-variant: #554334;
+  --inverse-surface: #2e3132;
+  --inverse-on-surface: #f0f1f2;
+  
+  /* Outline */
+  --outline: #887361;
+  --outline-variant: #dbc2ad;
+  
+  /* Misc */
+  --shadow: #000000;
+  --scrim: #000000;
+  
+  /* Custom spacing (from Tailwind config) */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-container-padding: 20px;
+  --spacing-grid-gutter: 12px;
+  
+  /* Border radius */
+  --radius-default: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+/* ===========================================
+   LUMINA POS THEME - Dark Mode
+   =========================================== */
+
+[data-theme="lumina"].dark {
+  /* Surface colors (dark backgrounds) */
+  --surface-container-lowest: #121212;
+  --surface-container-low: #1e1e1e;
+  --surface-container: #242424;
+  --surface-container-high: #2e2e2e;
+  --surface-container-highest: #383838;
+  --surface-dim: #121212;
+  --surface: #121212;
+  --surface-bright: #383838;
+  --surface-tint: #ffb874;
+  
+  /* Primary colors (keep bright for visibility) */
+  --primary: #ffb874;
+  --primary-fixed: #ffdcbf;
+  --primary-fixed-dim: #ffb874;
+  --on-primary: #2d1600;
+  --on-primary-container: #ffdcbf;
+  --primary-container: #8c5000;
+  --inverse-primary: #8c5000;
+  --on-primary-fixed: #2d1600;
+  --on-primary-fixed-variant: #6a3b00;
+  
+  /* Secondary colors */
+  --secondary: #c8c6c5;
+  --secondary-fixed: #e5e2e1;
+  --secondary-fixed-dim: #c8c6c5;
+  --on-secondary: #1c1b1b;
+  --on-secondary-container: #e5e2e1;
+  --secondary-container: #474746;
+  --on-secondary-fixed: #1c1b1b;
+  --on-secondary-fixed-variant: #474746;
+  
+  /* Tertiary colors */
+  --tertiary: #adc6ff;
+  --tertiary-fixed: #d8e2ff;
+  --tertiary-fixed-dim: #adc6ff;
+  --on-tertiary: #001a41;
+  --on-tertiary-container: #d8e2ff;
+  --tertiary-container: #004494;
+  --on-tertiary-fixed: #001a41;
+  --on-tertiary-fixed-variant: #004494;
+  
+  /* Error colors */
+  --error: #ffb4ab;
+  --error-container: #93000a;
+  --on-error: #690005;
+  --on-error-container: #ffdad6;
+  
+  /* Background & surface variants */
+  --background: #121212;
+  --on-background: #e1e3e4;
+  --surface-variant: #444444;
+  --on-surface: #e1e3e4;
+  --on-surface-variant: #dbc2ad;
+  --inverse-surface: #e1e3e4;
+  --inverse-on-surface: #2e3132;
+  
+  /* Outline */
+  --outline: #887361;
+  --outline-variant: #887361;
+  
+  /* Misc */
+  --shadow: #000000;
+  --scrim: #000000;
+}
+
+/* ===========================================
+   LUMINA CUSTOM SCROLLBAR
+   =========================================== */
+
+[data-theme="lumina"] .order-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-theme="lumina"] .order-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-theme="lumina"] .order-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2dfde;
+  border-radius: 10px;
+}
+
+/* ===========================================
+   LUMINA TYPOGRAPHY HELPERS
+   =========================================== */
+
+[data-theme="lumina"] .font-display-lg {
+  font-family: 'Epilogue', sans-serif;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+[data-theme="lumina"] .font-headline-md {
+  font-family: 'Epilogue', sans-serif;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+[data-theme="lumina"] .font-body-md {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+[data-theme="lumina"] .font-label-upper {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+[data-theme="lumina"] .font-price-display {
+  font-family: 'Epilogue', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+[data-theme="lumina"] .font-title-sm {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 600;
+}
