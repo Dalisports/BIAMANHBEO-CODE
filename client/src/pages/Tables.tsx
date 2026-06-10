@@ -504,23 +504,22 @@ export default function Tables() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-[#f5f6f8] flex-shrink-0">
+        <div className="grid grid-cols-3 gap-2.5 px-3 py-3 bg-[#f5f6f8] flex-shrink-0">
           {/* Card Đã TT */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl p-3 shadow-md flex flex-col justify-between"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Đã TT</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount} bàn</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-0.5">{formatCurrency(paidTotal)}</p>
+            <div className="flex justify-between items-center w-full">
+              <span className="text-[10px] sm:text-xs font-bold text-white/85">Đã TT</span>
+              <DollarSign className="w-4 h-4 text-white/90" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
-              <DollarSign className="w-4 h-4" />
+            <div className="flex justify-between items-baseline mt-3 w-full">
+              <span className="text-sm sm:text-base md:text-lg font-black text-white">{paidCount} bàn</span>
+              <span className="text-xs sm:text-sm font-bold text-white">{formatCurrency(paidTotal)}</span>
             </div>
           </motion.div>
 
@@ -529,15 +528,15 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-3 shadow-md flex flex-col justify-between"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Chưa TT</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{unpaidCount} bàn</h3>
-              <p className="text-xs font-bold text-orange-500 mt-0.5">{formatCurrency(unpaidTotal)}</p>
+            <div className="flex justify-between items-center w-full">
+              <span className="text-[10px] sm:text-xs font-bold text-white/85">Chưa TT</span>
+              <Clock className="w-4 h-4 text-white/90" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-4 h-4" />
+            <div className="flex justify-between items-baseline mt-3 w-full">
+              <span className="text-sm sm:text-base md:text-lg font-black text-white">{unpaidCount} bàn</span>
+              <span className="text-xs sm:text-sm font-bold text-white">{formatCurrency(unpaidTotal)}</span>
             </div>
           </motion.div>
 
@@ -546,15 +545,15 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl p-3 shadow-md flex flex-col justify-between"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Tất cả</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount + unpaidCount} bàn</h3>
-              <p className="text-xs font-bold text-blue-600 mt-0.5">{formatCurrency(paidTotal + unpaidTotal)}</p>
+            <div className="flex justify-between items-center w-full">
+              <span className="text-[10px] sm:text-xs font-bold text-white/85">Tất Cả</span>
+              <TrendingUp className="w-4 h-4 text-white/90" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-4 h-4" />
+            <div className="flex justify-between items-baseline mt-3 w-full">
+              <span className="text-sm sm:text-base md:text-lg font-black text-white">{paidCount + unpaidCount} bàn</span>
+              <span className="text-xs sm:text-sm font-bold text-white">{formatCurrency(paidTotal + unpaidTotal)}</span>
             </div>
           </motion.div>
         </div>

@@ -4,6 +4,8 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 import type { MenuItem } from "@/hooks/use-menu";
 import Fuse from "fuse.js";
+import { useQuery } from "@tanstack/react-query";
+import { getAuthHeaders } from "@/hooks/use-auth";
 
 const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop",
@@ -15,6 +17,13 @@ const PLACEHOLDER_IMAGES = [
 
 function getPlaceholderImage(index: number) {
   return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+}
+
+interface Category {
+  id: number;
+  name: string;
+  displayOrder?: number;
+  isActive?: boolean;
 }
 
 interface SearchMenuModalProps {
@@ -29,6 +38,18 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const menuListRef = useRef<HTMLDivElement>(null);
 
+  const { data: serverCategories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const res = await fetch("/api/categories", {
+        headers: getAuthHeaders(),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      return res.json();
+    },
+  });
+
   useEffect(() => {
     if (isOpen && menuListRef.current) {
       setTimeout(() => {
@@ -41,12 +62,20 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
   const { categories, groupedItems } = useMemo(() => {
     const groups: Record<string, MenuItem[]> = {};
     const catNames: Record<number, string> = {};
+
+    if (serverCategories) {
+      serverCategories.forEach(cat => {
+        catNames[cat.id] = cat.name;
+      });
+    }
     
     menuItems.forEach(item => {
       const catId = item.categoryId ?? 0;
       if (!groups[catId]) groups[catId] = [];
       groups[catId].push(item);
-      if (item.categoryId) catNames[catId] = `Danh mục ${item.categoryId}`;
+      if (item.categoryId && !catNames[item.categoryId]) {
+        catNames[item.categoryId] = `Danh mục ${item.categoryId}`;
+      }
     });
     
     if (groups[0]) catNames[0] = "Khác";
@@ -67,7 +96,7 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
       })),
       groupedItems: groups,
     };
-  }, [menuItems]);
+  }, [menuItems, serverCategories]);
 
   const fuse = useMemo(() => new Fuse(menuItems, {
     keys: ["searchName", "name", "description"],
@@ -100,21 +129,21 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start md:items-center justify-center p-0 md:p-6"
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: "-100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="bg-white dark:bg-[#171510] w-full max-w-xl md:max-w-2xl rounded-t-[2.5rem] md:rounded-[2.5rem] flex flex-col overflow-hidden h-[80vh] md:h-[75vh] shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-gray-100 dark:border-amber-500/10"
+            exit={{ y: "-100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 28, stiffness: 250 }}
+            className="bg-white dark:bg-[#171510] w-full max-w-xl md:max-w-2xl rounded-b-[2.5rem] md:rounded-[2.5rem] flex flex-col overflow-hidden h-[80vh] md:h-[75vh] shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-gray-100 dark:border-amber-500/10"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-border/30">
-              <h3 className="font-black text-sm text-gray-900 dark:text-amber-500 uppercase tracking-widest">
-                THÊM MÓN VÀO ĐƠN
+              <h3 className="font-bold text-lg text-gray-900 dark:text-amber-500">
+                Tìm món
               </h3>
               <button
                 onClick={onClose}
@@ -132,7 +161,7 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
                   autoFocus
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Gõ tên món ăn cần tìm kiếm..."
+                  placeholder="Tìm món..."
                   className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-border/40 bg-white dark:bg-[#24211a]/80 text-sm font-bold placeholder-gray-400 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5 transition-all"
                 />
               </div>
@@ -143,9 +172,9 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
               <button
                 onClick={() => setSelectedCategory("all")}
                 className={cn(
-                  "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all",
+                  "px-4 py-2 rounded-full text-xs font-bold transition-all",
                   selectedCategory === "all"
-                    ? "bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-md shadow-amber-500/20"
+                    ? "bg-amber-400 text-black shadow-md shadow-amber-500/20"
                     : "bg-gray-50 dark:bg-[#24211a]/50 border border-gray-100 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
                 )}
               >
@@ -156,9 +185,9 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all",
+                    "px-4 py-2 rounded-full text-xs font-bold transition-all",
                     selectedCategory === cat.id
-                      ? "bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-md shadow-amber-500/20"
+                      ? "bg-amber-400 text-black shadow-md shadow-amber-500/20"
                       : "bg-gray-50 dark:bg-[#24211a]/50 border border-gray-100 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
                   )}
                 >
@@ -175,21 +204,21 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
                     key={item.id}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleAddItem(item)}
-                    className="flex flex-col items-center rounded-[24px] border border-gray-100 dark:border-border/30 bg-white dark:bg-card p-3 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300 relative group"
+                    className="flex flex-col items-stretch rounded-[24px] border border-gray-100 dark:border-border/30 bg-white dark:bg-card p-0 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300 relative group overflow-hidden"
                   >
-                    <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-muted border border-gray-100 dark:border-border/20 mb-2 group-hover:scale-105 transition-transform duration-300">
+                    <div className="relative w-full aspect-square overflow-hidden bg-muted">
                       <img
                         src={item.image || getPlaceholderImage(index)}
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={e => { (e.target as HTMLImageElement).src = getPlaceholderImage(index); }}
                       />
                     </div>
-                    <div className="text-center w-full">
-                      <p className="text-[10px] sm:text-xs font-black text-gray-900 dark:text-gray-100 uppercase tracking-wide leading-tight line-clamp-2 min-h-[2rem] flex items-center justify-center">
+                    <div className="p-3 text-left w-full flex flex-col gap-1">
+                      <p className="text-xs sm:text-sm font-bold text-gray-950 dark:text-gray-100 line-clamp-2 min-h-[2rem] flex items-center leading-snug">
                         {item.name}
                       </p>
-                      <p className="text-xs font-black text-amber-500 mt-1">
+                      <p className="text-xs sm:text-sm font-black text-amber-500">
                         {formatCurrency(item.price)}
                       </p>
                     </div>

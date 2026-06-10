@@ -357,7 +357,7 @@ export function initWebSocket(httpServer: Server): void {
   });
 
   // Setup Postgres LISTEN for multi-node synchronization
-  if (process.env.DATABASE_URL) {
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("postgres")) {
     try {
       const dbUrl = new URL(process.env.DATABASE_URL);
       const isLocalDb = dbUrl.hostname === "127.0.0.1" || dbUrl.hostname === "localhost";

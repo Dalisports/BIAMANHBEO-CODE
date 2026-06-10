@@ -31,7 +31,7 @@ export function TableGrid({
   const allTables = Array.from({ length: maxTables }, (_, i) => i + 1);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 auto-rows-fr gap-3.5 p-2 w-full h-full">
+    <div className="grid grid-cols-3 auto-rows-fr gap-3.5 p-2 w-full h-full">
       {allTables.map((tableNum, index) => {
         const activeOrder = getActiveOrder(tableNum);
         const status: TableStatus = activeOrder
@@ -58,7 +58,7 @@ export function TableGrid({
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             className={cn(
-              "relative bg-white rounded-[20px] border p-4 text-left transition-all duration-300 cursor-pointer overflow-hidden group shadow-sm",
+              "relative bg-white rounded-[20px] border p-3 sm:p-4 text-left transition-all duration-300 cursor-pointer overflow-hidden group shadow-sm",
               isSelected
                 ? status === "empty" 
                   ? "border-orange-400 ring-4 ring-orange-500/10 shadow-lg"
@@ -74,7 +74,7 @@ export function TableGrid({
           >
             {/* Status dot indicator */}
             <span className={cn(
-              "absolute top-4 right-4 w-2 h-2 rounded-full",
+              "absolute top-2.5 right-2.5 sm:top-4 sm:right-4 w-2 h-2 rounded-full",
               status === "empty" ? "bg-gray-300" : status === "cooking" ? "bg-orange-500 animate-pulse" : "bg-emerald-500 animate-pulse"
             )} />
 
@@ -104,19 +104,19 @@ export function TableGrid({
               <>
                 {/* Header */}
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5">
                     {/* Icon container */}
                     <div className={cn(
-                      "w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105",
+                      "w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105",
                       status === "empty" ? "bg-gray-100 text-gray-400" : status === "cooking" ? "bg-orange-50 text-orange-500" : "bg-emerald-50 text-emerald-500"
                     )}>
-                      {status === "cooking" && <ChefHat className="w-4 h-4 text-orange-600" />}
-                      {status === "ready" && <UtensilsCrossed className="w-4 h-4 text-emerald-600" />}
-                      {status === "empty" && <Clock className="w-4 h-4 text-gray-400" />}
+                      {status === "cooking" && <ChefHat className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600" />}
+                      {status === "ready" && <UtensilsCrossed className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />}
+                      {status === "empty" && <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />}
                     </div>
                     <div>
-                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none">Bàn</p>
-                      <h3 className="text-sm font-extrabold text-gray-800 mt-1 leading-none">
+                      <p className="text-[9px] sm:text-xs font-bold text-gray-400 uppercase tracking-wide sm:tracking-widest leading-none">Bàn</p>
+                      <h3 className="text-xs sm:text-sm font-extrabold text-gray-800 mt-1 leading-none">
                         {tableNames[tableNum] || `${tableNum}`}
                       </h3>
                     </div>
@@ -134,28 +134,28 @@ export function TableGrid({
 
                 {/* Content */}
                 {activeOrder ? (
-                  <div className="mt-3 space-y-1">
-                    <div className="flex items-baseline justify-between">
-                      <span className={cn("text-base font-black tracking-tight", status === "cooking" ? "text-orange-600" : "text-emerald-600")}>
+                  <div className="mt-2.5 flex flex-col gap-1">
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5 sm:gap-2">
+                      <span className={cn("text-xs sm:text-sm md:text-base font-black tracking-tight whitespace-nowrap", status === "cooking" ? "text-orange-600" : "text-emerald-600")}>
                         {formatCurrency(activeOrder.totalAmount)}
                       </span>
                       {activeOrder.items && (
-                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-lg">
+                        <span className="text-[9px] sm:text-[10px] font-bold text-gray-450 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md whitespace-nowrap w-fit">
                           {activeOrder.items.reduce((sum: number, item: any) => sum + item.quantity, 0)} món
                         </span>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3.5">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100/50 px-2 py-1 rounded-lg">
+                  <div className="mt-3">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100/50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                       Sẵn sàng
                     </span>
                   </div>
                 )}
 
                 {/* Arrow indicator */}
-                <div className="absolute bottom-3 right-3">
+                <div className="hidden sm:block absolute bottom-3 right-3">
                   <ChevronRight className={cn(
                     "w-3.5 h-3.5 transition-all duration-300",
                     isSelected ? "text-orange-500 translate-x-0.5" : "text-gray-300 group-hover:text-orange-500"

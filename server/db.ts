@@ -1,10 +1,8 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
 import * as schema from "@shared/schema";
 
-const { Pool } = pg;
-
-let _pool: pg.Pool | null = null;
+let _sqlite: Database.Database | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export function getDb() {
@@ -14,27 +12,10 @@ export function getDb() {
       throw new Error("DATABASE_URL environment variable is not set");
     }
     
-    console.log("[DB] Initializing connection pool...");
-    console.log("[DB] Connection string host:", connectionString.match(/@([^:]+):/)?.[1] || "unknown");
-    
-    const isLocalDb = connectionString.includes('127.0.0.1') || connectionString.includes('localhost');
-    _pool = new Pool({ 
-      connectionString,
-      ssl: isLocalDb ? false : { rejectUnauthorized: false },
-      max: 20, // Increase max connection pool size for concurrent request handling
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return error if connection fails within 2 seconds instead of hanging
-    });
-    
-    _pool.on('error', (err) => {
-      console.error("[DB] Pool error:", err.message);
-    });
-    
-    _pool.on('connect', () => {
-      console.log("[DB] New client connected");
-    });
-    
-    _db = drizzle(_pool, { schema });
+    const dbPath = connectionString.replace("file:", "");
+    console.log("[DB] Initializing SQLite database at:", dbPath);
+    _sqlite = new Database(dbPath);
+    _db = drizzle(_sqlite, { schema });
     console.log("[DB] Drizzle instance created");
   }
   return _db;

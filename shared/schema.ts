@@ -1,41 +1,38 @@
-import { pgTable, serial, text, integer, jsonb, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const categories = pgTable("categories", {
-  id: serial("id").primaryKey(),
+export const categories = sqliteTable("categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   displayOrder: integer("display_order").default(0),
-  isActive: boolean("is_active").default(true),
+  isActive: integer("is_active", { mode: "boolean" }).default(true),
 });
 
-export const settings = pgTable("settings", {
-  id: serial("id").primaryKey(),
+export const settings = sqliteTable("settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   key: text("key").notNull().unique(),
   value: text("value"),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const menuItems = pgTable("menu_items", {
-  id: serial("id").primaryKey(),
+export const menuItems = sqliteTable("menu_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   price: integer("price").notNull(),
   categoryId: integer("category_id").references(() => categories.id),
   description: text("description"),
   image: text("image"),
-  isAvailable: boolean("is_available").default(true),
-  isActive: boolean("is_active").default(true),
-  isSticky: boolean("is_sticky").default(false),
-  isPriority: boolean("is_priority").default(false),
-  isHidden: boolean("is_hidden").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("menu_items_category_id_idx").on(table.categoryId),
-  index("menu_items_is_active_idx").on(table.isActive),
-]);
+  isAvailable: integer("is_available", { mode: "boolean" }).default(true),
+  isActive: integer("is_active", { mode: "boolean" }).default(true),
+  isSticky: integer("is_sticky", { mode: "boolean" }).default(false),
+  isPriority: integer("is_priority", { mode: "boolean" }).default(false),
+  isHidden: integer("is_hidden", { mode: "boolean" }).default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+});
 
-export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
+export const orders = sqliteTable("orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   tableNumber: text("table_number").notNull(),
   customerName: text("customer_name"),
   phone: text("phone"),
@@ -43,38 +40,28 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("Pending"),
   paymentStatus: text("payment_status").notNull().default("Unpaid"),
   paymentMethod: text("payment_method"),
-  items: jsonb("items").notNull(),
+  items: text("items", { mode: "json" }).notNull(),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  completedAt: timestamp("completed_at"),
-  paidAt: timestamp("paid_at"),
-}, (table) => [
-  index("orders_table_number_idx").on(table.tableNumber),
-  index("orders_status_idx").on(table.status),
-  index("orders_payment_status_idx").on(table.paymentStatus),
-  index("orders_paid_at_idx").on(table.paidAt),
-  index("orders_created_at_idx").on(table.createdAt),
-]);
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+  completedAt: integer("completed_at", { mode: "timestamp" }),
+  paidAt: integer("paid_at", { mode: "timestamp" }),
+});
 
-export const kitchenOrders = pgTable("kitchen_orders", {
-  id: serial("id").primaryKey(),
+export const kitchenOrders = sqliteTable("kitchen_orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   orderId: integer("order_id").notNull().references(() => orders.id),
   tableNumber: text("table_number").notNull(),
-  items: jsonb("items").notNull(),
+  items: text("items", { mode: "json" }).notNull(),
   status: text("status").notNull().default("Waiting"),
   priority: text("priority").default("normal"),
-  sentAt: timestamp("sent_at").defaultNow(),
-  startedAt: timestamp("started_at"),
-  completedAt: timestamp("completed_at"),
+  sentAt: integer("sent_at", { mode: "timestamp" }).defaultNow(),
+  startedAt: integer("started_at", { mode: "timestamp" }),
+  completedAt: integer("completed_at", { mode: "timestamp" }),
   notes: text("notes"),
-}, (table) => [
-  index("kitchen_orders_order_id_idx").on(table.orderId),
-  index("kitchen_orders_status_idx").on(table.status),
-  index("kitchen_orders_sent_at_idx").on(table.sentAt),
-]);
+});
 
-export const paymentSettings = pgTable("payment_settings", {
-  id: serial("id").primaryKey(),
+export const paymentSettings = sqliteTable("payment_settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   method: text("method").notNull().unique(),
   label: text("label"),
   icon: text("icon"),
@@ -83,80 +70,96 @@ export const paymentSettings = pgTable("payment_settings", {
   accountNumber: text("account_number"),
   bankName: text("bank_name"),
   additionalInfo: text("additional_info"),
-  isEnabled: boolean("is_enabled").default(true),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
 });
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("employee"),
   fullName: text("full_name"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  isActive: integer("is_active", { mode: "boolean" }).default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const userProfiles = pgTable("user_profiles", {
-  id: serial("id").primaryKey(),
+export const userProfiles = sqliteTable("user_profiles", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().unique(),
   fullName: text("full_name"),
   dateOfBirth: text("date_of_birth"),
   hometown: text("hometown"),
   idCardNumber: text("id_card_number"),
   phoneNumber: text("phone_number"),
-  isLocked: boolean("is_locked").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isLocked: integer("is_locked", { mode: "boolean" }).default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const dailyQRCodes = pgTable("daily_qr_codes", {
-  id: serial("id").primaryKey(),
+export const dailyQRCodes = sqliteTable("daily_qr_codes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull().unique(),
   qrCode: text("qr_code").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const conversations = pgTable("conversations", {
-  id: serial("id").primaryKey(),
+export const conversations = sqliteTable("conversations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull().default("New Chat"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
+export const messages = sqliteTable("messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   conversationId: integer("conversation_id").notNull().references(() => conversations.id),
   role: text("role").notNull(),
   content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("messages_conversation_id_idx").on(table.conversationId),
-  index("messages_created_at_idx").on(table.createdAt),
-]);
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+});
 
-export const attendanceRecords = pgTable("attendance_records", {
-  id: serial("id").primaryKey(),
+export const attendanceRecords = sqliteTable("attendance_records", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull(),
   date: text("date").notNull(),
   qrCode: text("qr_code").notNull(),
-  checkIn: timestamp("check_in"),
-  checkOut: timestamp("check_out"),
+  checkIn: integer("check_in", { mode: "timestamp" }),
+  checkOut: integer("check_out", { mode: "timestamp" }),
   totalHours: integer("total_hours"),
   status: text("status").notNull().default("checked_in"),
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("attendance_records_user_id_idx").on(table.userId),
-  index("attendance_records_date_idx").on(table.date),
-]);
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+});
 
-export const shortcuts = pgTable("shortcuts", {
-  id: serial("id").primaryKey(),
+export const shortcuts = sqliteTable("shortcuts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   position: integer("position").notNull().unique(),
   menuItemId: integer("menu_item_id").references(() => menuItems.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => [
-  index("shortcuts_menu_item_id_idx").on(table.menuItemId),
-]);
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
+});
+
+export const products = sqliteTable("products", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  price: integer("price").notNull(),
+});
+
+export const instructions = sqliteTable("instructions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  trigger: text("trigger").notNull(),
+  instruction: text("instruction").notNull(),
+  example: text("example"),
+  enabled: integer("enabled", { mode: "boolean" }).default(true).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow().notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow().notNull(),
+});
+
+export const memory = sqliteTable("memory", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  summary: text("summary").notNull(),
+  keyInfo: text("key_info"),
+  createdAt: integer("created_at", { mode: "timestamp" }).defaultNow().notNull(),
+});
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = typeof categories.$inferInsert;
@@ -181,25 +184,9 @@ export const insertCategorySchema = createInsertSchema(categories).omit({ id: tr
 export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
 
-export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  price: integer("price").notNull(),
-});
-
 export const insertProductSchema = createInsertSchema(products).omit({ id: true });
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
-
-export const instructions = pgTable("instructions", {
-  id: serial("id").primaryKey(),
-  trigger: text("trigger").notNull(),
-  instruction: text("instruction").notNull(),
-  example: text("example"),
-  enabled: boolean("enabled").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const insertInstructionSchema = createInsertSchema(instructions).omit({
   id: true,
@@ -209,22 +196,37 @@ export const insertInstructionSchema = createInsertSchema(instructions).omit({
 export type Instruction = typeof instructions.$inferSelect;
 export type InsertInstruction = z.infer<typeof insertInstructionSchema>;
 
-export const memory = pgTable("memory", {
-  id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
-  summary: text("summary").notNull(),
-  keyInfo: text("key_info"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("memory_conversation_id_idx").on(table.conversationId),
-]);
-
 export const insertMemorySchema = createInsertSchema(memory).omit({
   id: true,
   createdAt: true,
 });
 export type Memory = typeof memory.$inferSelect;
 export type InsertMemory = z.infer<typeof insertMemorySchema>;
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertKitchenOrderSchema = createInsertSchema(kitchenOrders).omit({ id: true, sentAt: true, startedAt: true, completedAt: true });
+export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({ id: true });
+export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
+export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+
+export type OrderItem = {
+  menuItemId: number;
+  name: string;
+  quantity: number;
+  price: number;
+  notes?: string;
+};
+
+export type KitchenItem = {
+  name: string;
+  quantity: number;
+  notes?: string;
+  cookingStatus?: "pending" | "cooking" | "done";
+};
+
+export type UserRole = "owner" | "employee";
+export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export const loginSchema = z.object({
   username: z.string().min(1),

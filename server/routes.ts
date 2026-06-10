@@ -424,10 +424,10 @@ export async function registerRoutes(
 
   app.post("/api/migrate/add-hidden-column", requireOwnerMiddleware, async (req, res) => {
     try {
-      await db.execute(sql`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false`);
+      await db.run(sql`ALTER TABLE menu_items ADD COLUMN is_hidden INTEGER DEFAULT 0`);
       res.json({ success: true, message: "Column is_hidden added" });
     } catch (err: any) {
-      if (err.message?.includes("already exists") || err.code === "42701") {
+      if (err.message?.includes("already exists") || err.message?.includes("duplicate column name") || err.code === "42701") {
         res.json({ success: true, message: "Column already exists" });
       } else {
         res.status(500).json({ message: "Migration failed", error: err.message });
