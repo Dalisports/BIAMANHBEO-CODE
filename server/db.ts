@@ -1,9 +1,12 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import Database from "better-sqlite3";
+import pg from "pg";
 import * as schema from "@shared/schema";
 
-let _sqlite: Database.Database | null = null;
-let _db: ReturnType<typeof drizzle> | null = null;
+const { Pool } = pg;
+
+let _db: any = null;
 
 export function getDb() {
   if (!_db) {
@@ -11,18 +14,30 @@ export function getDb() {
     if (!connectionString) {
       throw new Error("DATABASE_URL environment variable is not set");
     }
-    
-    const dbPath = connectionString.replace("file:", "");
-    console.log("[DB] Initializing SQLite database at:", dbPath);
-    _sqlite = new Database(dbPath);
-    _db = drizzle(_sqlite, { schema });
-    console.log("[DB] Drizzle instance created");
+
+    const isPostgres = connectionString.startsWith("postgres://") || connectionString.startsWith("postgresql://");
+
+    if (isPostgres) {
+      console.log("[DB] Initializing PostgreSQL database connection pool...");
+      const pool = new Pool({
+        connectionString,
+        ssl: connectionString.includes("sslmode=disable") ? false : { rejectUnauthorized: false }
+      });
+      _db = drizzlePg(pool, { schema });
+      console.log("[DB] Drizzle PostgreSQL instance created");
+    } else {
+      const dbPath = connectionString.replace("file:", "");
+      console.log("[DB] Initializing SQLite database at:", dbPath);
+      const sqlite = new Database(dbPath);
+      _db = drizzleSqlite(sqlite, { schema });
+      console.log("[DB] Drizzle SQLite instance created");
+    }
   }
   return _db;
 }
 
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+export const db = new Proxy({} as ReturnType<typeof drizzleSqlite>, {
   get(_target, prop) {
-    return getDb()[prop as keyof ReturnType<typeof drizzle>];
+    return getDb()[prop as keyof ReturnType<typeof drizzleSqlite>];
   }
 });

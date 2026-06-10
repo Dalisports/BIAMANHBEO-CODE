@@ -15,6 +15,8 @@ import { registerAIRoutes, agentStorage, brain } from "./server/ai";
 import { registerGauAssistantRoutes } from "./server/gau_assistant";
 import { readFileSync } from "fs";
 import { startOfTomorrow } from "date-fns";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { getDb } from "./server/db";
 
 const app = express();
 const httpServer = createServer(app);
@@ -72,6 +74,21 @@ export function log(message: string, source = "express") {
 
     registerGauAssistantRoutes(app);
     log("[GAU] Gau Assistant routes registered");
+
+    // Run PostgreSQL migrations if applicable
+    const connectionString = process.env.DATABASE_URL;
+    const isPostgres = connectionString?.startsWith("postgres://") || connectionString?.startsWith("postgresql://");
+    if (isPostgres) {
+      log("[DATABASE] Detecting PostgreSQL database. Running migrations...");
+      try {
+        const dbInstance = getDb();
+        await migrate(dbInstance, { migrationsFolder: "./migrations-pg" });
+        log("[DATABASE] PostgreSQL migrations completed successfully.");
+      } catch (err) {
+        console.error("[DATABASE] PostgreSQL migrations failed:", err);
+        throw err;
+      }
+    }
 
     await storage.runMigrations();
     log("[STORAGE] Migrations finished");

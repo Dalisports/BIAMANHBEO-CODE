@@ -1,26 +1,31 @@
 import { sqliteTable, integer, text } from "drizzle-orm/sqlite-core";
+import { pgTable, serial, integer as pgInteger, text as pgText, boolean as pgBoolean, timestamp as pgTimestamp, jsonb as pgJsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const categories = sqliteTable("categories", {
+// ==========================================
+// SQLite Schema Definitions (for Local Dev)
+// ==========================================
+
+export const categoriesSqlite = sqliteTable("categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   displayOrder: integer("display_order").default(0),
   isActive: integer("is_active", { mode: "boolean" }).default(true),
 });
 
-export const settings = sqliteTable("settings", {
+export const settingsSqlite = sqliteTable("settings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   key: text("key").notNull().unique(),
   value: text("value"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const menuItems = sqliteTable("menu_items", {
+export const menuItemsSqlite = sqliteTable("menu_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   price: integer("price").notNull(),
-  categoryId: integer("category_id").references(() => categories.id),
+  categoryId: integer("category_id").references(() => categoriesSqlite.id),
   description: text("description"),
   image: text("image"),
   isAvailable: integer("is_available", { mode: "boolean" }).default(true),
@@ -31,7 +36,7 @@ export const menuItems = sqliteTable("menu_items", {
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const orders = sqliteTable("orders", {
+export const ordersSqlite = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tableNumber: text("table_number").notNull(),
   customerName: text("customer_name"),
@@ -47,9 +52,9 @@ export const orders = sqliteTable("orders", {
   paidAt: integer("paid_at", { mode: "timestamp" }),
 });
 
-export const kitchenOrders = sqliteTable("kitchen_orders", {
+export const kitchenOrdersSqlite = sqliteTable("kitchen_orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  orderId: integer("order_id").notNull().references(() => orders.id),
+  orderId: integer("order_id").notNull().references(() => ordersSqlite.id),
   tableNumber: text("table_number").notNull(),
   items: text("items", { mode: "json" }).notNull(),
   status: text("status").notNull().default("Waiting"),
@@ -60,7 +65,7 @@ export const kitchenOrders = sqliteTable("kitchen_orders", {
   notes: text("notes"),
 });
 
-export const paymentSettings = sqliteTable("payment_settings", {
+export const paymentSettingsSqlite = sqliteTable("payment_settings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   method: text("method").notNull().unique(),
   label: text("label"),
@@ -73,7 +78,7 @@ export const paymentSettings = sqliteTable("payment_settings", {
   isEnabled: integer("is_enabled", { mode: "boolean" }).default(true),
 });
 
-export const users = sqliteTable("users", {
+export const usersSqlite = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -83,7 +88,7 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const userProfiles = sqliteTable("user_profiles", {
+export const userProfilesSqlite = sqliteTable("user_profiles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().unique(),
   fullName: text("full_name"),
@@ -96,28 +101,28 @@ export const userProfiles = sqliteTable("user_profiles", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const dailyQRCodes = sqliteTable("daily_qr_codes", {
+export const dailyQRCodesSqlite = sqliteTable("daily_qr_codes", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull().unique(),
   qrCode: text("qr_code").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const conversations = sqliteTable("conversations", {
+export const conversationsSqlite = sqliteTable("conversations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   title: text("title").notNull().default("New Chat"),
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const messages = sqliteTable("messages", {
+export const messagesSqlite = sqliteTable("messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
+  conversationId: integer("conversation_id").notNull().references(() => conversationsSqlite.id),
   role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const attendanceRecords = sqliteTable("attendance_records", {
+export const attendanceRecordsSqlite = sqliteTable("attendance_records", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull(),
   date: text("date").notNull(),
@@ -129,21 +134,21 @@ export const attendanceRecords = sqliteTable("attendance_records", {
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const shortcuts = sqliteTable("shortcuts", {
+export const shortcutsSqlite = sqliteTable("shortcuts", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   position: integer("position").notNull().unique(),
-  menuItemId: integer("menu_item_id").references(() => menuItems.id),
+  menuItemId: integer("menu_item_id").references(() => menuItemsSqlite.id),
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow(),
 });
 
-export const products = sqliteTable("products", {
+export const productsSqlite = sqliteTable("products", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   price: integer("price").notNull(),
 });
 
-export const instructions = sqliteTable("instructions", {
+export const instructionsSqlite = sqliteTable("instructions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   trigger: text("trigger").notNull(),
   instruction: text("instruction").notNull(),
@@ -153,62 +158,249 @@ export const instructions = sqliteTable("instructions", {
   updatedAt: integer("updated_at", { mode: "timestamp" }).defaultNow().notNull(),
 });
 
-export const memory = sqliteTable("memory", {
+export const memorySqlite = sqliteTable("memory", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  conversationId: integer("conversation_id").notNull().references(() => conversationsSqlite.id, { onDelete: "cascade" }),
   summary: text("summary").notNull(),
   keyInfo: text("key_info"),
   createdAt: integer("created_at", { mode: "timestamp" }).defaultNow().notNull(),
 });
 
-export type Category = typeof categories.$inferSelect;
-export type InsertCategory = typeof categories.$inferInsert;
-export type MenuItem = typeof menuItems.$inferSelect;
-export type InsertMenuItem = typeof menuItems.$inferInsert;
-export type Order = typeof orders.$inferSelect;
-export type InsertOrder = typeof orders.$inferInsert;
-export type KitchenOrder = typeof kitchenOrders.$inferSelect;
-export type InsertKitchenOrder = typeof kitchenOrders.$inferInsert;
-export type PaymentSetting = typeof paymentSettings.$inferSelect;
-export type InsertPaymentSetting = typeof paymentSettings.$inferInsert;
-export type User = typeof users.$inferSelect;
-export type UserProfile = typeof userProfiles.$inferSelect;
-export type InsertUserProfile = typeof userProfiles.$inferInsert;
-export type DailyQRCode = typeof dailyQRCodes.$inferSelect;
-export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
-export type Conversation = typeof conversations.$inferSelect;
-export type Message = typeof messages.$inferSelect;
-export type Shortcut = typeof shortcuts.$inferSelect;
+// ==========================================
+// PostgreSQL Schema Definitions (for Production)
+// ==========================================
 
-export const insertCategorySchema = createInsertSchema(categories).omit({ id: true });
-export const insertMenuItemSchema = createInsertSchema(menuItems).omit({ id: true, createdAt: true });
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
+export const categoriesPg = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: pgText("name").notNull(),
+  displayOrder: pgInteger("display_order").default(0),
+  isActive: pgBoolean("is_active").default(true),
+});
 
-export const insertProductSchema = createInsertSchema(products).omit({ id: true });
-export type Product = typeof products.$inferSelect;
+export const settingsPg = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: pgText("key").notNull().unique(),
+  value: pgText("value"),
+  updatedAt: pgTimestamp("updated_at").defaultNow(),
+});
+
+export const menuItemsPg = pgTable("menu_items", {
+  id: serial("id").primaryKey(),
+  name: pgText("name").notNull(),
+  price: pgInteger("price").notNull(),
+  categoryId: pgInteger("category_id").references(() => categoriesPg.id),
+  description: pgText("description"),
+  image: pgText("image"),
+  isAvailable: pgBoolean("is_available").default(true),
+  isActive: pgBoolean("is_active").default(true),
+  isSticky: pgBoolean("is_sticky").default(false),
+  isPriority: pgBoolean("is_priority").default(false),
+  isHidden: pgBoolean("is_hidden").default(false),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const ordersPg = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  tableNumber: pgText("table_number").notNull(),
+  customerName: pgText("customer_name"),
+  phone: pgText("phone"),
+  totalAmount: pgInteger("total_amount").notNull(),
+  status: pgText("status").notNull().default("Pending"),
+  paymentStatus: pgText("payment_status").notNull().default("Unpaid"),
+  paymentMethod: pgText("payment_method"),
+  items: pgJsonb("items").notNull(),
+  notes: pgText("notes"),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+  completedAt: pgTimestamp("completed_at"),
+  paidAt: pgTimestamp("paid_at"),
+});
+
+export const kitchenOrdersPg = pgTable("kitchen_orders", {
+  id: serial("id").primaryKey(),
+  orderId: pgInteger("order_id").notNull().references(() => ordersPg.id),
+  tableNumber: pgText("table_number").notNull(),
+  items: pgJsonb("items").notNull(),
+  status: pgText("status").notNull().default("Waiting"),
+  priority: pgText("priority").default("normal"),
+  sentAt: pgTimestamp("sent_at").defaultNow(),
+  startedAt: pgTimestamp("started_at"),
+  completedAt: pgTimestamp("completed_at"),
+  notes: pgText("notes"),
+});
+
+export const paymentSettingsPg = pgTable("payment_settings", {
+  id: serial("id").primaryKey(),
+  method: pgText("method").notNull().unique(),
+  label: pgText("label"),
+  icon: pgText("icon"),
+  qrImageUrl: pgText("qr_image_url"),
+  accountName: pgText("account_name"),
+  accountNumber: pgText("account_number"),
+  bankName: pgText("bank_name"),
+  additionalInfo: pgText("additional_info"),
+  isEnabled: pgBoolean("is_enabled").default(true),
+});
+
+export const usersPg = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: pgText("username").notNull().unique(),
+  password: pgText("password").notNull(),
+  role: pgText("role").notNull().default("employee"),
+  fullName: pgText("full_name"),
+  isActive: pgBoolean("is_active").default(true),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const userProfilesPg = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: pgInteger("user_id").notNull().unique(),
+  fullName: pgText("full_name"),
+  dateOfBirth: pgText("date_of_birth"),
+  hometown: pgText("hometown"),
+  idCardNumber: pgText("id_card_number"),
+  phoneNumber: pgText("phone_number"),
+  isLocked: pgBoolean("is_locked").default(false),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+  updatedAt: pgTimestamp("updated_at").defaultNow(),
+});
+
+export const dailyQRCodesPg = pgTable("daily_qr_codes", {
+  id: serial("id").primaryKey(),
+  date: pgText("date").notNull().unique(),
+  qrCode: pgText("qr_code").notNull(),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const conversationsPg = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  title: pgText("title").notNull().default("New Chat"),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const messagesPg = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: pgInteger("conversation_id").notNull().references(() => conversationsPg.id),
+  role: pgText("role").notNull(),
+  content: pgText("content").notNull(),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const attendanceRecordsPg = pgTable("attendance_records", {
+  id: serial("id").primaryKey(),
+  userId: pgInteger("user_id").notNull(),
+  date: pgText("date").notNull(),
+  qrCode: pgText("qr_code").notNull(),
+  checkIn: pgTimestamp("check_in"),
+  checkOut: pgTimestamp("check_out"),
+  totalHours: pgInteger("total_hours"),
+  status: pgText("status").notNull().default("checked_in"),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+});
+
+export const shortcutsPg = pgTable("shortcuts", {
+  id: serial("id").primaryKey(),
+  position: pgInteger("position").notNull().unique(),
+  menuItemId: pgInteger("menu_item_id").references(() => menuItemsPg.id),
+  createdAt: pgTimestamp("created_at").defaultNow(),
+  updatedAt: pgTimestamp("updated_at").defaultNow(),
+});
+
+export const productsPg = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: pgText("name").notNull(),
+  price: pgInteger("price").notNull(),
+});
+
+export const instructionsPg = pgTable("instructions", {
+  id: serial("id").primaryKey(),
+  trigger: pgText("trigger").notNull(),
+  instruction: pgText("instruction").notNull(),
+  example: pgText("example"),
+  enabled: pgBoolean("enabled").default(true).notNull(),
+  createdAt: pgTimestamp("created_at").defaultNow().notNull(),
+  updatedAt: pgTimestamp("updated_at").defaultNow().notNull(),
+});
+
+export const memoryPg = pgTable("memory", {
+  id: serial("id").primaryKey(),
+  conversationId: pgInteger("conversation_id").notNull().references(() => conversationsPg.id, { onDelete: "cascade" }),
+  summary: pgText("summary").notNull(),
+  keyInfo: pgText("key_info"),
+  createdAt: pgTimestamp("created_at").defaultNow().notNull(),
+});
+
+// ==========================================
+// Dynamic Exports Wrapper
+// ==========================================
+
+const isPostgres = typeof process !== "undefined" && (process.env.DATABASE_URL?.startsWith("postgres://") || process.env.DATABASE_URL?.startsWith("postgresql://"));
+
+export const categories = (isPostgres ? categoriesPg : categoriesSqlite) as typeof categoriesSqlite;
+export const settings = (isPostgres ? settingsPg : settingsSqlite) as typeof settingsSqlite;
+export const menuItems = (isPostgres ? menuItemsPg : menuItemsSqlite) as typeof menuItemsSqlite;
+export const orders = (isPostgres ? ordersPg : ordersSqlite) as typeof ordersSqlite;
+export const kitchenOrders = (isPostgres ? kitchenOrdersPg : kitchenOrdersSqlite) as typeof kitchenOrdersSqlite;
+export const paymentSettings = (isPostgres ? paymentSettingsPg : paymentSettingsSqlite) as typeof paymentSettingsSqlite;
+export const users = (isPostgres ? usersPg : usersSqlite) as typeof usersSqlite;
+export const userProfiles = (isPostgres ? userProfilesPg : userProfilesSqlite) as typeof userProfilesSqlite;
+export const dailyQRCodes = (isPostgres ? dailyQRCodesPg : dailyQRCodesSqlite) as typeof dailyQRCodesSqlite;
+export const conversations = (isPostgres ? conversationsPg : conversationsSqlite) as typeof conversationsSqlite;
+export const messages = (isPostgres ? messagesPg : messagesSqlite) as typeof messagesSqlite;
+export const attendanceRecords = (isPostgres ? attendanceRecordsPg : attendanceRecordsSqlite) as typeof attendanceRecordsSqlite;
+export const shortcuts = (isPostgres ? shortcutsPg : shortcutsSqlite) as typeof shortcutsSqlite;
+export const products = (isPostgres ? productsPg : productsSqlite) as typeof productsSqlite;
+export const instructions = (isPostgres ? instructionsPg : instructionsSqlite) as typeof instructionsSqlite;
+export const memory = (isPostgres ? memoryPg : memorySqlite) as typeof memorySqlite;
+
+// Export types and insert schemas based on SQLite definition statically for client/Zod safety
+export type Category = typeof categoriesSqlite.$inferSelect;
+export type InsertCategory = typeof categoriesSqlite.$inferInsert;
+export type MenuItem = typeof menuItemsSqlite.$inferSelect;
+export type InsertMenuItem = typeof menuItemsSqlite.$inferInsert;
+export type Order = typeof ordersSqlite.$inferSelect;
+export type InsertOrder = typeof ordersSqlite.$inferInsert;
+export type KitchenOrder = typeof kitchenOrdersSqlite.$inferSelect;
+export type InsertKitchenOrder = typeof kitchenOrdersSqlite.$inferInsert;
+export type PaymentSetting = typeof paymentSettingsSqlite.$inferSelect;
+export type InsertPaymentSetting = typeof paymentSettingsSqlite.$inferInsert;
+export type User = typeof usersSqlite.$inferSelect;
+export type UserProfile = typeof userProfilesSqlite.$inferSelect;
+export type InsertUserProfile = typeof userProfilesSqlite.$inferInsert;
+export type DailyQRCode = typeof dailyQRCodesSqlite.$inferSelect;
+export type AttendanceRecord = typeof attendanceRecordsSqlite.$inferSelect;
+export type Conversation = typeof conversationsSqlite.$inferSelect;
+export type Message = typeof messagesSqlite.$inferSelect;
+export type Shortcut = typeof shortcutsSqlite.$inferSelect;
+
+export const insertCategorySchema = createInsertSchema(categoriesSqlite).omit({ id: true });
+export const insertMenuItemSchema = createInsertSchema(menuItemsSqlite).omit({ id: true, createdAt: true });
+export const insertOrderSchema = createInsertSchema(ordersSqlite).omit({ id: true, createdAt: true, completedAt: true, paidAt: true });
+
+export const insertProductSchema = createInsertSchema(productsSqlite).omit({ id: true });
+export type Product = typeof productsSqlite.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 
-export const insertInstructionSchema = createInsertSchema(instructions).omit({
+export const insertInstructionSchema = createInsertSchema(instructionsSqlite).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
-export type Instruction = typeof instructions.$inferSelect;
+export type Instruction = typeof instructionsSqlite.$inferSelect;
 export type InsertInstruction = z.infer<typeof insertInstructionSchema>;
 
-export const insertMemorySchema = createInsertSchema(memory).omit({
+export const insertMemorySchema = createInsertSchema(memorySqlite).omit({
   id: true,
   createdAt: true,
 });
-export type Memory = typeof memory.$inferSelect;
+export type Memory = typeof memorySqlite.$inferSelect;
 export type InsertMemory = z.infer<typeof insertMemorySchema>;
 
-export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertKitchenOrderSchema = createInsertSchema(kitchenOrders).omit({ id: true, sentAt: true, startedAt: true, completedAt: true });
-export const insertPaymentSettingSchema = createInsertSchema(paymentSettings).omit({ id: true });
-export const insertConversationSchema = createInsertSchema(conversations).omit({ id: true, createdAt: true });
-export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserProfileSchema = createInsertSchema(userProfilesSqlite).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertKitchenOrderSchema = createInsertSchema(kitchenOrdersSqlite).omit({ id: true, sentAt: true, startedAt: true, completedAt: true });
+export const insertPaymentSettingSchema = createInsertSchema(paymentSettingsSqlite).omit({ id: true });
+export const insertConversationSchema = createInsertSchema(conversationsSqlite).omit({ id: true, createdAt: true });
+export const insertMessageSchema = createInsertSchema(messagesSqlite).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(usersSqlite).omit({ id: true, createdAt: true });
 
 export type OrderItem = {
   menuItemId: number;
