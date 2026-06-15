@@ -18,6 +18,18 @@ import { MenuSection } from "@/components/tables/MenuSection";
 import { OrderPanelDesktop } from "@/components/tables/OrderPanelDesktop";
 import { SearchMenuModal } from "@/components/tables/SearchMenuModal";
 
+const PLACEHOLDER_IMAGES = [
+  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=300&fit=crop",
+  "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop",
+];
+
+function getPlaceholderImage(index: number) {
+  return PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
+}
+
 const MAX_TABLES = 15;
 
 // Mobile Order View Component
@@ -147,21 +159,37 @@ function MobileOrderView({
             {orderWithStatus?.items.map((item, idx) => {
               const isDone = item.cookingStatus === "done";
               const autoGreen = isDone || isKitchenHidden(item.menuItemId);
+              const menuItem = menuItems?.find((m: any) => m.id === item.menuItemId || m.name === item.name);
+              const itemImage = menuItem?.image || getPlaceholderImage(idx);
+              const displayPrice = item.price >= 1000 
+                ? `${Number((item.price / 1000).toFixed(1)).toString()}k`
+                : formatCurrency(item.price);
+
               return (
                 <div
                   key={`${item.menuItemId}-${idx}`}
-                  className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300"
+                  className="flex items-center justify-between p-3 bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm", autoGreen ? "bg-green-500 shadow-green-500/20" : "bg-gray-300")} />
-                    <div className="flex-1">
-                      <p className="font-extrabold text-xs text-gray-900 tracking-wide break-words">{item.name}</p>
-                      <p className="text-xs font-bold text-gray-400 mt-1">
-                        {formatCurrency(item.price)} × {item.quantity}
+                  <div className="flex items-center gap-3 min-w-0 flex-1 mr-2">
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={itemImage}
+                        alt={item.name}
+                        className="w-14 h-14 object-cover rounded-xl border border-gray-100"
+                        onError={e => { (e.target as HTMLImageElement).src = getPlaceholderImage(idx); }}
+                      />
+                      {autoGreen && (
+                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm animate-pulse" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-extrabold text-sm text-gray-900 tracking-wide break-words leading-snug">{item.name}</p>
+                      <p className="text-xs font-black text-amber-600 mt-1">
+                        {displayPrice}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <div className="flex items-center gap-1 bg-amber-500/5 rounded-2xl p-1 border border-amber-500/15">
                       <button
                         onClick={() => onUpdateQuantity(idx, -1)}
