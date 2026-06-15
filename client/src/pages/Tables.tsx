@@ -34,6 +34,16 @@ interface MobileOrderViewProps {
   onUpdateQuantity: (index: number, delta: number) => void;
   onSearchClick: () => void;
   onClose: () => void;
+  
+  // Discount props
+  showDiscount: boolean;
+  setShowDiscount: (val: boolean) => void;
+  discountType: "percent" | "amount";
+  setDiscountType: (val: "percent" | "amount") => void;
+  discountValue: string;
+  setDiscountValue: (val: string) => void;
+  discountAmount: number;
+  finalTotal: number;
 }
 
 function MobileOrderView({
@@ -49,6 +59,14 @@ function MobileOrderView({
   onUpdateQuantity,
   onSearchClick,
   onClose,
+  showDiscount,
+  setShowDiscount,
+  discountType,
+  setDiscountType,
+  discountValue,
+  setDiscountValue,
+  discountAmount,
+  finalTotal,
 }: MobileOrderViewProps) {
   const tableName = tableNames[selectedTable] || `Bàn ${selectedTable}`;
 
@@ -76,7 +94,7 @@ function MobileOrderView({
       <div className="flex-shrink-0 bg-white border-b border-amber-500/10 shadow-sm z-10">
         <div className="flex items-center justify-between px-4 pt-3 pb-3">
           <div className="flex items-center gap-3">
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105", isReady ? "bg-green-500 shadow-green-500/20" : "bg-amber-400 shadow-amber-400/20")}>
+            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105", isReady ? "bg-green-500 shadow-green-500/20" : "bg-[#f5c20a] shadow-amber-500/10")}>
               <UtensilsCrossed className="w-5 h-5 text-black" />
             </div>
             <div>
@@ -89,16 +107,21 @@ function MobileOrderView({
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-2xl font-black text-amber-500 tracking-wide">
-                {formatCurrency(activeOrder?.totalAmount || 0)}
+              {discountAmount > 0 && (
+                <span className="text-[10px] text-red-500 font-bold block line-through">
+                  {formatCurrency(activeOrder?.totalAmount || 0)}
+                </span>
+              )}
+              <span className="text-2xl font-black text-[#e2990f] tracking-wide">
+                {activeOrder && finalTotal > 0 ? formatCurrency(finalTotal) : "0k"}
               </span>
               <p className="text-xs font-bold text-gray-400 mt-0.5">{totalItems} món</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-600 transition-all duration-200"
+              className="w-10 h-10 rounded-full bg-gray-100/80 hover:bg-gray-200 active:scale-95 text-gray-500 flex items-center justify-center transition-all duration-200"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -163,18 +186,20 @@ function MobileOrderView({
           </div>
         ) : (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center h-full py-16">
-            <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mb-5 text-amber-500">
-              <UtensilsCrossed className="w-9 h-9" />
+          <div className="flex flex-col items-center justify-center h-full py-16 bg-white">
+            <div className="w-24 h-24 bg-gray-100/80 rounded-full flex items-center justify-center mb-6 text-gray-400">
+              <UtensilsCrossed className="w-10 h-10 stroke-[1.5]" />
             </div>
             <p className="text-gray-900 font-black text-lg mb-1 tracking-wide">Chưa có món nào</p>
-            <p className="text-xs font-bold text-gray-400 mb-6 text-center max-w-[200px]">Hãy chọn thêm món ăn từ thực đơn của quán</p>
+            <p className="text-xs font-bold text-gray-400 mb-6 text-center max-w-[200px]">
+              Bắt đầu đặt món cho {tableName}
+            </p>
             <button
               onClick={onSearchClick}
-              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-amber-400 text-black rounded-2xl font-black shadow-lg shadow-amber-500/20 hover:from-amber-600 hover:to-amber-500 active:scale-95 transition-all flex items-center gap-3 text-sm tracking-wider"
+              className="px-8 py-3.5 bg-[#e2990f] hover:bg-[#c68305] text-white rounded-full font-bold shadow-lg shadow-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-2 text-base"
             >
-              <Search className="w-4.5 h-4.5 stroke-[3]" />
-              ĐẶT MÓN NGAY
+              <Search className="w-5 h-5 text-white stroke-[2.5]" />
+              Bắt đầu đặt món
             </button>
           </div>
         )}
@@ -183,6 +208,80 @@ function MobileOrderView({
       {/* Action buttons - sticky bottom, full width */}
       {activeOrder && (
         <div className="px-4 pb-5 pt-3 bg-white border-t border-gray-100 space-y-2 flex-shrink-0 z-10 shadow-[0_-4px_16px_rgba(0,0,0,0.03)]">
+          {/* Discount Section */}
+          <div className="border-b border-gray-100 pb-2">
+            <button
+              onClick={() => setShowDiscount(!showDiscount)}
+              className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors mb-2 w-full"
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">%</span>
+                Giảm giá
+              </span>
+              <span className="ml-auto text-xs font-extrabold text-amber-600">
+                {showDiscount ? "Ẩn" : "Thêm"}
+              </span>
+            </button>
+
+            <AnimatePresence>
+              {showDiscount && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden space-y-2"
+                >
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDiscountType("percent")}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-xl text-xs font-black transition-all",
+                        discountType === "percent"
+                          ? "bg-amber-500 text-black shadow-sm"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      )}
+                    >
+                      Phần trăm
+                    </button>
+                    <button
+                      onClick={() => setDiscountType("amount")}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-xl text-xs font-black transition-all",
+                        discountType === "amount"
+                          ? "bg-amber-500 text-black shadow-sm"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      )}
+                    >
+                      Số tiền
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={discountValue}
+                      onChange={e => setDiscountValue(e.target.value)}
+                      placeholder={discountType === "percent" ? "10" : "10000"}
+                      className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all text-black"
+                      min="0"
+                      max={discountType === "percent" ? "100" : undefined}
+                    />
+                    <span className="text-xs font-extrabold text-gray-500 min-w-[1.5rem] text-right">
+                      {discountType === "percent" ? "%" : "đ"}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Totals Summary */}
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-xs text-red-500 font-extrabold px-1 pb-1">
+              <span>Đã giảm:</span>
+              <span>-{formatCurrency(discountAmount)}</span>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={onShowMoveModal}
@@ -202,6 +301,15 @@ function MobileOrderView({
     </div>
   );
 }
+
+// Shorten currency numbers for mobile stats card (e.g. 150000 -> 150k, 0 -> 0k)
+const formatStatsPrice = (price: number) => {
+  if (price === 0) return "0k";
+  if (price >= 1000) {
+    return `${price / 1000}k`;
+  }
+  return `${price}`;
+};
 
 export default function Tables() {
   const queryClient = useQueryClient();
@@ -230,6 +338,13 @@ export default function Tables() {
     return () => document.body.classList.remove("hide-agent-bubble");
   }, [selectedTable]);
 
+  // Reset discount on table change
+  useEffect(() => {
+    setShowDiscount(false);
+    setDiscountType("percent");
+    setDiscountValue("");
+  }, [selectedTable]);
+
   useEffect(() => {
     const handleOpenCheckout = (e: CustomEvent) => {
       const tableNumber = e.detail?.tableNumber;
@@ -256,6 +371,11 @@ export default function Tables() {
   const [deleteItemIndex, setDeleteItemIndex] = useState<number | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [editingSetting, setEditingSetting] = useState<string | null>(null);
+
+  // Shared discount state
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [discountType, setDiscountType] = useState<"percent" | "amount">("percent");
+  const [discountValue, setDiscountValue] = useState("");
   const [settingForm, setSettingForm] = useState({
     label: "",
     icon: "",
@@ -275,6 +395,12 @@ export default function Tables() {
 
   const selectedOrder = selectedTable ? getActiveOrder(selectedTable) : undefined;
   const currentStatus = !selectedOrder ? "empty" : selectedOrder.status === "Ready" ? "ready" : "cooking";
+
+  const subtotal = selectedOrder ? selectedOrder.totalAmount : 0;
+  const discountAmount = discountType === "percent" && discountValue
+    ? Math.round(subtotal * Number(discountValue) / 100)
+    : Number(discountValue) || 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount);
 
   // Stats: tính trong ngày hôm nay
   const todayStart = new Date();
@@ -507,20 +633,20 @@ export default function Tables() {
       {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-[#f5f6f8] flex-shrink-0">
+        <div className="grid grid-cols-3 gap-3 px-4 py-3.5 bg-[#f4f4f5]/60 flex-shrink-0">
           {/* Card Đã TT */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-[#4bae4f] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Đã TT</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount} bàn</h3>
-              <p className="text-xs font-bold text-emerald-600 mt-0.5">{formatCurrency(paidTotal)}</p>
+            <div className="flex justify-between items-start w-full">
+              <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Đã TT</span>
+              <DollarSign className="w-4 h-4 text-white/90 stroke-[2.5]" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
-              <DollarSign className="w-4 h-4" />
+            <div className="flex justify-between items-baseline w-full mt-auto gap-1">
+              <span className="text-sm sm:text-base font-black text-white leading-none">{paidCount} bàn</span>
+              <span className="text-[10px] sm:text-xs font-bold text-white/95 leading-none">{formatStatsPrice(paidTotal)}</span>
             </div>
           </motion.div>
 
@@ -529,15 +655,15 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-[#e2990f] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Chưa TT</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{unpaidCount} bàn</h3>
-              <p className="text-xs font-bold text-orange-500 mt-0.5">{formatCurrency(unpaidTotal)}</p>
+            <div className="flex justify-between items-start w-full">
+              <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Chưa TT</span>
+              <Clock className="w-4 h-4 text-white/90 stroke-[2.5]" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-4 h-4" />
+            <div className="flex justify-between items-baseline w-full mt-auto gap-1">
+              <span className="text-sm sm:text-base font-black text-white leading-none">{unpaidCount} bàn</span>
+              <span className="text-[10px] sm:text-xs font-bold text-white/95 leading-none">{formatStatsPrice(unpaidTotal)}</span>
             </div>
           </motion.div>
 
@@ -546,15 +672,15 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-2"
+            className="bg-[#4b5261] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
           >
-            <div>
-              <p className="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">Tất cả</p>
-              <h3 className="text-base font-black text-gray-800 mt-0.5">{paidCount + unpaidCount} bàn</h3>
-              <p className="text-xs font-bold text-blue-600 mt-0.5">{formatCurrency(paidTotal + unpaidTotal)}</p>
+            <div className="flex justify-between items-start w-full">
+              <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Tất Cả</span>
+              <TrendingUp className="w-4 h-4 text-white/90 stroke-[2.5]" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-4 h-4" />
+            <div className="flex justify-between items-baseline w-full mt-auto gap-1">
+              <span className="text-sm sm:text-base font-black text-white leading-none">{paidCount + unpaidCount} bàn</span>
+              <span className="text-[10px] sm:text-xs font-bold text-white/95 leading-none">{formatStatsPrice(paidTotal + unpaidTotal)}</span>
             </div>
           </motion.div>
         </div>
@@ -601,6 +727,14 @@ export default function Tables() {
                 doneItemNames={doneItemNames}
                 menuItems={menuItems || []}
                 onSearchClick={() => setShowSearchModal(true)}
+                showDiscount={showDiscount}
+                setShowDiscount={setShowDiscount}
+                discountType={discountType}
+                setDiscountType={setDiscountType}
+                discountValue={discountValue}
+                setDiscountValue={setDiscountValue}
+                discountAmount={discountAmount}
+                finalTotal={finalTotal}
               />
             </div>
 
@@ -619,6 +753,14 @@ export default function Tables() {
                 onUpdateQuantity={handleUpdateQuantity}
                 onSearchClick={() => setShowSearchModal(true)}
                 onClose={() => setSelectedTable(null)}
+                showDiscount={showDiscount}
+                setShowDiscount={setShowDiscount}
+                discountType={discountType}
+                setDiscountType={setDiscountType}
+                discountValue={discountValue}
+                setDiscountValue={setDiscountValue}
+                discountAmount={discountAmount}
+                finalTotal={finalTotal}
               />
             </div>
           </>
@@ -638,7 +780,7 @@ export default function Tables() {
         showPayModal={!!showPayModal}
         selectedTable={selectedTable}
         tableNames={tableNames}
-        orderTotal={selectedOrder ? selectedOrder.totalAmount : 0}
+        orderTotal={selectedOrder ? finalTotal : 0}
         paymentSettings={paymentSettings}
         payMethod={payMethod}
         setPayMethod={setPayMethod}

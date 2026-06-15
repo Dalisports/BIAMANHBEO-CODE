@@ -16,6 +16,16 @@ interface TableGridProps {
   onCommitRename: (num: number) => void;
 }
 
+const formatStatsPrice = (price: number | string) => {
+  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  if (isNaN(numPrice)) return price;
+  if (numPrice === 0) return "0k";
+  if (numPrice >= 1000) {
+    return `${numPrice / 1000}k`;
+  }
+  return `${numPrice}`;
+};
+
 export function TableGrid({
   maxTables,
   tableNames,
@@ -31,16 +41,20 @@ export function TableGrid({
   const allTables = Array.from({ length: maxTables }, (_, i) => i + 1);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 auto-rows-fr gap-3.5 p-2 w-full h-full">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 auto-rows-fr gap-2 p-2 w-full h-full">
       {allTables.map((tableNum, index) => {
         const activeOrder = getActiveOrder(tableNum);
         const status: TableStatus = activeOrder
           ? getActiveStatus(activeOrder)
           : "empty";
-        const sc = TABLE_STATUS[status];
         const isSelected = selectedTable === tableNum;
         const isRenaming = renamingTable === tableNum;
-        const tableName = tableNames[tableNum] || `Bàn ${tableNum}`;
+        const tableName = tableNames[tableNum] || `${tableNum}`;
+
+        // Get items that have been ordered but not yet cooked/done
+        const pendingItems = activeOrder?.items?.filter((item: any) => {
+          return item.cookingStatus !== "done";
+        }) || [];
 
         return (
           <motion.div
@@ -58,7 +72,7 @@ export function TableGrid({
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             className={cn(
-              "relative bg-white rounded-[20px] border p-4 text-left transition-all duration-300 cursor-pointer overflow-hidden group shadow-sm",
+              "relative bg-white rounded-[16px] sm:rounded-[20px] border p-2.5 sm:p-3 text-left transition-all duration-300 cursor-pointer overflow-hidden group shadow-sm flex flex-col min-h-[115px] justify-between",
               isSelected
                 ? status === "empty" 
                   ? "border-orange-400 ring-4 ring-orange-500/10 shadow-lg"
@@ -74,7 +88,7 @@ export function TableGrid({
           >
             {/* Status dot indicator */}
             <span className={cn(
-              "absolute top-4 right-4 w-2 h-2 rounded-full",
+              "absolute top-3 right-3 w-1.5 h-1.5 rounded-full",
               status === "empty" ? "bg-gray-300" : status === "cooking" ? "bg-orange-500 animate-pulse" : "bg-emerald-500 animate-pulse"
             )} />
 
@@ -103,62 +117,65 @@ export function TableGrid({
             ) : (
               <>
                 {/* Header */}
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    {/* Icon container */}
-                    <div className={cn(
-                      "w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105",
-                      status === "empty" ? "bg-gray-100 text-gray-400" : status === "cooking" ? "bg-orange-50 text-orange-500" : "bg-emerald-50 text-emerald-500"
-                    )}>
-                      {status === "cooking" && <ChefHat className="w-4 h-4 text-orange-600" />}
-                      {status === "ready" && <UtensilsCrossed className="w-4 h-4 text-emerald-600" />}
-                      {status === "empty" && <Clock className="w-4 h-4 text-gray-400" />}
-                    </div>
-                    <div>
-                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest leading-none">Bàn</p>
-                      <h3 className="text-sm font-extrabold text-gray-800 mt-1 leading-none">
-                        {tableNames[tableNum] || `${tableNum}`}
-                      </h3>
-                    </div>
+                <div className="flex items-center gap-2">
+                  {/* Icon container */}
+                  <div className={cn(
+                    "w-7 h-7 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105 flex-shrink-0",
+                    status === "empty" ? "bg-gray-100 text-gray-400" : status === "cooking" ? "bg-orange-50 text-orange-500" : "bg-emerald-50 text-emerald-500"
+                  )}>
+                    {status === "cooking" && <ChefHat className="w-3.5 h-3.5 text-orange-600" />}
+                    {status === "ready" && <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-600" />}
+                    {status === "empty" && <Clock className="w-3.5 h-3.5 text-gray-400" />}
                   </div>
-
-                  {/* Edit button - hidden on mobile */}
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => onStartRename(tableNum, e)}
-                    className="hidden md:block p-1.5 rounded-lg hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity mr-4"
-                  >
-                    <Pencil className="w-3.5 h-3.5 text-gray-400 hover:text-orange-500" />
-                  </motion.button>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-black text-gray-800 leading-none">
+                      {tableName}
+                    </h3>
+                  </div>
                 </div>
 
-                {/* Content */}
-                {activeOrder ? (
-                  <div className="mt-3 space-y-1">
-                    <div className="flex items-baseline justify-between">
-                      <span className={cn("text-base font-black tracking-tight", status === "cooking" ? "text-orange-600" : "text-emerald-600")}>
-                        {formatCurrency(activeOrder.totalAmount)}
-                      </span>
-                      {activeOrder.items && (
-                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-lg">
-                          {activeOrder.items.reduce((sum: number, item: any) => sum + item.quantity, 0)} món
-                        </span>
+                {/* Pending items in the middle */}
+                <div className="my-2 flex-1 flex flex-col justify-center min-h-[32px]">
+                  {pendingItems.length > 0 ? (
+                    <div className="space-y-0.5">
+                      {pendingItems.slice(0, 2).map((item: any, idx: number) => (
+                        <p key={idx} className="text-[9px] text-gray-500 font-bold truncate leading-tight">
+                          • {item.name} {item.quantity > 1 ? `x${item.quantity}` : ""}
+                        </p>
+                      ))}
+                      {pendingItems.length > 2 && (
+                        <p className="text-[8px] text-gray-400 font-extrabold leading-none italic pl-2">
+                          + {pendingItems.length - 2} món...
+                        </p>
                       )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="mt-3.5">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100/50 px-2 py-1 rounded-lg">
-                      Sẵn sàng
-                    </span>
-                  </div>
-                )}
+                  ) : null}
+                </div>
 
-                {/* Arrow indicator */}
-                <div className="absolute bottom-3 right-3">
+                {/* Bottom Row */}
+                <div className="flex items-center justify-between w-full mt-auto pt-1.5 border-t border-gray-50">
+                  <div className="flex items-center gap-1.5">
+                    {activeOrder ? (
+                      <>
+                        <span className="text-[11px] sm:text-xs font-black text-[#e2990f] tracking-tight">
+                          {formatStatsPrice(activeOrder.totalAmount)}
+                        </span>
+                        {activeOrder.items && (
+                          <span className="text-[8px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-1 py-0.5 rounded-md">
+                            {activeOrder.items.reduce((sum: number, item: any) => sum + item.quantity, 0)} món
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100/50 px-1 py-0.5 rounded-md">
+                        Sẵn sàng
+                      </span>
+                    )}
+                  </div>
+
                   <ChevronRight className={cn(
-                    "w-3.5 h-3.5 transition-all duration-300",
-                    isSelected ? "text-orange-500 translate-x-0.5" : "text-gray-300 group-hover:text-orange-500"
+                    "w-3.5 h-3.5 transition-all duration-300 flex-shrink-0 text-gray-300 group-hover:text-orange-500",
+                    isSelected && "text-orange-500 translate-x-0.5"
                   )} />
                 </div>
               </>

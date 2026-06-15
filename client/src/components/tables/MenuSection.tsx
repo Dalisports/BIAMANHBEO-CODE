@@ -141,40 +141,40 @@ export function MenuSection({ menuItems, activeOrder, onAddItem, onUpdateQuantit
                 whileHover={{ scale: 1.03, y: -4 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { try { navigator.vibrate?.(30); } catch {} onAddItem(item); }}
-                className="relative flex flex-col rounded-[24px] bg-white border border-gray-100 p-4 shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300"
+                className="relative flex flex-col rounded-[24px] bg-white border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-orange-200 transition-all duration-300"
               >
-                {/* Image Wrap as Circle Plate (Enlarged) */}
-                <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden mx-auto mb-4 shadow-md border border-gray-50 flex-shrink-0 bg-surface-container relative">
+                {/* Image Container (aspect-square) */}
+                <div className="w-full aspect-square bg-surface-container relative overflow-hidden flex-shrink-0">
                   <img
                     src={item.image || getPlaceholderImage(index)}
                     alt={item.name}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     onError={e => { (e.target as HTMLImageElement).src = getPlaceholderImage(index); }}
                   />
+                  
+                  {/* Order quantity badge */}
+                  {orderQty > 0 && (
+                    <div className="absolute top-3 right-3 bg-orange-500 text-white font-black text-xs w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-200 z-10">
+                      {orderQty}
+                    </div>
+                  )}
+
+                  {/* Priority badge */}
+                  {item.isPriority && (
+                    <div className="absolute top-3 left-3 bg-orange-100 text-orange-700 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm z-10">
+                      🔥 PHỔ BIẾN
+                    </div>
+                  )}
                 </div>
 
-                {/* Order quantity badge */}
-                {orderQty > 0 && (
-                  <div className="absolute top-3 right-3 bg-orange-500 text-white font-black text-xs w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-in zoom-in duration-200">
-                    {orderQty}
-                  </div>
-                )}
-
-                {/* Priority badge */}
-                {item.isPriority && (
-                  <div className="absolute top-3 left-3 bg-orange-100 text-orange-700 text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                    🔥 PHỔ BIẾN
-                  </div>
-                )}
-
-                {/* Content: Price (Align Left) - Name (Uppercase, Bold) on same row */}
-                <div className="flex flex-col w-full mt-auto">
-                  <div className="flex items-center gap-1.5 w-full justify-start border-t border-gray-50 pt-2.5">
+                {/* Content: Price - Name */}
+                <div className="flex flex-col w-full p-3.5 mt-auto">
+                  <div className="flex items-center gap-1.5 w-full justify-start">
                     <span className="font-black text-orange-500 text-base whitespace-nowrap flex-shrink-0">
                       {formatCurrency(item.price)}
                     </span>
                     <span className="text-gray-300 font-bold flex-shrink-0">-</span>
-                    <h4 className="font-black text-base text-gray-800 uppercase truncate flex-1 text-left" title={item.name.toUpperCase()}>
+                    <h4 className="font-black text-sm md:text-base text-gray-800 uppercase truncate flex-1 text-left" title={item.name.toUpperCase()}>
                       {item.name}
                     </h4>
                   </div>

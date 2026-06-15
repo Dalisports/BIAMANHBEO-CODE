@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone, X } from "lucide-react";
 
+import { useLocation } from "wouter";
+
 const PWA_HINT_DISMISSED_KEY = "pwa-install-hint-dismissed";
 
 export function PWAInstallPrompt() {
+  const [location] = useLocation();
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -56,7 +59,7 @@ export function PWAInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  if (isInstalled) return null;
+  if (isInstalled || location === "/login" || location === "/app") return null;
 
   return (
     <>

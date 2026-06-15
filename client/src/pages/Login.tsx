@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { Download } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -25,26 +26,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-500 via-[#1e190f] to-[#0f0e0b] flex flex-col items-center justify-center relative px-6 py-12 font-sans overflow-hidden">
-      {/* Background decoration elements */}
-      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-amber-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-amber-600/10 blur-[120px] pointer-events-none" />
-
-      {/* Container chính với hiệu ứng Glassmorphism */}
-      <div className="w-full max-w-[400px] bg-[#171510]/85 backdrop-blur-xl border border-amber-500/10 rounded-[2.5rem] p-8 md:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.65)] flex flex-col items-center z-10 mb-16">
+    <div className="min-h-screen bg-[#f1b400] flex flex-col items-center justify-center relative px-6 py-12 font-sans overflow-hidden">
+      {/* Main container directly holds the logo, title, and form without dark box */}
+      <div className="w-full max-w-[320px] flex flex-col items-center z-10 mb-16">
         {/* Logo */}
         <div className="mb-6 hover:scale-105 transition-transform duration-300">
-          <img src="/logo.png" alt="Logo" className="w-44 h-auto drop-shadow-[0_4px_12px_rgba(245,158,11,0.2)]" />
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            className="w-36 h-auto drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]" 
+          />
         </div>
 
-        {/* Tiêu đề */}
-        <h1 className="text-3xl md:text-4xl font-black tracking-widest text-amber-500 mb-12 text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+        {/* Brand Title */}
+        <h1 className="text-3xl font-black tracking-widest text-black mb-10 text-center uppercase">
           BIA MẠNH BÉO
         </h1>
 
-        {/* Form đăng nhập */}
-        <form onSubmit={handleLogin} className="w-full flex flex-col space-y-5">
-          {/* Tên đăng nhập */}
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="w-full flex flex-col space-y-4">
+          {/* Username Input */}
           <div className="w-full">
             <input
               type="text"
@@ -54,12 +55,12 @@ export default function Login() {
               onChange={(e) =>
                 setLoginForm({ ...loginForm, username: e.target.value })
               }
-              className="w-full bg-[#24211a]/80 text-white placeholder-amber-500/30 px-6 py-4 rounded-2xl text-sm font-bold tracking-widest border border-amber-500/10 transition-all duration-300 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10"
+              className="w-full bg-[#e8f0fe] text-black placeholder-gray-400 px-6 py-3.5 rounded-2xl text-sm font-bold tracking-widest text-center border-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-black/10"
               required
             />
           </div>
 
-          {/* Mật khẩu */}
+          {/* Password Input */}
           <div className="w-full">
             <input
               type="password"
@@ -69,17 +70,17 @@ export default function Login() {
               onChange={(e) =>
                 setLoginForm({ ...loginForm, password: e.target.value })
               }
-              className="w-full bg-[#24211a]/80 text-white placeholder-amber-500/30 px-6 py-4 rounded-2xl text-sm font-bold tracking-widest border border-amber-500/10 transition-all duration-300 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10"
+              className="w-full bg-[#e8f0fe] text-black placeholder-gray-400 px-6 py-3.5 rounded-2xl text-sm font-bold tracking-widest text-center border-none transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-black/10"
               required
             />
           </div>
 
-          {/* Nút Đăng nhập */}
-          <div className="w-full pt-6">
+          {/* Submit Button */}
+          <div className="w-full pt-4">
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-black font-black text-sm py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.2)] hover:from-amber-600 hover:to-amber-500 hover:shadow-[0_8px_40px_rgba(245,158,11,0.4)] active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed tracking-widest"
+              className="w-full bg-white text-black font-black text-sm py-4 rounded-full shadow-md hover:bg-gray-50 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed tracking-widest"
             >
               {isLoading ? "ĐANG ĐĂNG NHẬP..." : "ĐĂNG NHẬP"}
             </button>
@@ -87,10 +88,26 @@ export default function Login() {
         </form>
       </div>
 
-      {/* Footer */}
-      <div className="absolute bottom-6 left-0 w-full px-8 flex justify-between items-center text-white/30 font-bold text-xs tracking-wider">
-        <span>POS v1.0</span>
-        <span className="hover:text-amber-500 transition-colors duration-300">0904 478 593</span>
+      {/* Footer and App Install Button at the bottom */}
+      <div className="absolute bottom-6 left-0 w-full px-6 flex justify-between items-center text-black font-bold text-xs tracking-wider">
+        <span className="opacity-80">POS v1.0</span>
+        <button 
+          type="button"
+          onClick={() => {
+            // Install App handler if any, or trigger default PWA install
+            const installEvent = (window as any).deferredPrompt;
+            if (installEvent) {
+              installEvent.prompt();
+            } else {
+              alert("Ứng dụng đã được cài đặt hoặc trình duyệt không hỗ trợ.");
+            }
+          }}
+          className="bg-[#d28b03] hover:bg-[#b07402] text-white border border-white/20 px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Cài đặt App
+        </button>
+        <span className="opacity-80">0904 478 593</span>
       </div>
     </div>
   );

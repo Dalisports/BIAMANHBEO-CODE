@@ -18,6 +18,16 @@ interface OrderPanelDesktopProps {
   doneItemNames?: Set<string>;
   menuItems?: any[];
   onSearchClick?: () => void;
+  
+  // Shared discount props
+  showDiscount: boolean;
+  setShowDiscount: (val: boolean) => void;
+  discountType: "percent" | "amount";
+  setDiscountType: (val: "percent" | "amount") => void;
+  discountValue: string;
+  setDiscountValue: (val: string) => void;
+  discountAmount: number;
+  finalTotal: number;
 }
 
 export function OrderPanelDesktop({
@@ -33,22 +43,22 @@ export function OrderPanelDesktop({
   doneItemNames,
   menuItems,
   onSearchClick,
+  showDiscount,
+  setShowDiscount,
+  discountType,
+  setDiscountType,
+  discountValue,
+  setDiscountValue,
+  discountAmount,
+  finalTotal,
 }: OrderPanelDesktopProps) {
-  const [showDiscount, setShowDiscount] = useState(false);
-  const [discountType, setDiscountType] = useState<"percent" | "amount">("percent");
-  const [discountValue, setDiscountValue] = useState("");
   const [isItemsExpanded, setIsItemsExpanded] = useState(true);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const tableName = tableNames[selectedTable] || `Bàn ${selectedTable}`;
   const statusLabel = currentStatus === "empty" ? "Trống" : currentStatus === "cooking" ? "Đang phục vụ" : "Sẵn sàng";
   const totalItems = activeOrder?.items.length || 0;
-
   const subtotal = activeOrder?.totalAmount || 0;
-  const discountAmount = discountType === "percent" && discountValue
-    ? Math.round(subtotal * Number(discountValue) / 100)
-    : Number(discountValue) || 0;
-  const finalTotal = Math.max(0, subtotal - discountAmount);
 
   const isKitchenHidden = (menuItemId?: number) => {
     if (!menuItemId) return false;

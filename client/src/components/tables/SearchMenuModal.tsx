@@ -28,6 +28,16 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const menuListRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (isOpen && menuListRef.current) {
@@ -93,6 +103,16 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
     setSearchQuery("");
   };
 
+  // Format price helper to display like '10k', '145k', etc. on mobile
+  const formatMobilePrice = (price: number | string) => {
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+    if (isNaN(numPrice)) return price;
+    if (numPrice >= 1000) {
+      return `${numPrice / 1000}k`;
+    }
+    return formatCurrency(numPrice);
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -100,40 +120,50 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6"
+          className={cn(
+            "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center p-0 md:p-6",
+            isMobile ? "items-start" : "items-center"
+          )}
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="bg-white dark:bg-[#171510] w-full max-w-xl md:max-w-2xl rounded-t-[2.5rem] md:rounded-[2.5rem] flex flex-col overflow-hidden h-[80vh] md:h-[75vh] shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-gray-100 dark:border-amber-500/10"
+            initial={isMobile ? { y: "-100%" } : { y: 50, opacity: 0 }}
+            animate={isMobile ? { y: 0 } : { y: 0, opacity: 1 }}
+            exit={isMobile ? { y: "-100%" } : { y: 50, opacity: 0 }}
+            transition={
+              isMobile 
+                ? { type: "spring", damping: 28, stiffness: 240 }
+                : { type: "spring", damping: 25, stiffness: 220 }
+            }
+            className={cn(
+              "bg-white dark:bg-[#171510] w-full max-w-xl md:max-w-2xl flex flex-col overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-gray-100 dark:border-amber-500/10",
+              isMobile ? "rounded-b-[2.5rem] rounded-t-none h-[50vh]" : "rounded-t-[2.5rem] md:rounded-[2.5rem] h-[80vh] md:h-[75vh]"
+            )}
             onClick={e => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header - customized to "Tìm món" */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-border/30">
-              <h3 className="font-black text-sm text-gray-900 dark:text-amber-500 uppercase tracking-widest">
-                THÊM MÓN VÀO ĐƠN
+              <h3 className="font-extrabold text-lg text-gray-900 dark:text-amber-500">
+                Tìm món
               </h3>
               <button
                 onClick={onClose}
-                className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-amber-950/20 text-gray-400 transition-colors"
+                className="p-1 rounded-full text-gray-900 hover:bg-gray-100 dark:hover:bg-amber-950/20 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6 stroke-[2.5]" />
               </button>
             </div>
 
-            {/* Search */}
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-[#1c1913]/30 border-b border-gray-100 dark:border-border/10">
+            {/* Search - simplified placeholder and styled border */}
+            <div className="px-6 py-4 bg-white dark:bg-[#1c1913]/30 border-b border-gray-100 dark:border-border/10">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-amber-500 stroke-[3]" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400 stroke-[2.5]" />
                 <input
                   autoFocus
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Gõ tên món ăn cần tìm kiếm..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-border/40 bg-white dark:bg-[#24211a]/80 text-sm font-bold placeholder-gray-400 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5 transition-all"
+                  placeholder="Tìm món..."
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-amber-400 bg-gray-50/50 dark:bg-[#24211a]/80 text-sm font-bold placeholder-gray-400 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 dark:focus:ring-amber-500/5 transition-all"
                 />
               </div>
             </div>
@@ -143,10 +173,10 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
               <button
                 onClick={() => setSelectedCategory("all")}
                 className={cn(
-                  "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all",
+                  "px-5 py-2 rounded-full text-xs font-black transition-all",
                   selectedCategory === "all"
-                    ? "bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-md shadow-amber-500/20"
-                    : "bg-gray-50 dark:bg-[#24211a]/50 border border-gray-100 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
+                    ? "bg-[#f5c20a] text-black shadow-sm"
+                    : "bg-white dark:bg-[#24211a]/50 border border-gray-200 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
                 )}
               >
                 Tất cả
@@ -156,10 +186,10 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={cn(
-                    "px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all",
+                    "px-5 py-2 rounded-full text-xs font-black transition-all",
                     selectedCategory === cat.id
-                      ? "bg-gradient-to-r from-amber-500 to-amber-400 text-black shadow-md shadow-amber-500/20"
-                      : "bg-gray-50 dark:bg-[#24211a]/50 border border-gray-100 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
+                      ? "bg-[#f5c20a] text-black shadow-sm"
+                      : "bg-white dark:bg-[#24211a]/50 border border-gray-200 dark:border-border/20 text-gray-600 dark:text-gray-400 hover:border-amber-400"
                   )}
                 >
                   {cat.name}
@@ -167,30 +197,33 @@ export function SearchMenuModal({ isOpen, onClose, menuItems, onAddItem }: Searc
               ))}
             </div>
 
-            {/* Menu Items */}
+            {/* Menu Items Grid */}
             <div ref={menuListRef} className="flex-1 overflow-y-auto p-6 bg-gray-50/50 dark:bg-[#1a1813]/20 scrollbar-thin">
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                 {filteredItems.map((item, index) => (
                   <motion.button
                     key={item.id}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleAddItem(item)}
-                    className="flex flex-col items-center rounded-[24px] border border-gray-100 dark:border-border/30 bg-white dark:bg-card p-3 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300 relative group"
+                    className="flex flex-col rounded-[20px] border border-gray-100/80 dark:border-border/30 bg-white dark:bg-card p-0 shadow-sm hover:shadow-md hover:border-amber-400/50 transition-all duration-300 overflow-hidden"
                   >
-                    <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-muted border border-gray-100 dark:border-border/20 mb-2 group-hover:scale-105 transition-transform duration-300">
+                    {/* Square image taking full width with price tag */}
+                    <div className="w-full aspect-square overflow-hidden bg-gray-50 relative">
                       <img
                         src={item.image || getPlaceholderImage(index)}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         onError={e => { (e.target as HTMLImageElement).src = getPlaceholderImage(index); }}
                       />
+                      {/* Price tag overlaying the bottom-left of the image */}
+                      <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.15)] z-10">
+                        {formatMobilePrice(item.price)}
+                      </span>
                     </div>
-                    <div className="text-center w-full">
-                      <p className="text-[10px] sm:text-xs font-black text-gray-900 dark:text-gray-100 uppercase tracking-wide leading-tight line-clamp-2 min-h-[2rem] flex items-center justify-center">
+                    {/* Item details below the image: name only uppercase */}
+                    <div className="p-2.5 text-center w-full bg-white dark:bg-card flex items-center justify-center min-h-[2.8rem]">
+                      <p className="text-xs sm:text-sm font-black text-gray-950 dark:text-gray-50 tracking-wide leading-tight line-clamp-2 uppercase">
                         {item.name}
-                      </p>
-                      <p className="text-xs font-black text-amber-500 mt-1">
-                        {formatCurrency(item.price)}
                       </p>
                     </div>
                   </motion.button>
