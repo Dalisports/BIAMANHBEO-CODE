@@ -109,7 +109,7 @@ function AppContent() {
   return (
     <>
       <Router />
-      {user && location !== "/agent" && location !== "/gau" && <FloatingChatBubble />}
+      {user && location !== "/agent" && location !== "/gau" && location !== "/menu" && location !== "/menutv" && location !== "/menu-tv" && <FloatingChatBubble />}
       <DebugToolbar />
     </>
   );

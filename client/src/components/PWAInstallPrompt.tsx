@@ -59,7 +59,7 @@ export function PWAInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  if (isInstalled || location === "/login" || location === "/app") return null;
+  if (isInstalled || location === "/login" || location === "/app" || location === "/menutv" || location === "/menu-tv") return null;
 
   return (
     <>

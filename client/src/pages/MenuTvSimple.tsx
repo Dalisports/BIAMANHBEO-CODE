@@ -23,6 +23,13 @@ export default function MenuTvSimple() {
   const [slideIndex, setSlideIndex] = useState(0);
 
   useWebSocket();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.location.reload();
+    }, 60000);
+    return () => clearTimeout(timer);
+  }, []);
   useEffect(() => {
     const interval = setInterval(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/kitchen"] });
