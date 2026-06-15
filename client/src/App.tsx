@@ -68,9 +68,12 @@ function Router() {
 
       {/* Protected routes wrapped in Layout */}
       {!user ? (
-        <Route path="*">
-          <Redirect href="/login" />
-        </Route>
+        <Switch>
+          <Route path="/menu" component={Menu} />
+          <Route path="*">
+            <Redirect href="/login" />
+          </Route>
+        </Switch>
       ) : (
         <Layout>
           <Switch>

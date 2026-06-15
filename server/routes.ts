@@ -344,7 +344,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get(api.products.list.path, requireAuthMiddleware, async (req, res) => {
+  app.get(api.products.list.path, async (req, res) => {
     const prods = await storage.getMenuItems();
     // Sắp xếp: Món ghim (isSticky) lên đầu, sau đó ưu tiên (isPriority),
     // cuối cùng sắp xếp theo giá (nhỏ -> lớn).
@@ -465,7 +465,7 @@ export async function registerRoutes(
     res.json(ord);
   });
 
-  app.post(api.orders.create.path, requireAuthMiddleware, async (req, res) => {
+  app.post(api.orders.create.path, async (req, res) => {
     try {
       const input = api.orders.create.input.parse(req.body);
       const tableNum = input.tableNumber;
@@ -783,12 +783,12 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/categories", requireAuthMiddleware, async (req, res) => {
+  app.get("/api/categories", async (req, res) => {
     const cats = await storage.getCategories();
     res.json(cats);
   });
 
-  app.get("/api/settings/:key", requireAuthMiddleware, async (req, res) => {
+  app.get("/api/settings/:key", async (req, res) => {
     try {
       const key = req.params.key;
       const setting = await storage.getSetting(key);
