@@ -29,5 +29,39 @@
 - **Prevention**: Luôn kiểm tra trùng lặp hoặc sử dụng cơ chế gộp/xóa trùng lặp trước khi import dữ liệu mới vào DB.
 - **Status**: Fixed
 
+## [2026-06-16 02:15] - Lỗi 500 Unique Constraint Violation sau khi di chuyển Database
+
+- **Type**: Runtime
+- **Severity**: High
+- **File**: `server/storage.ts:430` (câu lệnh insert order mới)
+- **Agent**: Mi
+- **Root Cause**: Khi import dữ liệu lịch sử từ Neon DB sang Fly Postgres, ta insert trực tiếp cột ID khóa chính. Việc này khiến Postgres SEQUENCE quản lý ID tự tăng không được cập nhật. Khi ứng dụng tạo đơn hàng mới, Postgres cố gắng phát sinh ID bắt đầu từ 1, dẫn đến trùng khóa chính với dữ liệu lịch sử cũ (Unique Constraint Violation) và trả về lỗi 500 ở API `/api/orders`.
+- **Error Message**: 
+  ```
+  postgres error: duplicate key value violates unique constraint "orders_pkey"
+  ```
+- **Fix Applied**: Viết script `reset-sequences.mjs` chạy qua proxy local kết nối tới Fly Postgres, thực hiện câu lệnh `SELECT setval(pg_get_serial_sequence('table', 'id'), coalesce(max(id), 1)) FROM "table"` cho tất cả 16 bảng của hệ thống để đồng bộ lại các sequence tự tăng.
+- **Prevention**: Luôn chạy script reset sequence cho PostgreSQL ngay sau khi migration dữ liệu có chứa ID tự tăng.
+- **Status**: Fixed
+
 ---
+
+## [2026-06-16 02:18] - Lỗi 400 Bad Request ở API send-to-kitchen cho đơn hàng chỉ có đồ uống
+
+- **Type**: Logic
+- **Severity**: Medium
+- **File**: `server/storage.ts:555`
+- **Agent**: Mi
+- **Root Cause**: Khi khách hàng tạo đơn hàng chỉ chứa các món ăn/đồ uống đã được đánh dấu ẩn đối với bếp (isHidden = true - ví dụ bia đóng chai), hàm sendToKitchen lọc bỏ toàn bộ các món này dẫn đến danh sách gửi bếp trống (itemsToSent.length === 0). Do chưa có đơn bếp nào trước đó, hàm sẽ ném ra exception 'No items to send to kitchen' gây ra lỗi 400 cho client.
+- **Error Message**: 
+  ```
+  Fetch không tải được: POST /api/orders/117/send-to-kitchen 400 (Bad Request)
+  ```
+- **Fix Applied**: Sửa logic sendToKitchen trong storage.ts để nếu không có món nào cần gửi bếp (do bị ẩn) và chưa có đơn bếp cũ, thay vì ném lỗi, ta trả về một mock kitchenOrder đã hoàn thành (Done) với danh sách món rỗng để client nhận được phản hồi thành công.
+- **Prevention**: Luôn xử lý các trường hợp biên khi các món ăn trong đơn hàng không thuộc diện cần xử lý ở bếp.
+- **Status**: Fixed
+
+---
+
+
 

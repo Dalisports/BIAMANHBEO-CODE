@@ -550,9 +550,23 @@ export class DatabaseStorage implements IStorage {
       if (order.status === "Pending") {
         await db.update(orders).set({ status: "InKitchen" }).where(eq(orders.id, orderId));
       }
-      // Return the most recent kitchen order if any, or throw
+      // Return the most recent kitchen order if any
       if (existingKitchenOrders.length > 0) return existingKitchenOrders[0];
-      throw new Error("No items to send to kitchen");
+      
+      // If no items need to be sent (e.g. only bottled drinks/hidden items) and no previous kitchen order exists,
+      // return a finished/mock kitchen order to prevent 400 Bad Request on the frontend.
+      return {
+        id: 0,
+        orderId: orderId,
+        tableNumber: order.tableNumber,
+        items: [],
+        status: "Done",
+        priority: "normal",
+        sentAt: new Date(),
+        startedAt: new Date(),
+        completedAt: new Date(),
+        notes: "No items need to be sent to kitchen (auto-completed)"
+      } as any;
     }
 
     // Check if there's an active (not Done) kitchen order to merge into

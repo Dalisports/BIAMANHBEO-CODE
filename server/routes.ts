@@ -645,6 +645,7 @@ export async function registerRoutes(
       broadcastEvent("KITCHEN_ORDER_CREATED", kitchenOrder);
       res.status(201).json(kitchenOrder);
     } catch (err) {
+      console.error("[send-to-kitchen] Error details:", err);
       res.status(400).json({ message: "Error sending to kitchen" });
     }
   });
