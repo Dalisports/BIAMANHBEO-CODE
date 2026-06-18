@@ -27,6 +27,12 @@ import {
 import { eq, inArray, and, desc, lt, ne, gte, lte, count } from "drizzle-orm";
 import { startOfDay, endOfDay, startOfToday } from "date-fns";
 
+function getVietnamDateString(date: Date = new Date()): string {
+  const tzOffset = 7 * 60 * 60 * 1000;
+  const vnTime = new Date(date.getTime() + tzOffset);
+  return vnTime.toISOString().split("T")[0];
+}
+
 export interface IStorage {
   getUsers(): Promise<User[]>;
   createUser(user: { username: string; password: string; role: string; fullName?: string }): Promise<User>;
@@ -155,7 +161,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async generateDailyQRCode() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getVietnamDateString();
     const qrCode = `ATT-${today}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const existing = await db.select().from(dailyQRCodes).where(eq(dailyQRCodes.date, today));
     if (existing.length > 0) {
@@ -166,7 +172,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTodayQRCode() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getVietnamDateString();
     const [code] = await db.select().from(dailyQRCodes).where(eq(dailyQRCodes.date, today));
     if (!code) {
       return this.generateDailyQRCode();
@@ -175,7 +181,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async regenerateDailyQRCode() {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getVietnamDateString();
     const qrCode = `ATT-${today}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const existing = await db.select().from(dailyQRCodes).where(eq(dailyQRCodes.date, today));
     if (existing.length > 0) {
@@ -199,7 +205,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkIn(userId: number, qrCode: string) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getVietnamDateString();
     const existing = await db.select().from(attendanceRecords).where(
       and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, today))
     );
@@ -217,10 +223,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkOut(userId: number, qrCode: string) {
-    const today = new Date().toISOString().split("T")[0];
     const [existing] = await db.select().from(attendanceRecords).where(
-      and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.date, today), eq(attendanceRecords.status, "checked_in"))
-    );
+      and(eq(attendanceRecords.userId, userId), eq(attendanceRecords.status, "checked_in"))
+    ).orderBy(desc(attendanceRecords.checkIn)).limit(1);
     if (!existing) return null;
     
     const checkInTime = new Date(existing.checkIn!);

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Clock, DollarSign, History, Play, Square, Timer, ScanLine } from "lucide-react";
 import { QrScanner } from "@/components/QrScanner";
+import { cn } from "@/lib/utils";
 
 interface AttendanceRecord {
   id: number;
@@ -53,7 +54,8 @@ export default function Attendance() {
   const hourlyRate = hourlyRateData?.hourlyRate || 50000;
 
   const todayStatus = useMemo(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const tzOffset = 7 * 60 * 60 * 1000; // GMT+7
+    const today = new Date(Date.now() + tzOffset).toISOString().split("T")[0];
     return records.find((r) => r.date === today) || null;
   }, [records]);
 

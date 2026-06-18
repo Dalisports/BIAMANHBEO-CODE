@@ -269,7 +269,20 @@ export async function registerRoutes(
   app.post("/api/attendance/checkin", requireAuthMiddleware, async (req: any, res) => {
     try {
       const { qrCode } = req.body;
+
+      // Verify QR Code if enabled
+      const qrEnabled = await storage.getQrEnabled();
+      if (qrEnabled) {
+        const todayQr = await storage.getTodayQRCode();
+        if (!todayQr || todayQr.qrCode !== qrCode) {
+          return res.status(400).json({ message: "Mã QR không hợp lệ hoặc đã hết hạn" });
+        }
+      }
+
       const result = await storage.checkIn(req.user.userId, qrCode);
+      if (!result) {
+        return res.status(400).json({ message: "Bạn đã chấm công vào (check-in) ngày hôm nay rồi" });
+      }
       res.json(result);
     } catch (err) {
       res.status(500).json({ message: "Error checking in" });
@@ -279,7 +292,20 @@ export async function registerRoutes(
   app.post("/api/attendance/checkout", requireAuthMiddleware, async (req: any, res) => {
     try {
       const { qrCode } = req.body;
+
+      // Verify QR Code if enabled
+      const qrEnabled = await storage.getQrEnabled();
+      if (qrEnabled) {
+        const todayQr = await storage.getTodayQRCode();
+        if (!todayQr || todayQr.qrCode !== qrCode) {
+          return res.status(400).json({ message: "Mã QR không hợp lệ hoặc đã hết hạn" });
+        }
+      }
+
       const result = await storage.checkOut(req.user.userId, qrCode);
+      if (!result) {
+        return res.status(400).json({ message: "Không tìm thấy lượt check-in nào chưa check-out" });
+      }
       res.json(result);
     } catch (err) {
       res.status(500).json({ message: "Error checking out" });

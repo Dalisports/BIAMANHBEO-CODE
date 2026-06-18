@@ -209,9 +209,10 @@ export default function Settings() {
       
       setHourlyRate(data.hourlyRate || 50000);
 
-      const now = new Date();
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-      const todayStr = now.toISOString().split("T")[0];
+      const tzOffset = 7 * 60 * 60 * 1000; // GMT+7
+      const vnTime = new Date(Date.now() + tzOffset);
+      const monthStart = `${vnTime.toISOString().split("-")[0]}-${vnTime.toISOString().split("-")[1]}-01`;
+      const todayStr = vnTime.toISOString().split("T")[0];
 
       const hoursMap: Record<number, number> = {};
       for (const record of data.records || []) {
@@ -563,7 +564,7 @@ export default function Settings() {
                         <p className="text-xs text-muted-foreground">Mã hôm nay</p>
                         <p className="font-mono font-bold break-all text-sm">{qrData?.qrCode || "—"}</p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          Ngày: {qrData?.date || new Date().toISOString().split("T")[0]}
+                          Ngày: {qrData?.date || new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().split("T")[0]}
                         </p>
                       </div>
                     </div>
