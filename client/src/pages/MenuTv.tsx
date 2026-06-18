@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
@@ -30,7 +30,13 @@ export default function MenuTv() {
   const queryClient = useQueryClient();
 
   // Real-time: WebSocket sẽ tự invalidate /api/kitchen + /api/orders khi có thay đổi
-  useWebSocket();
+  useWebSocket({
+    onMessage: (event) => {
+      if (event.type === "ATTENDANCE_QR_CHANGED") {
+        fetchQr();
+      }
+    }
+  });
 
   // Polling fallback + refresh menu/QR/ticker (WS không cover các key này)
   useEffect(() => {
@@ -86,19 +92,20 @@ export default function MenuTv() {
       .catch(() => {});
   }, []);
 
+  const fetchQr = useCallback(() => {
+    fetch("/api/attendance/qr")
+      .then((r) => r.json())
+      .then((d) =>
+        setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }),
+      )
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
-    const fetchQr = () => {
-      fetch("/api/attendance/qr")
-        .then((r) => r.json())
-        .then((d) =>
-          setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }),
-        )
-        .catch(() => {});
-    };
     fetchQr();
     const interval = setInterval(fetchQr, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchQr]);
 
   const updateTicker = async (text: string) => {
     try {
@@ -460,22 +467,24 @@ export default function MenuTv() {
 
       {/* Attendance QR overlay */}
       {attendanceQr?.enabled && attendanceQr.qrCode && (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="absolute bottom-[6vh] right-[1vw] z-30 bg-white rounded-2xl shadow-2xl p-3 border-4 border-yellow-500"
-        >
-          <div className="flex items-center gap-2 mb-2 text-black">
-            <ScanLine className="w-5 h-5 text-yellow-600" />
-            <p className="font-black text-sm uppercase">Quét để chấm công</p>
-          </div>
-          <center>
-            <QRCodeSVG value={attendanceQr.qrCode} size={140} level="M" />
-          </center>
-          <p className="text-center text-[10px] font-mono text-slate-600 mt-2 break-all max-w-[140px]">
-            {attendanceQr.qrCode}
-          </p>
-        </motion.div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-[10px] border-yellow-500 text-black max-w-sm w-full mx-4 flex flex-col items-center justify-center"
+          >
+            <div className="flex items-center gap-3 mb-6 text-black">
+              <ScanLine className="w-8 h-8 text-yellow-600" />
+              <p className="font-black text-2xl uppercase tracking-wider">Quét để chấm công</p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-inner border border-slate-100 flex items-center justify-center">
+              <QRCodeSVG value={attendanceQr.qrCode} size={240} level="M" />
+            </div>
+            <p className="text-center text-xs font-mono text-slate-600 mt-4 break-all max-w-[260px]">
+              {attendanceQr.qrCode}
+            </p>
+          </motion.div>
+        </div>
       )}
     </div>
   );

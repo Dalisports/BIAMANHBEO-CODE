@@ -249,6 +249,7 @@ export async function registerRoutes(
     try {
       const qr = await storage.regenerateDailyQRCode();
       const enabled = await storage.getQrEnabled();
+      broadcastEvent("ATTENDANCE_QR_CHANGED", { enabled: !!enabled, qrCode: qr?.qrCode });
       res.json({ ...qr, enabled });
     } catch (err) {
       res.status(500).json({ message: "Error regenerating QR code" });
