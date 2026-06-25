@@ -17,10 +17,10 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  Pending: "CHƯA XỬ LÝ",
-  InKitchen: "ĐANG NẤU",
-  Ready: "CHƯA THANH TOÁN",
-  Complete: "ĐÃ THANH TOÁN",
+  Pending: "Chưa xử lý",
+  InKitchen: "Đang nấu",
+  Ready: "Chưa thanh toán",
+  Complete: "Đã thanh toán",
 };
 
 const TAB_COLORS: Record<string, { active: string; hover: string }> = {
@@ -197,7 +197,7 @@ export default function Orders() {
 
   return (
     <div className="h-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="px-4 py-2 rounded-xl bg-orange-100 text-orange-700 font-semibold">
             <span className="text-2xl">{activeOrders.length}</span> đơn đang xử lý
@@ -216,9 +216,17 @@ export default function Orders() {
             Hôm nay ({todayCount})
           </button>
         </div>
+
+        <button
+          onClick={() => setShowSettingsModal(true)}
+          className="self-start sm:self-auto px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          Cài đặt thanh toán
+        </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-6">
         {["All", "Pending", "InKitchen", "Ready", "Complete"].map((f) => {
           const colors = TAB_COLORS[f];
           const isPending = f === "Pending";
@@ -228,7 +236,7 @@ export default function Orders() {
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 relative",
+                "px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 relative",
                 filter === f && colors 
                   ? colors.active + " shadow-md" 
                   : colors 
@@ -241,13 +249,6 @@ export default function Orders() {
             </button>
           );
         })}
-        <button
-          onClick={() => setShowSettingsModal(true)}
-          className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
-        >
-          <Settings className="w-4 h-4" />
-          Cài đặt thanh toán
-        </button>
       </div>
 
       {isLoading ? (
