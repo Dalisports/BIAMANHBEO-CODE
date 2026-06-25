@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { buildCookingQueue, type CookingQueueItem } from "@/lib/cookingQueue";
 import { useMenuItems } from "@/hooks/use-menu";
 import { useKitchenOrders, type KitchenItem } from "@/hooks/use-orders";
 import { formatCurrency } from "@/lib/utils";
-import { Flame, CheckCircle2, ChefHat } from "lucide-react";
+import { Flame, CheckCircle2, ChefHat, ScanLine } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1600&h=1200&fit=crop",
@@ -22,7 +23,33 @@ export default function MenuTvSimple() {
   const queryClient = useQueryClient();
   const [slideIndex, setSlideIndex] = useState(0);
 
-  useWebSocket();
+  const [attendanceQr, setAttendanceQr] = useState<{
+    qrCode: string;
+    enabled: boolean;
+  } | null>(null);
+
+  const fetchQr = useCallback(() => {
+    fetch("/api/attendance/qr")
+      .then((r) => r.json())
+      .then((d) =>
+        setAttendanceQr({ qrCode: d.qrCode, enabled: !!d.enabled }),
+      )
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchQr();
+    const interval = setInterval(fetchQr, 30000);
+    return () => clearInterval(interval);
+  }, [fetchQr]);
+
+  useWebSocket({
+    onMessage: (event) => {
+      if (event.type === "ATTENDANCE_QR_CHANGED") {
+        fetchQr();
+      }
+    }
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -220,6 +247,37 @@ export default function MenuTvSimple() {
           )}
         </div>
       </div>
+
+      {/* Attendance QR overlay */}
+      {attendanceQr?.enabled && attendanceQr.qrCode && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 99999 
+          }}
+        >
+          <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-[10px] border-yellow-500 text-black max-w-sm w-full mx-4 flex flex-col items-center justify-center">
+            <div className="flex items-center gap-3 mb-6 text-black">
+              <ScanLine className="w-8 h-8 text-yellow-600" />
+              <p className="font-black text-2xl uppercase tracking-wider">Quét để chấm công</p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-inner border border-slate-100 flex items-center justify-center">
+              <QRCodeSVG value={attendanceQr.qrCode} size={240} level="M" />
+            </div>
+            <p className="text-center text-xs font-mono text-slate-600 mt-4 break-all max-w-[260px]">
+              {attendanceQr.qrCode}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

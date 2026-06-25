@@ -467,12 +467,21 @@ export default function MenuTv() {
 
       {/* Attendance QR overlay */}
       {attendanceQr?.enabled && attendanceQr.qrCode && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-[10px] border-yellow-500 text-black max-w-sm w-full mx-4 flex flex-col items-center justify-center"
-          >
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 99999 
+          }}
+        >
+          <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-[10px] border-yellow-500 text-black max-w-sm w-full mx-4 flex flex-col items-center justify-center">
             <div className="flex items-center gap-3 mb-6 text-black">
               <ScanLine className="w-8 h-8 text-yellow-600" />
               <p className="font-black text-2xl uppercase tracking-wider">Quét để chấm công</p>
@@ -483,7 +492,7 @@ export default function MenuTv() {
             <p className="text-center text-xs font-mono text-slate-600 mt-4 break-all max-w-[260px]">
               {attendanceQr.qrCode}
             </p>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
