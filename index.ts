@@ -1,6 +1,8 @@
 import { config as dotenv } from "dotenv";
 
-const envFile = process.env.NODE_ENV === "development" ? ".env.development" : ".env";
+import { existsSync } from "fs";
+
+const envFile = (process.env.NODE_ENV === "development" && existsSync(".env.development")) ? ".env.development" : ".env";
 dotenv({ path: envFile, override: true });
 
 import express, { type Request, Response, NextFunction } from "express";

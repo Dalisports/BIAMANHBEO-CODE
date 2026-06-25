@@ -661,12 +661,12 @@ export default function Tables() {
       {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-3 px-4 py-3.5 bg-[#f4f4f5]/60 flex-shrink-0">
+        <div className="grid grid-cols-3 gap-2 px-4 pt-3.5 pb-1 flex-shrink-0">
           {/* Card Đã TT */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#4bae4f] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
+            className="bg-[#4bae4f] text-white rounded-[18px] p-2.5 flex flex-col justify-between h-[72px] relative shadow-sm"
           >
             <div className="flex justify-between items-start w-full">
               <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Đã TT</span>
@@ -683,7 +683,7 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="bg-[#e2990f] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
+            className="bg-[#e2990f] text-white rounded-[18px] p-2.5 flex flex-col justify-between h-[72px] relative shadow-sm"
           >
             <div className="flex justify-between items-start w-full">
               <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Chưa TT</span>
@@ -700,7 +700,7 @@ export default function Tables() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-[#4b5261] text-white rounded-2xl p-3 flex flex-col justify-between h-[85px] relative shadow-sm"
+            className="bg-[#4b5261] text-white rounded-[18px] p-2.5 flex flex-col justify-between h-[72px] relative shadow-sm"
           >
             <div className="flex justify-between items-start w-full">
               <span className="text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-wider">Tất Cả</span>
