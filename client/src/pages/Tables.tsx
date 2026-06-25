@@ -661,7 +661,7 @@ export default function Tables() {
       {/* Stats bar */}
       {/* Stats bar - only show when no table selected */}
       {!selectedTable && (
-        <div className="grid grid-cols-3 gap-2 px-4 pt-3.5 pb-1 flex-shrink-0">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 gap-2 px-2 pt-3.5 pb-1 flex-shrink-0">
           {/* Card Đã TT */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
